@@ -297,7 +297,7 @@ final class PicksTab {
                 ? T.t("More hits than chance over the whole history. With several periods and models compared, confirm it holds in new draws.")
                 : T.t("No better than random selection: the hits are what chance alone gives.")));
 
-        LinearLayout bm = ui.details(c, T.f("By model · %s", o.days > 0 ? T.f("last %d days", o.days) : T.t("all history")));
+        LinearLayout bm = ui.details(c, T.t("By model"));
         float[] w2 = {2.4f, 1.1f, 1.2f, 1.3f, 1.1f};
         bm.addView(ui.row(new String[]{T.t("Model"), T.t("Draws"), hitName, T.t("Expected"), "p"}, w2, true, null), ui.matchWrap(4));
         for (Object[] row : go.perModel) {

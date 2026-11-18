@@ -66,13 +66,13 @@ public class LaunchTest {
         for (String lottery : Game.LOTTERIES) {
             for (int tab = 0; tab <= MainActivity.ODDS; tab++) show(a, lottery, 0, tab);
         }
-        show(a, "Dorado", 3, MainActivity.SUMMARY); // all three draws at once
-        show(a, "Dorado", 3, MainActivity.PICKS);
+        show(a, "Dorado", 1, MainActivity.SUMMARY); // Tarde
+        show(a, "Dorado", 2, MainActivity.PICKS);   // Noche
         show(a, "Baloto", 1, MainActivity.SUMMARY); // Revancha
-        // every El Dorado bet format in the checker, and every pack goal
-        for (Prizes.Bet b : Prizes.Bet.values()) {
-            a.checkBet = b;
-            show(a, "Dorado", 0, MainActivity.SUMMARY, "2820".substring(4 - b.digits));
+        // every amount in El Dorado's prize list
+        for (double w : new double[]{200, 500, 1000, 2000, 5000}) {
+            a.checkWager = w;
+            show(a, "Dorado", 0, MainActivity.SUMMARY);
         }
         for (Pack.Objective o : Pack.Objective.values()) {
             a.packObjective = o;

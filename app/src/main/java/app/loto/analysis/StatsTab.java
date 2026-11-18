@@ -49,19 +49,7 @@ final class StatsTab {
                     + "up more, cool ones less.", Fmt.num(D / 10.0))));
             hot.addView(new Charts.Heat(a, o.freq.positions), ui.matchWrap(8));
         } else {
-            int n = o.freq.values.size();
-            String[] labels = new String[n];
-            double[] obs = new double[n], exp = new double[n], z = new double[n];
-            for (int i = 0; i < n; i++) {
-                Analysis.Cell c = o.freq.values.get(i);
-                labels[i] = c.value == 1 || c.value % 5 == 0 ? String.valueOf(c.value) : "";
-                obs[i] = c.observed;
-                exp[i] = c.expected;
-                z[i] = c.z;
-            }
-            hot.addView(ui.note(T.f("Times each number was drawn. The dashed line is a fair draw's expectation (%s each).",
-                    Fmt.num(o.freq.values.get(0).expected))));
-            hot.addView(new Charts.Bars(a, labels, obs, exp, z, 1), ui.matchWrap(8));
+            hot.addView(ui.note(T.f("Times each number was drawn; a fair draw gives each %s.", Fmt.num(o.freq.values.get(0).expected))));
         }
         LinearLayout cols = ui.hbox();
         cols.addView(cellList(a, T.t("Most frequent"), o.freq.hot(5)), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
@@ -96,28 +84,24 @@ final class StatsTab {
 
         if (o.freq.extraDraws > 0) {
             LinearLayout ex = ui.card(body, g.extraName.toUpperCase(T.L), T.t("descriptive"));
-            int n = o.freq.extra.size();
-            String[] labels = new String[n];
-            double[] obs = new double[n], exp = new double[n], z = new double[n];
-            for (int i = 0; i < n; i++) {
-                Analysis.Cell c = o.freq.extra.get(i);
-                labels[i] = c.label;
-                obs[i] = c.observed;
-                exp[i] = c.expected;
-                z[i] = c.z;
-            }
-            ex.addView(ui.note(T.f("%d draws with a %s. Fair: %s each.", o.freq.extraDraws, g.extraName.toLowerCase(T.L), Fmt.num(exp[0]))));
-            ex.addView(new Charts.Bars(a, labels, obs, exp, z, 1), ui.matchWrap(8));
+            ex.addView(ui.note(T.f("%d draws with a %s. Fair: %s each.", o.freq.extraDraws, g.extraName.toLowerCase(T.L),
+                    Fmt.num(o.freq.extra.get(0).expected))));
+            List<Analysis.Cell> byCount = new java.util.ArrayList<>(o.freq.extra);
+            byCount.sort((x, y) -> Double.compare(y.observed, x.observed));
+            int k = Math.min(3, byCount.size());
+            LinearLayout xc = ui.hbox();
+            xc.addView(cellList(a, T.t("Most frequent"), byCount.subList(0, k)), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+            LinearLayout.LayoutParams xp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            xp.leftMargin = ui.dp(12);
+            List<Analysis.Cell> least = new java.util.ArrayList<>(byCount.subList(byCount.size() - k, byCount.size()));
+            java.util.Collections.reverse(least);
+            xc.addView(cellList(a, T.t("Least frequent"), least), xp);
+            ex.addView(xc, ui.matchWrap(10));
             ex.addView(verdict(a, o.freq.extraP, T.f("Chi-square p = %s.", Combi.pText(o.freq.extraP))));
         }
 
         // ---- even / odd ----
         LinearLayout eo = ui.card(body, T.t("EVEN & ODD"), T.t("descriptive"));
-        String[] eoLabels = new String[o.evenOdd.labels.length];
-        for (int i = 0; i < eoLabels.length; i++) eoLabels[i] = T.f("%dE", i);
-        eo.addView(ui.note(g.digits() ? T.t("Draws by number of even digits (0E = all odd). Bars: observed; dots: a fair draw.")
-                : T.t("Draws by number of even numbers (0E = all odd). Bars: observed; dots: a fair draw.")));
-        eo.addView(new Charts.Dist(a, eoLabels, o.evenOdd.observed, o.evenOdd.expected), ui.matchWrap(8));
         double evenShare = o.evenOdd.obsMean / g.count, fairShare = o.evenOdd.expMean / g.count;
         eo.addView(verdict(a, o.evenOdd.p, g.digits()
                 ? T.f("%s of all digits were even and %s odd (fair: %s each). Chi-square p = %s.", Fmt.pct(evenShare), Fmt.pct(1 - evenShare),
@@ -131,12 +115,6 @@ final class StatsTab {
 
         // ---- sums ----
         LinearLayout sc = ui.card(body, T.t("SUM OF THE NUMBERS"), T.t("descriptive"));
-        String[] labels = new String[40];
-        double[][] rb = Charts.rebin(o.sums.observed, o.sums.expected, g.digits() ? 13 : 12, labels);
-        int nb = (int) rb[2][0];
-        sc.addView(ui.note(g.digits() ? T.t("Draws by the total of their digits; dots show a fair draw.")
-                : T.t("Draws by the total of their numbers; dots show a fair draw.")));
-        sc.addView(new Charts.Dist(a, java.util.Arrays.copyOf(labels, nb), rb[0], rb[1]), ui.matchWrap(8));
         int[] mid = Analysis.middleHalf(g);
         sc.addView(verdict(a, o.sums.p, T.f("Average %.1f (fair %.1f), spread %.1f (fair %.1f). Half of all fair draws total "
                 + "%d–%d. Chi-square p = %s.", o.sums.obsMean, o.sums.expMean, o.sums.obsSd, o.sums.expSd, mid[0], mid[1],

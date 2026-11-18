@@ -10,7 +10,7 @@ import java.util.Map;
 final class Es {
     private Es() {}
 
-    static final Map<String, String> MAP = new HashMap<>(766);
+    static final Map<String, String> MAP = new HashMap<>(736);
 
     private static void p(String en, String es) {
         MAP.put(en, es);
@@ -149,8 +149,6 @@ final class Es {
                 "%s sorteos guardados · %s");
         p("%d source(s) unreachable (see History)",
                 "%d fuente(s) sin respuesta (ver Historial)");
-        p("All draws",
-                "Todos");
         p("Working it out…",
                 "Calculando…");
         p("SOMETHING WENT WRONG",
@@ -159,12 +157,10 @@ final class Es {
                 "No se pudo calcular esta vista: %s");
         p("NO DRAWS",
                 "SIN SORTEOS");
-        p("There are no stored results for %s in this period yet. Tap ↻ to fetch the newest results, or choose a longer period.",
-                "Todavía no hay resultados guardados de %s en este período. Toca ↻ para traer los más recientes, o elige un período más largo.");
-        p("%s (all draws)",
-                "%s (todos los sorteos)");
-        p("%s · %s · %s draws",
-                "%s · %s · %s sorteos");
+        p("There are no stored results for %s yet. Tap ↻ to fetch the newest results.",
+                "Aún no hay resultados guardados de %s. Toca ↻ para traer los más recientes.");
+        p("%s · %s draws",
+                "%s · %s sorteos");
         p("Results",
                 "Resultados");
         p("A notification when a result you follow is announced",
@@ -439,12 +435,8 @@ final class Es {
                 "Más aciertos que el azar en todo el historial. Como se comparan varios períodos y modelos, confirma que se mantenga en sorteos nuevos.");
         p("No better than random selection: the hits are what chance alone gives.",
                 "No es mejor que elegir al azar: los aciertos son los que da el azar.");
-        p("By model · %s",
-                "Por modelo · %s");
-        p("last %d days",
-                "últimos %d días");
-        p("all history",
-                "todo el historial");
+        p("By model",
+                "Por modelo");
         p("With 5 models and 4 periods, a p below 0.05 somewhere is expected by chance about once in a while; only a result that keeps holding in new draws would point to a real edge.",
                 "Con 5 modelos y 4 períodos, es normal que por azar aparezca de vez en cuando una p menor que 0,05; solo un resultado que se mantenga en sorteos nuevos indicaría una ventaja real.");
         p("RECOMMENDATIONS SHOWN · %s",
@@ -625,8 +617,8 @@ final class Es {
                 "descriptivo");
         p("How often each digit came up in each position. A fair draw gives every cell %s; warm cells came up more, cool ones less.",
                 "Cuántas veces salió cada cifra en cada posición. Un sorteo justo da %s en cada casilla; las cálidas salieron más, las frías menos.");
-        p("Times each number was drawn. The dashed line is a fair draw's expectation (%s each).",
-                "Veces que salió cada número. La línea punteada es lo que espera un sorteo justo (%s cada uno).");
+        p("Times each number was drawn; a fair draw gives each %s.",
+                "Veces que salió cada número; un sorteo justo da %s a cada uno.");
         p("Most frequent",
                 "Los más frecuentes");
         p("Least frequent",
@@ -657,12 +649,6 @@ final class Es {
                 "Chi-cuadrado p = %s.");
         p("EVEN & ODD",
                 "PARES E IMPARES");
-        p("%dE",
-                "%dP");
-        p("Draws by number of even digits (0E = all odd). Bars: observed; dots: a fair draw.",
-                "Sorteos según la cantidad de cifras pares (0P = todas impares). Barras: lo observado; puntos: un sorteo justo.");
-        p("Draws by number of even numbers (0E = all odd). Bars: observed; dots: a fair draw.",
-                "Sorteos según la cantidad de números pares (0P = todos impares). Barras: lo observado; puntos: un sorteo justo.");
         p("%s of all digits were even and %s odd (fair: %s each). Chi-square p = %s.",
                 "El %s de las cifras fueron pares y el %s impares (justo: %s cada uno). Chi cuadrado p = %s.");
         p("%s of all numbers were even and %s odd (fair: %s even). Chi-square p = %s.",
@@ -673,10 +659,6 @@ final class Es {
                 "%s esperados");
         p("SUM OF THE NUMBERS",
                 "SUMA DE LOS NÚMEROS");
-        p("Draws by the total of their digits; dots show a fair draw.",
-                "Sorteos según el total de sus cifras; los puntos muestran un sorteo justo.");
-        p("Draws by the total of their numbers; dots show a fair draw.",
-                "Sorteos según el total de sus números; los puntos muestran un sorteo justo.");
         p("Average %.1f (fair %.1f), spread %.1f (fair %.1f). Half of all fair draws total %d–%d. Chi-square p = %s.",
                 "Promedio %.1f (justo %.1f), dispersión %.1f (justo %.1f). La mitad de los sorteos justos suma %d–%d. Chi-cuadrado p = %s.");
         p("Not enough data",
@@ -687,8 +669,6 @@ final class Es {
                 "Inusual (p < 0,05)");
         p("Within chance",
                 "Dentro del azar");
-        p("Fill in all %d boxes with one digit each.",
-                "Llena las %d casillas con una cifra cada una.");
         p("Jackpot (5 + superbalota)",
                 "Premio mayor (5 + superbalota)");
         p("%d + superbalota",
@@ -745,32 +725,22 @@ final class Es {
                 "%s · %s");
         p("Model ranking & track record",
                 "Ranking de modelos e historial");
-        p("CHECK A NUMBER",
-                "REVISAR UN NÚMERO");
         p("CHECK A COMBINATION",
                 "REVISAR UNA COMBINACIÓN");
-        p("In order",
-                "En orden");
-        p("Any order (combinado)",
-                "En cualquier orden (combinado)");
         p("Five numbers from 1 to 43, then the superbalota (1–16, optional).",
                 "Cinco números del 1 al 43 y luego la superbalota (1–16, opcional).");
         p("Five numbers from 1 to 39.",
                 "Cinco números del 1 al 39.");
         p("Check",
                 "Revisar");
-        p("Net prize if it wins",
-                "Premio neto si gana");
-        p("Gross %s − 20%% withholding",
-                "Bruto %s − 20%% de retención");
-        p("Wins the latest draw (%s)",
-                "Gana en el último sorteo (%s)");
-        p("Doesn't win the latest draw (%s)",
-                "No gana en el último sorteo (%s)");
         p("Latest draw: %s (%s)",
                 "Último sorteo: %s (%s)");
         p("Latest draw: no prize, %d matched (%s)",
                 "Último sorteo: sin premio, %d acertados (%s)");
+        p("WHAT YOU WIN",
+                "LO QUE GANAS");
+        p("Net prize, after withholding where it applies.",
+                "Premio neto, ya descontada la retención cuando aplica.");
         p("NOTIFICATIONS",
                 "NOTIFICACIONES");
         p("%s results",

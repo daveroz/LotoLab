@@ -29,9 +29,9 @@ and aren't published to the `latest` release. (The same keystore as Worldly's wo
 2. Open **LotoLab**. The bundled history loads at once; the newest results are fetched in the background
    (↻ fetches again).
 3. Swipe left or right through the lotteries' logos (or tap the one at the side), choose one of its draws
-   (Mañana / Tarde / Noche, Baloto / Revancha) or all of them, then a tab. Switching lottery always starts on
-   its first draw (Dorado Mañana, Baloto). It opens on **Summary**; the other tabs, with their period
-   (30 days, 90 days, 1 year, all), are for going deeper.
+   (Mañana / Tarde / Noche, Baloto / Revancha), then a tab. Switching lottery always starts on its first draw
+   (Dorado Mañana, Baloto). It opens on **Summary**; the other tabs are for going deeper, always over the
+   whole history.
 4. Allow notifications when asked (Android 13+) to be told as soon as a result is out.
 
 ## Lotteries and draws
@@ -57,9 +57,9 @@ the chance draws from early 2023. Every result is stored by lottery, draw, date 
 
 | Tab | What it shows |
 |---|---|
-| **Summary** | Only the essentials: the latest result (its figures in one line: evens, odds, sum, la pata, quinta; and its audit), the next draw, a warning only when data is missing or old; **today's recommendation** (the top-ranked model's pick for the next draw, its probability, and whether any model beats chance); a **checker** with one box per digit or ball (for El Dorado: 4 cifras, 3 cifras, pata or uña, in order or combinado, and the amount), which gives the probability, the net prize in pesos and whether it wins the latest result; and the notification switch |
+| **Summary** | Only the essentials: the latest result (its figures in one line: evens, odds, sum, la pata, quinta; and its audit), the next draw, a warning only when data is missing or old; **today's recommendation** (the top-ranked model's pick for the next draw, its probability, and whether any model beats chance); for El Dorado, **what you win**: the net prize of each bet (4 cifras, 3 cifras, pata, uña, combinado) for $200, $500, $1.000, $2.000 or $5.000; for Baloto and MiLoto, a **checker** with one box per ball giving the probability and the prize category in the latest draw; and the notification switch |
 | **History** | Every stored result grouped by date with the full weekday name and time, filterable by day of the week, each with its audit (how ordinary the draw is, 0–100); the schedule; how much history is stored, any result that should be out but isn't, the last refresh and which sources answered |
-| **Stats** | Hot and cold numbers (bars against the fair-draw expectation; for chance a heat map of each digit in each position), la pata (two-digit endings), the quinta / superbalota, even and odd, and the sum of the numbers. Every figure with its expected value and a p-value; the depth is folded under ▸ details |
+| **Stats** | Hot and cold numbers (most and least frequent; for chance a table of each digit in each position), la pata (two-digit endings), the quinta / superbalota, even and odd, and the sum of the numbers. Every figure with its expected value and a p-value; the depth is folded under ▸ details |
 | **Picks** | The recommendation engine in depth: today's **model ranking** (out-of-sample score with 95% CI, each model's candidate), the **track record** of the daily recommendation replayed over the whole history (30 days, 90 days, 1 year, all; exact and partial hits against random selection, hit rate with its 95% CI, p-values) and per model, the **log of recommendations shown** with their results, and a model explorer (top pick, reasons, alternatives) |
 | **Odds** | The chance of the top prize, El Dorado's official prize plan (what $1.000 wins in each category, net, how it's worked out, and the average return) or every lotto prize tier, the **betting pack**, and what playing every draw for a year adds up to |
 
@@ -175,7 +175,7 @@ schedules and formats), `Holidays` (Colombian holidays), `Draw`, `History` (CSV 
 (El Dorado's prize plan, IVA, withholding), `Pack` (the betting pack), `Odds`, `Fmt`.
 Language: `T` (device language, number formats) and `Es` (the Spanish texts), plus `Fmt` for dates and times.
 App: `MainActivity` (carousel, selectors, tabs, background work), `LogoCarousel` + `Svg` (the logos), `SummaryTab`, `HistoryTab`,
-`StatsTab`, `PicksTab`, `OddsTab`, `Charts` (bars, distributions, heat map), `Ui` (cards, expandable details, chips, number tiles, digit boxes, tables), `Data` (bundled + stored
+`StatsTab`, `PicksTab`, `OddsTab`, `Charts` (the digit table), `Ui` (cards, expandable details, chips, number tiles, digit boxes, tables), `Data` (bundled + stored
 history, recommendation log), `Fetcher` (sources), `Net`,
 `Notifier` + `DrawAlarmReceiver` + `ResultJobService` + `BootReceiver` (notifications), and from Worldly
 `Theme` and `StageView`.
@@ -184,8 +184,7 @@ history, recommendation log), `Fetcher` (sources), `Net`,
 The same "light in fog" as Worldly and SAB Monitor: a dark stage in amber haze with a chase of lamps along
 the top and film grain over everything (`StageView`), glass cards with hairline edges, the chosen option
 lit in the amber key light, labels in spaced capitals, Carbon+ type. The analysis adds a cool blue for
-"cold" / below expectation and coral for strong deviations; charts glow softly, and the fair-draw
-expectation is always drawn as a dashed line of light.
+"cold" / below expectation and coral for strong deviations.
 
 ## Play responsibly
 Every lottery ticket has a negative expected return. The recommendations and packs are for curiosity and

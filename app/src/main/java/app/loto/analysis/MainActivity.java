@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
     private StageView stage;
     private ScrollView scroll;
     private LogoCarousel carousel;
-    private LinearLayout drawBox, tabBox, periodBox, body;
+    private LinearLayout drawBox, tabBox, body;
     private TextView statusLine;
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private int generation;
@@ -47,15 +47,13 @@ public class MainActivity extends Activity {
 
     // what's chosen (kept between launches)
     String lottery;
-    int gameIdx;       // index into the lottery's draws; == size for "all"
-    int periodIdx;
+    int gameIdx;       // index into the lottery's draws
     int tab;
     int weekday = -1;  // History filter: -1 all, 0 Monday .. 6 Sunday
     int limit = 40;    // History: days shown
     Predictor.Model model = Predictor.Model.FREQUENCY;
     long seed = 1;
     String check = "";
-    Prizes.Bet checkBet = Prizes.Bet.FOUR;
     double checkWager = 1000;
     Pack.Objective packObjective = Pack.Objective.ANY;
     double packTarget = 0.5;
@@ -63,7 +61,6 @@ public class MainActivity extends Activity {
 
     /** A snapshot of the choice, handed to the background work. */
     static final class Sel {
-        Prizes.Bet checkBet;
         double checkWager;
         Pack.Objective packObjective;
         double packTarget, packStake;
@@ -79,7 +76,6 @@ public class MainActivity extends Activity {
         Predictor.Model model;
         long seed;
         String check;
-        String periodLabel;
     }
 
     static String tabName(int i) {
@@ -109,8 +105,7 @@ public class MainActivity extends Activity {
         SharedPreferences sp = Data.sp(this);
         lottery = sp.getString("lottery", "Dorado");
         if (Game.of(lottery).isEmpty()) lottery = "Dorado";
-        gameIdx = Math.max(0, Math.min(Game.of(lottery).size(), sp.getInt("game", 0)));
-        periodIdx = Math.max(0, Math.min(PERIODS.length - 1, sp.getInt("period", 3)));
+        gameIdx = Math.max(0, Math.min(Game.of(lottery).size() - 1, sp.getInt("game", 0)));
         tab = SUMMARY; // Summary first, every time the app opens
         try {
             model = Predictor.Model.valueOf(sp.getString("model", "FREQUENCY"));
@@ -151,8 +146,7 @@ public class MainActivity extends Activity {
         carousel = new LogoCarousel(this, Game.LOTTERIES, subs, colors,
                 java.util.Arrays.asList(Game.LOTTERIES).indexOf(lottery), i -> {
                     lottery = Game.LOTTERIES[i];
-                    gameIdx = 0; // always the lottery's first draw (Mañana, Baloto...), never "all"
-                    checkBet = Prizes.Bet.FOUR;
+                    gameIdx = 0; // always the lottery's first draw (Mañana, Baloto...)
                     weekday = -1;
                     limit = 40;
                     check = "";
@@ -165,8 +159,6 @@ public class MainActivity extends Activity {
         col.addView(drawBox, ui.matchWrap(2));
         tabBox = ui.vbox();
         col.addView(tabBox, ui.matchWrap(6));
-        periodBox = ui.vbox();
-        col.addView(periodBox, ui.matchWrap(0));
         body = ui.vbox();
         col.addView(body, ui.matchWrap(0));
         setContentView(room);
@@ -242,7 +234,7 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
         stage.setRunning(false);
-        Data.sp(this).edit().putString("lottery", lottery).putInt("game", gameIdx).putInt("period", periodIdx)
+        Data.sp(this).edit().putString("lottery", lottery).putInt("game", gameIdx)
                 .putString("model", model.name()).apply();
     }
 
@@ -300,22 +292,9 @@ public class MainActivity extends Activity {
 
     List<Game> chosenGames() {
         List<Game> all = Game.of(lottery);
-        if (gameIdx >= all.size()) return new ArrayList<>(all);
         List<Game> one = new ArrayList<>();
-        one.add(all.get(gameIdx));
+        one.add(all.get(Math.max(0, Math.min(all.size() - 1, gameIdx))));
         return one;
-    }
-
-    /** "Mañana · morning" in English; in Spanish the draw's own name says it already. */
-    static String drawLabel(Game g) {
-        if (T.es || !g.digits()) return g.shortName();
-        String w;
-        switch (g.slot) {
-            case MORNING: w = "morning"; break;
-            case AFTERNOON: w = "afternoon"; break;
-            default: w = "night";
-        }
-        return g.shortName() + " · " + w;
     }
 
     void buildSelectors() {
@@ -323,9 +302,9 @@ public class MainActivity extends Activity {
         List<Game> games = Game.of(lottery);
         if (games.size() > 1) {
             LinearLayout gr = ui.chipRow(drawBox, 4, true);
-            for (int i = 0; i <= games.size(); i++) {
+            for (int i = 0; i < games.size(); i++) {
                 final int idx = i;
-                String label = i == games.size() ? T.t("All draws") : drawLabel(games.get(i));
+                String label = games.get(i).shortName();
                 gr.addView(ui.chip(label, idx == gameIdx, v -> {
                     gameIdx = idx;
                     buildSelectors();
@@ -349,18 +328,6 @@ public class MainActivity extends Activity {
             tr.addView(t, ui.wrap(i == 0 ? 0 : 8));
         }
         ui.reveal(tr, tab);
-        periodBox.removeAllViews();
-        if (tab != SUMMARY && tab != ODDS) {
-            LinearLayout pr = ui.chipRow(periodBox, 8, false);
-            for (int i = 0; i < PERIODS.length; i++) {
-                final int idx = i;
-                pr.addView(ui.chip(periodName(i), i == periodIdx, v -> {
-                    periodIdx = idx;
-                    buildSelectors();
-                    render();
-                }), ui.wrap(i == 0 ? 0 : 8));
-            }
-        }
     }
 
     Sel snapshot() {
@@ -368,15 +335,12 @@ public class MainActivity extends Activity {
         s.h = history;
         s.lottery = lottery;
         s.games = chosenGames();
-        boolean periodApplies = tab != SUMMARY && tab != ODDS;
-        s.days = periodApplies ? PERIODS[periodIdx] : 0;
-        s.periodLabel = periodApplies ? periodName(periodIdx) : T.t("All");
+        s.days = 0; // every tab looks at the whole history
         s.weekday = weekday;
         s.limit = limit;
         s.model = model;
         s.seed = seed;
         s.check = check;
-        s.checkBet = checkBet;
         s.checkWager = checkWager;
         s.packObjective = packObjective;
         s.packTarget = packTarget;
@@ -465,20 +429,17 @@ public class MainActivity extends Activity {
     /** "Not enough draws" card. */
     static void empty(MainActivity a, LinearLayout body, Sel s) {
         LinearLayout c = a.ui.card(body, T.t("NO DRAWS"));
-        c.addView(a.ui.body(T.f("There are no stored results for %s in this period yet. Tap ↻ to fetch the newest results, "
-                + "or choose a longer period.", label(s))));
+        c.addView(a.ui.body(T.f("There are no stored results for %s yet. Tap ↻ to fetch the newest results.", label(s))));
     }
 
     static String label(Sel s) {
-        List<Game> all = Game.of(s.lottery);
-        if (s.games.size() == all.size() && all.size() > 1) return T.f("%s (all draws)", s.lottery);
         return s.games.get(0).name;
     }
 
-    /** "Dorado Mañana · 1 year · 288 draws (19 Nov 2025 – 17 Nov 2026)". */
+    /** "Dorado Mañana · 1,155 draws (10 Jan 2023 – 18 Nov 2026)". */
     static String scope(Sel s) {
         Sample sm = s.sample;
-        String base = T.f("%s · %s · %s draws", label(s), s.periodLabel, Fmt.num(sm.size()));
+        String base = T.f("%s · %s draws", label(s), Fmt.num(sm.size()));
         return sm.size() == 0 ? base : base + " (" + Fmt.shortDate(sm.from()) + " – " + Fmt.shortDate(sm.to()) + ")";
     }
 }

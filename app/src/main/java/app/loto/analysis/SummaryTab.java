@@ -37,16 +37,13 @@ final class SummaryTab {
         long generatedAt;
     }
 
-    /** The checker's answer. */
+    /** The lotto checker's answer. */
     static final class Check {
         String error;
-        Prizes.Bet bet;
-        String number;
         double probability;
-        Prizes.Payout payout;      // chance only
         Draw latest;               // the chosen draw's latest result
         boolean won;
-        String tier;               // lotto: the prize category reached in the latest draw, or null
+        String tier;               // the prize category reached in the latest draw, or null
         int matched;
     }
 
@@ -101,7 +98,7 @@ final class SummaryTab {
             }
             o.latest.add(l);
         }
-        if (s.check != null && !s.check.trim().isEmpty()) o.check = check(s, o);
+        if (!s.games.get(0).digits() && s.check != null && !s.check.trim().isEmpty()) o.check = check(s, o);
         return o;
     }
 
@@ -137,33 +134,17 @@ final class SummaryTab {
         Check c = new Check();
         Game g = s.games.get(0);
         c.latest = o.latest.get(0).draw;
-        if (g.digits()) {
-            c.bet = s.checkBet;
-            String digits = s.check.replaceAll("[^0-9]", "");
-            if (digits.length() != c.bet.digits) {
-                c.error = T.f("Fill in all %d boxes with one digit each.", c.bet.digits);
-                return c;
-            }
-            int[] d = new int[c.bet.digits];
-            for (int i = 0; i < d.length; i++) d[i] = digits.charAt(i) - '0';
-            c.number = digits;
-            c.probability = Prizes.probability(c.bet, d);
-            c.payout = Prizes.payout(c.bet, s.checkWager, ZonedDateTime.now(MainActivity.BOGOTA).getYear());
-            c.won = c.latest != null && Prizes.wins(c.bet, d, c.latest);
-        } else {
-            Odds.Check oc = Odds.read(g, s.check);
-            if (oc.error != null) {
-                c.error = oc.error;
-                return c;
-            }
-            c.probability = 1 / (Combi.choose(g.max, g.count) * (g.extraMax > 0 && oc.extra > 0 ? g.extraMax : 1));
-            Draw probe = new Draw(g, null, "", oc.nums, oc.extra);
-            c.number = probe.numbersText() + (oc.extra > 0 ? " + " + probe.extraText() : "");
-            if (c.latest != null) {
-                c.matched = probe.shared(c.latest);
-                c.tier = tierName(g, c.matched, oc.extra > 0 && c.latest.extra == oc.extra);
-                c.won = c.tier != null;
-            }
+        Odds.Check oc = Odds.read(g, s.check);
+        if (oc.error != null) {
+            c.error = oc.error;
+            return c;
+        }
+        c.probability = 1 / (Combi.choose(g.max, g.count) * (g.extraMax > 0 && oc.extra > 0 ? g.extraMax : 1));
+        Draw probe = new Draw(g, null, "", oc.nums, oc.extra);
+        if (c.latest != null) {
+            c.matched = probe.shared(c.latest);
+            c.tier = tierName(g, c.matched, oc.extra > 0 && c.latest.extra == oc.extra);
+            c.won = c.tier != null;
         }
         return c;
     }
@@ -315,51 +296,13 @@ final class SummaryTab {
     private static void checker(MainActivity a, LinearLayout body, MainActivity.Sel s, Out o) {
         Ui ui = a.ui;
         Game g = s.games.get(0);
-        LinearLayout ck = ui.card(body, g.digits() ? T.t("CHECK A NUMBER") : T.t("CHECK A COMBINATION"));
-        final Ui.Slots slots;
         if (g.digits()) {
-            LinearLayout formats = ui.chipRow(ck, 0);
-            Prizes.Bet[] main = {Prizes.Bet.FOUR, Prizes.Bet.THREE, Prizes.Bet.TWO, Prizes.Bet.ONE};
-            Prizes.Bet cur = s.checkBet;
-            int curDigits = cur.digits;
-            for (Prizes.Bet b : main) {
-                formats.addView(ui.chip(b.shortLabel(), b.digits == curDigits, v -> {
-                    a.checkBet = b;
-                    a.check = "";
-                    a.rerenderInPlace();
-                }), ui.wrap(formats.getChildCount() == 0 ? 0 : 6));
-            }
-            if (curDigits >= 3) {
-                Prizes.Bet anyVariant = curDigits == 4 ? Prizes.Bet.FOUR_ANY : Prizes.Bet.THREE_ANY;
-                Prizes.Bet straight = curDigits == 4 ? Prizes.Bet.FOUR : Prizes.Bet.THREE;
-                LinearLayout order = ui.chipRow(ck, 6);
-                order.addView(ui.chip(T.t("In order"), !cur.anyOrder, v -> {
-                    a.checkBet = straight;
-                    a.rerenderInPlace();
-                }));
-                order.addView(ui.chip(T.t("Any order (combinado)"), cur.anyOrder, v -> {
-                    a.checkBet = anyVariant;
-                    a.rerenderInPlace();
-                }), ui.wrap(6));
-            }
-            TextView rule = ui.note(cur.rule());
-            rule.setPadding(0, ui.dp(6), 0, 0);
-            ck.addView(rule);
-            String digits = s.check == null ? "" : s.check.replaceAll("[^0-9]", "");
-            String[] init = new String[curDigits];
-            for (int i = 0; i < curDigits; i++) init[i] = i < digits.length() ? String.valueOf(digits.charAt(i)) : "";
-            slots = ui.slots(curDigits, 1, -1, init);
-            ck.addView(slots.row, ui.matchWrap(10));
-            LinearLayout wager = ui.chipRow(ck, 10);
-            double[] amounts = {500, 1000, 2000, 5000};
-            for (double amt : amounts) {
-                wager.addView(ui.chip(Prizes.cop(amt), Math.abs(s.checkWager - amt) < 0.5, v -> {
-                    a.checkWager = amt;
-                    a.check = String.join("", slots.values());
-                    a.rerenderInPlace();
-                }), ui.wrap(wager.getChildCount() == 0 ? 0 : 6));
-            }
-        } else {
+            prizes(a, body, s);
+            return;
+        }
+        LinearLayout ck = ui.card(body, T.t("CHECK A COMBINATION"));
+        final Ui.Slots slots;
+        {
             ck.addView(ui.note(g.extraMax > 0 ? T.t("Five numbers from 1 to 43, then the superbalota (1–16, optional).")
                     : T.t("Five numbers from 1 to 39.")));
             String[] init = new String[g.count + (g.extraMax > 0 ? 1 : 0)];
@@ -375,14 +318,10 @@ final class SummaryTab {
         }
         ck.addView(ui.primaryButton(T.t("Check"), v -> {
             String[] vals = slots.values();
-            if (g.digits()) {
-                a.check = String.join("", vals);
-            } else {
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < g.count; i++) sb.append(i == 0 ? "" : " ").append(vals[i]);
-                if (g.extraMax > 0 && vals.length > g.count && !vals[g.count].isEmpty()) sb.append(" + ").append(vals[g.count]);
-                a.check = sb.toString();
-            }
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < g.count; i++) sb.append(i == 0 ? "" : " ").append(vals[i]);
+            if (g.extraMax > 0 && vals.length > g.count && !vals[g.count].isEmpty()) sb.append(" + ").append(vals[g.count]);
+            a.check = sb.toString();
             a.rerenderInPlace();
         }), ui.matchWrap(12));
 
@@ -395,29 +334,47 @@ final class SummaryTab {
             // point at the boxes that are wrong
             String[] vals = slots.values();
             for (int i = 0; i < vals.length; i++) {
-                boolean bad;
-                if (g.digits()) bad = vals[i].length() != 1;
-                else if (i == g.count) bad = !vals[i].isEmpty() && (parse(vals[i]) < 1 || parse(vals[i]) > g.extraMax);
-                else bad = parse(vals[i]) < 1 || parse(vals[i]) > g.max || duplicate(vals, i, g.count);
+                boolean bad = i == g.count ? !vals[i].isEmpty() && (parse(vals[i]) < 1 || parse(vals[i]) > g.extraMax)
+                        : parse(vals[i]) < 1 || parse(vals[i]) > g.max || duplicate(vals, i, g.count);
                 if (bad) ui.markSlot(slots.boxes[i], true);
             }
             return;
         }
         ck.addView(ui.divider());
-        ck.addView(ui.kv(g.digits() ? T.f("%s · %s", c.bet.label(), c.number) : T.t("Probability"), Combi.oneIn(c.probability),
-                Theme.AMBER_LIGHT, null));
-        if (c.payout != null) {
-            Prizes.Payout p = c.payout;
-            ck.addView(ui.kv(T.t("Net prize if it wins"), Prizes.cop(p.net), Theme.GREEN,
-                    p.taxed ? T.f("Gross %s − 20%% withholding", Prizes.cop(p.gross)) : null));
-        }
+        ck.addView(ui.kv(T.t("Probability"), Combi.oneIn(c.probability), Theme.AMBER_LIGHT, null));
         if (c.latest != null) {
-            String res = c.latest.numbersText() + (!g.digits() && c.latest.extra > 0 ? " + " + c.latest.extraText() : "");
-            String line = g.digits()
-                    ? (c.won ? T.f("Wins the latest draw (%s)", res) : T.f("Doesn't win the latest draw (%s)", res))
-                    : (c.won ? T.f("Latest draw: %s (%s)", c.tier, res) : T.f("Latest draw: no prize, %d matched (%s)", c.matched, res));
+            String res = c.latest.numbersText() + (c.latest.extra > 0 ? " + " + c.latest.extraText() : "");
+            String line = c.won ? T.f("Latest draw: %s (%s)", c.tier, res) : T.f("Latest draw: no prize, %d matched (%s)", c.matched, res);
             ck.addView(ui.status(c.won ? Theme.GREEN : Theme.DIM, line, null));
         }
+    }
+
+    /** El Dorado: what each bet wins, net, for the amount chosen. */
+    private static void prizes(MainActivity a, LinearLayout body, MainActivity.Sel s) {
+        Ui ui = a.ui;
+        LinearLayout c = ui.card(body, T.t("WHAT YOU WIN"));
+        // the five amounts share the row equally, so all fit on a narrow phone
+        LinearLayout wager = ui.hbox();
+        double[] amounts = {200, 500, 1000, 2000, 5000};
+        for (double amt : amounts) {
+            TextView chip = ui.chip(Prizes.cop(amt), Math.abs(s.checkWager - amt) < 0.5, v -> {
+                a.checkWager = amt;
+                a.rerenderInPlace();
+            });
+            chip.setPadding(ui.dp(2), ui.dp(11), ui.dp(2), ui.dp(11));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            if (wager.getChildCount() > 0) lp.leftMargin = ui.dp(5);
+            wager.addView(chip, lp);
+        }
+        c.addView(wager, ui.matchWrap(0));
+        int year = ZonedDateTime.now(MainActivity.BOGOTA).getYear();
+        Prizes.Bet[] bets = {Prizes.Bet.FOUR, Prizes.Bet.THREE, Prizes.Bet.TWO, Prizes.Bet.ONE, Prizes.Bet.FOUR_ANY, Prizes.Bet.THREE_ANY};
+        LinearLayout list = ui.vbox();
+        for (Prizes.Bet b : bets) {
+            list.addView(ui.kv(b.label(), Prizes.cop(Prizes.payout(b, s.checkWager, year).net), b == Prizes.Bet.FOUR ? Theme.GREEN : Theme.TEXT, null));
+        }
+        c.addView(list, ui.matchWrap(8));
+        c.addView(ui.note(T.t("Net prize, after withholding where it applies.")), ui.matchWrap(2));
     }
 
     private static int parse(String v) {
