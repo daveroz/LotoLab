@@ -1,0 +1,53 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'app.loto.analysis'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'app.loto.analysis'
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName '1.0'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // Every build must be signed with the same key, or Android refuses to install it over the
+    // last one ("package conflicts with an existing package"). GitHub Actions passes that key in
+    // SIGNING_KEYSTORE_FILE (from the SIGNING_KEYSTORE_BASE64 repository secret); without it,
+    // builds fall back to the build machine's own debug key.
+    def keystore = System.getenv('SIGNING_KEYSTORE_FILE')
+    signingConfigs {
+        if (keystore) {
+            fixed {
+                storeFile file(keystore)
+                storePassword System.getenv('SIGNING_KEYSTORE_PASSWORD') ?: 'android'
+                keyAlias System.getenv('SIGNING_KEY_ALIAS') ?: 'androiddebugkey'
+                keyPassword System.getenv('SIGNING_KEY_PASSWORD') ?: 'android'
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig keystore ? signingConfigs.fixed : signingConfigs.debug
+        }
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+}
+
+dependencies {
+    // The statistics engine is plain Java, so its tests run on the build machine's JVM.
+    testImplementation 'junit:junit:4.13.2'
+}

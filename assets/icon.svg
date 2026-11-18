@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108"><defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1c2230"/><stop offset="1" stop-color="#06080d"/></linearGradient>
+  <radialGradient id="wash" cx="84" cy="22" r="70" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#eb9438" stop-opacity=".33"/><stop offset="1" stop-color="#eb9438" stop-opacity="0"/></radialGradient>
+  <clipPath id="sq"><rect width="108" height="108" rx="24"/></clipPath>
+</defs><g clip-path="url(#sq)">
+<rect width="108" height="108" fill="url(#bg)"/><rect width="108" height="108" fill="url(#wash)"/>
+<g fill="#e08a33"><rect x="31" y="61" width="6" height="9" opacity=".7"/><rect x="39" y="53" width="6" height="17" opacity=".8"/>
+<rect x="47" y="45" width="6" height="25" fill="#eb9438" opacity=".9"/><rect x="55" y="47" width="6" height="23" fill="#eb9438" opacity=".9"/>
+<rect x="63" y="55" width="6" height="15" opacity=".8"/><rect x="71" y="62" width="6" height="8" opacity=".7"/></g>
+<path d="M28,69 C38,68 42,44 54,43 C66,44 70,68 80,69" fill="none" stroke="#fdf2e7" stroke-width="2" stroke-linecap="round"/>
+<rect x="28" y="72" width="52" height="1.2" fill="#aadcff" opacity=".35"/>
+<circle cx="54" cy="33" r="6" fill="#f0ae6a"/><circle cx="52.2" cy="31.2" r="1.8" fill="#fdf2e7"/>
+</g></svg>
