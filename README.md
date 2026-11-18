@@ -8,7 +8,7 @@ accounts, no API keys, no ads. A native Android app in plain Java, like Worldly.
 ## Get the APK
 The newest build is always at
 **https://github.com/daveroz/Loto-App/releases/download/latest/LotoLab.apk**
-(GitHub Actions builds it on every push to `main`). Each run's **Actions** page also has
+(GitHub Actions builds it on every push; builds of the default branch are published there). Each run's **Actions** page also has
 `LotoLab.apk` to download directly, not inside a zip.
 
 (Or open the folder in Android Studio and use Build > Build APK.)
@@ -109,7 +109,7 @@ sign of irregularities: all differences are within what fair draws produce.
 | Baloto, Revancha, MiLoto | baloto.com, the official site (paginated archive) |
 | Dorado Mañana / Tarde / Noche, Paisita Día / Noche / 3 | astroluna.co (last 100 draws with the quinta, and per-date pages back to 2023) |
 | Chance results if astroluna doesn't answer | loteriasdehoy.co |
-| The whole history in one go | this repository, `app/src/main/assets/history/*.csv` via raw.githubusercontent.com |
+| The whole history in one go | this repository's default branch, `app/src/main/assets/history/*.csv` via raw.githubusercontent.com |
 
 ## How it updates
 - **The repository**: `.github/workflows/history.yml` runs `scripts/update_history.py` twice a day
