@@ -92,6 +92,13 @@ public class MainActivity extends Activity {
         scroll = new ScrollView(this);
         scroll.setBackgroundColor(0);
         scroll.setFillViewport(true);
+        // glass picks up the stage's light behind it, so it's redrawn as the page moves under the light
+        final int[] lastY = {0};
+        scroll.setOnScrollChangeListener((v, x, y, ox, oy) -> {
+            if (Math.abs(y - lastY[0]) < ui.dp(6)) return;
+            lastY[0] = y;
+            Glass.refresh();
+        });
         room.addView(scroll, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         room.addView(new StageView.Film(this, 0), new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         LinearLayout col = ui.vbox();
@@ -107,11 +114,7 @@ public class MainActivity extends Activity {
         statusLine.setTextSize(11);
         titles.addView(statusLine);
         head.addView(titles, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        TextView refresh = ui.secondaryButton("↻", v -> fetch(true));
-        refresh.setTextSize(16);
-        refresh.setPadding(ui.dp(14), ui.dp(8), ui.dp(14), ui.dp(8));
-        refresh.setContentDescription(T.t("Fetch the newest results"));
-        head.addView(refresh);
+        head.addView(ui.iconButton(Icon.Kind.REFRESH, T.t("Fetch the newest results"), 44, v -> fetch(true)));
         col.addView(head);
 
         // ---- the lotteries: swipe through their emblems ----
@@ -269,36 +272,26 @@ public class MainActivity extends Activity {
     }
 
     void buildSelectors() {
+        // the lottery's draws, then the sections: both segmented controls, the sections the larger
         drawBox.removeAllViews();
         List<Game> games = Game.of(lottery);
         if (games.size() > 1) {
-            LinearLayout gr = ui.chipRow(drawBox, 4, true);
-            for (int i = 0; i < games.size(); i++) {
-                final int idx = i;
-                String label = games.get(i).shortName();
-                gr.addView(ui.chip(label, idx == gameIdx, v -> {
-                    gameIdx = idx;
-                    buildSelectors();
-                    render();
-                }), ui.wrap(i == 0 ? 0 : 8));
-            }
-            ui.reveal(gr, gameIdx);
-        }
-        tabBox.removeAllViews();
-        LinearLayout tr = ui.chipRow(tabBox, 10, false);
-        for (int i = 0; i <= STATS; i++) {
-            final int idx = i;
-            TextView t = ui.chip(tabName(i).toUpperCase(T.L), i == tab, v -> {
-                tab = idx;
+            String[] names = new String[games.size()];
+            for (int i = 0; i < names.length; i++) names[i] = games.get(i).shortName();
+            ui.segmented(drawBox, names, gameIdx, idx -> {
+                gameIdx = idx;
                 buildSelectors();
                 render();
-            });
-            t.setLetterSpacing(0.14f);
-            t.setTextSize(11);
-            t.setTypeface(Theme.uiBold(this));
-            tr.addView(t, ui.wrap(i == 0 ? 0 : 8));
+            }, false, 4);
         }
-        ui.reveal(tr, tab);
+        tabBox.removeAllViews();
+        String[] tabs = new String[STATS + 1];
+        for (int i = 0; i < tabs.length; i++) tabs[i] = tabName(i);
+        ui.segmented(tabBox, tabs, tab, idx -> {
+            tab = idx;
+            buildSelectors();
+            render();
+        }, true, 10);
     }
 
     Sel snapshot() {
@@ -378,7 +371,7 @@ public class MainActivity extends Activity {
 
     private View loading(String msg) {
         LinearLayout c = ui.vbox();
-        c.setBackground(Theme.glass(this, 16));
+        c.setBackground(Theme.glass(this, Ui.CARD_RADIUS));
         c.setPadding(ui.dp(14), ui.dp(18), ui.dp(14), ui.dp(18));
         TextView t = ui.body(msg);
         t.setGravity(Gravity.CENTER);

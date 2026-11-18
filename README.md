@@ -173,16 +173,29 @@ record, the model explorer and the lotto prize tiers are still in the engine, wi
 shows them since 1.5.
 Language: `T` (device language, number formats) and `Es` (the Spanish texts), plus `Fmt` for dates and times.
 App: `MainActivity` (carousel, selectors, tabs, background work), `LogoCarousel` + `Svg` (the logos), `SummaryTab`, `HistoryTab`,
-`StatsTab`, `Charts` (the digit table), `Ui` (cards, expandable details, chips, number tiles, tables), `Data` (bundled + stored
+`StatsTab`, `Charts` (the digit table), `Ui` (cards, expandable details, segmented controls, chips, buttons, number tiles, tables),
+`Glass` (glass, the amber key, lit, lamps), `Controls` (the switch, equal-cell chips), `Icon` (solid icons), `Data` (bundled + stored
 history, recommendation log), `Fetcher` (sources), `Net`,
 `Notifier` + `DrawAlarmReceiver` + `ResultJobService` + `BootReceiver` (notifications), and from Worldly
 `Theme` and `StageView`.
 
 ## Visual language
-The same "light in fog" as Worldly and SAB Monitor: a dark stage in amber haze with a chase of lamps along
-the top and film grain over everything (`StageView`), glass cards with hairline edges, the chosen option
-lit in the amber key light, labels in spaced capitals, Carbon+ type. The analysis adds a cool blue for
-"cold" / below expectation and coral for strong deviations.
+Fuji-App's crystal style on Worldly's stage. Behind everything, the same "light in fog" as Worldly and SAB
+Monitor: a dark stage in amber haze, a chase of lamps blooming along the top, fog banks drifting through and
+film grain, lighter and darker specks, over the whole screen (`StageView`). On it, Fuji-App's glass
+(`Glass`): cards of charcoal glass, kept quiet and a little solid, a touch lighter at the top left and deeper at
+the bottom, with a faint sheen, grain and a hairline rim brightest at the corners that catch the light; the
+glass picks up the stage's key light behind it (cards near the top right glow a little warmer, and their rim
+warms where the light falls) and is redrawn as the page scrolls under it. Section titles sit above their cards
+in spaced amber capitals.
+
+Controls are Fuji-App's: the sections (Summary, History, Stats) and the lottery's draws are segmented controls,
+a recessed well with the chosen one a lighter lens of glass; sets of choices (the day of the week, the amount
+bet) are equal cells across the card, the chosen one lit (an amber wash with the light bleeding in from a
+glowing edge, inside its bounds, so it's never bigger than the others); notifications are a glass switch; the
+key action of a card is solid amber; small actions are icons in bubbles of glass; status lights are lamps
+blooming in their colour. Icons are solid, drawn in code (`Icon`). Carbon+ type throughout. The analysis adds
+a cool blue for "cold" / below expectation and coral for strong deviations.
 
 ## Play responsibly
 Every lottery ticket has a negative expected return. The recommendations are for curiosity and

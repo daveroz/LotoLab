@@ -1,16 +1,6 @@
 package app.loto.analysis;
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BlurMaskFilter;
-import android.graphics.Canvas;
-import android.graphics.ColorFilter;
-import android.graphics.Paint;
-import android.graphics.PixelFormat;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
-import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -18,36 +8,28 @@ import android.graphics.drawable.StateListDrawable;
 import android.widget.TextView;
 
 /**
- * The Deco "light in fog" visual language, shared with the Deco launcher and SAB Monitor: a night stage in haze,
- * glass panels with hairline edges, and one amber key light. Something that's on is "lit" (a touch of the key on
- * the glass with a glowing key edge) rather than a solid block, and small labels are spaced bold capitals.
- * Type is Carbon+, as in Worldly. The same palette as the Worldly widgets and SAB Monitor, so the apps feel like one
- * family; the analysis screens add a cool tone for "cold" numbers and a coral one for strong deviations.
+ * The look: Fuji-App's crystal glass and controls on Worldly's stage. A night stage in haze, lit by one amber key
+ * light, with film grain over everything ({@link StageView}); cards of charcoal glass with a sheen, grain and a
+ * hairline rim brightest at the corners, picking up the stage's light behind them ({@link Glass}); a segmented
+ * control for sections, equal cells for choices, a switch for on/off, solid amber for the key action, solid icons
+ * ({@link Icon}), and small labels in spaced bold capitals. Type is Carbon+, as in Worldly, SAB Monitor and Fuji-App.
+ * The palette is Fuji-App's near-neutral charcoal; the analysis adds a cool tone for "cold" numbers and coral for
+ * strong deviations.
  */
 final class Theme {
     private Theme() {}
 
-    // surfaces (darkest to lightest)
-    static final int BG = 0xFF05070B;        // the night behind everything
-    static final int HEADER = 0xFF070A10;
-    static final int PANEL = 0xFF0B1220;
-    static final int SURFACE = 0xFF0D1422;
-    static final int SURFACE_HI = 0xFF131C2C;
-    static final int DEEP = 0xFF070A10;
-    /** Glass: the night at 72%, over the light. */
-    static final int GLASS = 0xB80A0F16;
-    /** A well inside glass (inputs, pickers): darker, still see-through. */
-    static final int WELL = 0x8C05070B;
-    // hairlines: a cool white at low strength, so they read as an edge of light, not a line of paint
-    static final int BORDER_SOFT = 0x14AADCFF;
-    static final int BORDER = 0x1FAADCFF;
-    static final int BORDER_STRONG = 0x38AADCFF;
-    static final int NIGHT = 0xFF33405A;     // the night strip on the clocks
+    // surfaces
+    static final int BG = 0xFF060708;        // the night behind everything
+    // hairlines: white at low strength, an edge of light rather than a line of paint
+    static final int BORDER_SOFT = 0x14FFFFFF;
+    static final int BORDER = 0x1FFFFFFF;
+    static final int BORDER_STRONG = 0x33FFFFFF;
     // text
-    static final int TEXT = 0xFFEEF4F8;
-    static final int TEXT_SOFT = 0xFFC9D4DD;
-    static final int MUTED = 0xFF8FA0B3;
-    static final int DIM = 0xFF6F8091;
+    static final int TEXT = 0xFFF2F3F5;
+    static final int TEXT_SOFT = 0xFFCDD0D6;
+    static final int MUTED = 0xFF9EA2AA;
+    static final int DIM = 0xFF6E727B;
     // the key light
     static final int AMBER = 0xFFEB9438;
     static final int AMBER_MID = 0xFFE08A33;
@@ -59,7 +41,6 @@ final class Theme {
     static final int KEY_GLASS = 0x24EB9438;
     static final int KEY_GLASS_HI = 0x3DEB9438;
     static final int KEY_EDGE = 0x99EB9438;
-    static final int KEY_HALO = 0x1FEB9438;
     static final int GREEN = 0xFF34D399;
     /** Cold numbers and "fewer than expected": a cool blue, the opposite of the warm key. */
     static final int COOL = 0xFF7FB8E6;
@@ -101,7 +82,7 @@ final class Theme {
 
     static float dp(Context c, float v) { return v * c.getResources().getDisplayMetrics().density; }
 
-    /** Rounded box with an optional 1dp border (stroke = 0 for none). */
+    /** A plain rounded box with an optional 1 dp border (stroke = 0 for none), for small solid shapes. */
     static GradientDrawable box(Context c, int fill, int stroke, float radiusDp) {
         GradientDrawable g = new GradientDrawable();
         g.setColor(fill);
@@ -110,86 +91,36 @@ final class Theme {
         return g;
     }
 
-    /** A glass panel: the night at 72% with a hairline edge. */
-    static GradientDrawable glass(Context c, float radiusDp) {
-        return box(c, GLASS, BORDER, radiusDp);
+    /** A card of crystal glass ({@link Glass.Pane}). */
+    static Drawable glass(Context c, float radiusDp) {
+        return new Glass.Pane(c, dp(c, radiusDp), Glass.Tone.PANE, false);
     }
 
-    /** A well inside glass: inputs and pickers. The edge turns to the key when it's focused or pressed. */
-    static GradientDrawable well(Context c, float radiusDp, boolean active) {
-        return box(c, active ? KEY_GLASS : WELL, active ? KEY_EDGE : BORDER, radiusDp);
+    /** Glass of a given tone; {@code radiusDp} < 0 takes a control's corner. */
+    static Drawable glass(Context c, float radiusDp, Glass.Tone tone) {
+        return new Glass.Pane(c, radiusDp < 0 ? -1 : dp(c, radiusDp), tone, false);
     }
 
-    /**
-     * Something that's on, lit like a lamp: a touch of the key light on the glass, the light bleeding into the glass
-     * along its edge, a bright key edge, and outside it a wide, soft bloom with a tight halo hugging the edge. The
-     * glow needs room, so the panel is drawn {@link Lit#INSET_DP} in from the view's edges.
-     */
+    /** Glass that takes the key light when it's pressed. */
+    static Drawable glassPressable(Context c, float radiusDp, Glass.Tone tone) {
+        float r = radiusDp < 0 ? -1 : dp(c, radiusDp);
+        return pressable(new Glass.Pane(c, r, tone, false), new Glass.Pane(c, r, tone, true));
+    }
+
+    /** The key action: solid amber. */
+    static Drawable key(Context c, float radiusDp) {
+        float r = radiusDp < 0 ? -1 : dp(c, radiusDp);
+        return pressable(new Glass.Key(c, r, false), new Glass.Key(c, r, true));
+    }
+
+    /** A recess inside glass, for inputs; it takes the key light when focused. */
+    static Drawable well(Context c, float radiusDp, boolean active) {
+        return active ? new Glass.Lit(c, radiusDp, false) : glass(c, radiusDp, Glass.Tone.WELL);
+    }
+
+    /** Something that's on: an amber wash with the light bleeding in from a glowing edge, within its bounds. */
     static Drawable lit(Context c, float radiusDp, boolean pressed) {
-        return new Lit(dp(c, radiusDp), dp(c, Lit.INSET_DP), dp(c, 1), pressed ? KEY_GLASS_HI : KEY_GLASS);
-    }
-
-    /** The lit look, drawn once into a picture whenever its size changes (a blur can't be drawn live everywhere). */
-    static final class Lit extends Drawable {
-        static final float INSET_DP = 3;
-        private final float radius, inset, line;
-        private final int fill;
-        private Bitmap picture;
-
-        Lit(float radius, float inset, float line, int fill) {
-            this.radius = radius;
-            this.inset = inset;
-            this.line = line;
-            this.fill = fill;
-        }
-
-        @Override
-        protected void onBoundsChange(Rect b) {
-            picture = null;
-        }
-
-        @Override
-        public void draw(Canvas canvas) {
-            Rect b = getBounds();
-            if (b.width() <= 0 || b.height() <= 0) return;
-            if (picture == null) {
-                picture = Bitmap.createBitmap(b.width(), b.height(), Bitmap.Config.ARGB_8888);
-                Canvas c = new Canvas(picture);
-                RectF r = new RectF(inset, inset, b.width() - inset, b.height() - inset);
-                Paint glow = new Paint(Paint.ANTI_ALIAS_FLAG);
-                glow.setStyle(Paint.Style.STROKE);
-                glow.setStrokeWidth(inset);
-                glow.setColor(0x8CEB9438);
-                glow.setMaskFilter(new BlurMaskFilter(inset * 0.9f, BlurMaskFilter.Blur.NORMAL));
-                c.drawRoundRect(r, radius, radius, glow);
-                glow.setStrokeWidth(line * 1.5f);
-                glow.setColor(0x99F0AE6A);
-                glow.setMaskFilter(new BlurMaskFilter(line * 1.5f, BlurMaskFilter.Blur.NORMAL));
-                c.drawRoundRect(r, radius, radius, glow);
-                Paint p = new Paint(Paint.ANTI_ALIAS_FLAG);
-                p.setColor(BG);
-                p.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-                c.drawRoundRect(r, radius, radius, p); // the glow is only outside; inside is glass
-                p.setXfermode(null);
-                p.setColor(fill);
-                c.drawRoundRect(r, radius, radius, p);
-                // the light bleeding into the glass along its edge
-                p.setColor(0x38EB9438);
-                p.setMaskFilter(new BlurMaskFilter(inset * 1.1f, BlurMaskFilter.Blur.INNER));
-                c.drawRoundRect(r, radius, radius, p);
-                p.setMaskFilter(null);
-                p.setStyle(Paint.Style.STROKE);
-                p.setStrokeWidth(line);
-                p.setColor(0xCCF0AE6A);
-                float h = line / 2;
-                c.drawRoundRect(new RectF(r.left + h, r.top + h, r.right - h, r.bottom - h), radius, radius, p);
-            }
-            canvas.drawBitmap(picture, b.left, b.top, null);
-        }
-
-        @Override public void setAlpha(int alpha) { }
-        @Override public void setColorFilter(ColorFilter cf) { }
-        @Override public int getOpacity() { return PixelFormat.TRANSLUCENT; }
+        return new Glass.Lit(c, radiusDp, pressed);
     }
 
     /** Small label: bold capitals, spaced out, like markings on a piece of equipment. */
