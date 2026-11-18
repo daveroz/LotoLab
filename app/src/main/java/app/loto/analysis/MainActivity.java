@@ -14,9 +14,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import java.time.Instant;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -39,7 +37,7 @@ public class MainActivity extends Activity {
     private ScrollView scroll;
     private LogoCarousel carousel;
     private LinearLayout drawBox, tabBox, body;
-    private TextView statusLine;
+    private View refresh;
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private int generation;
     private boolean fetching;
@@ -48,7 +46,6 @@ public class MainActivity extends Activity {
     String lottery;
     int gameIdx;       // index into the lottery's draws
     int tab;
-    int weekday = -1;  // History filter: -1 all, 0 Monday .. 6 Sunday
     int limit = 40;    // History: days shown
     double checkWager = 1000; // El Dorado's prize list on Summary
 
@@ -63,7 +60,7 @@ public class MainActivity extends Activity {
         List<Game> games;
         int days;
         Sample sample;
-        int weekday, limit;
+        int limit;
     }
 
     static String tabName(int i) {
@@ -102,34 +99,28 @@ public class MainActivity extends Activity {
         room.addView(scroll, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         room.addView(new StageView.Film(this, 0), new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         LinearLayout col = ui.vbox();
-        col.setPadding(ui.dp(16), ui.dp(26), ui.dp(16), ui.dp(28));
+        col.setPadding(ui.dp(16), ui.dp(8), ui.dp(16), ui.dp(28));
         scroll.addView(col, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        // ---- header: title and the data status, with a refresh button ----
-        LinearLayout head = ui.hbox();
-        head.setGravity(Gravity.CENTER_VERTICAL);
-        LinearLayout titles = ui.vbox();
-        titles.addView(ui.text("LotoLab", 19, Theme.uiBold(this), Theme.TEXT));
-        statusLine = ui.note("");
-        statusLine.setTextSize(11);
-        titles.addView(statusLine);
-        head.addView(titles, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        head.addView(ui.iconButton(Icon.Kind.REFRESH, T.t("Fetch the newest results"), 44, v -> fetch(true)));
-        col.addView(head);
-
-        // ---- the lotteries: swipe through their emblems ----
+        // ---- the lotteries: swipe through their emblems, the refresh button in the top corner ----
         String[] subs = {T.t("Chance · 3 draws a day"), T.t("5 of 43 + superbalota"), T.t("5 of 39 · 4 draws a week")};
         int[] colors = {0xFFF2B230, 0xFFEB9438, 0xFFE08A33};
         carousel = new LogoCarousel(this, Game.LOTTERIES, subs, colors,
                 java.util.Arrays.asList(Game.LOTTERIES).indexOf(lottery), i -> {
                     lottery = Game.LOTTERIES[i];
                     gameIdx = 0; // always the lottery's first draw (Mañana, Baloto...)
-                    weekday = -1;
                     limit = 40;
                     buildSelectors();
                     render();
                 });
-        col.addView(carousel, ui.matchWrap(10));
+        FrameLayout top = new FrameLayout(this);
+        FrameLayout.LayoutParams cp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        cp.topMargin = ui.dp(8);
+        top.addView(carousel, cp);
+        // small, in the corner above the next lottery's emblem peeking in at the side
+        refresh = ui.iconButton(Icon.Kind.REFRESH, T.t("Fetch the newest results"), 34, v -> fetch(true));
+        top.addView(refresh, new FrameLayout.LayoutParams(ui.dp(34), ui.dp(34), Gravity.TOP | Gravity.END));
+        col.addView(top, ui.matchWrap(0));
 
         drawBox = ui.vbox();
         col.addView(drawBox, ui.matchWrap(2));
@@ -154,7 +145,6 @@ public class MainActivity extends Activity {
                 history = h;
                 buildSelectors();
                 render();
-                updateStatus();
                 fetch(false);
                 Notifier.schedule(getApplicationContext());
             });
@@ -223,7 +213,7 @@ public class MainActivity extends Activity {
     private void fetch(boolean everything) {
         if (fetching || history == null) return;
         fetching = true;
-        statusLine.setText(T.t("Fetching the newest results…"));
+        spin();
         new Thread(() -> {
             Fetcher.Status got = null;
             try {
@@ -236,30 +226,19 @@ public class MainActivity extends Activity {
             final Fetcher.Status st = got;
             runOnUiThread(() -> {
                 fetching = false;
-                updateStatus();
                 if (st == null || st.added > 0 || tab == HISTORY || tab == SUMMARY) render(true);
             });
         }).start();
     }
 
-    void updateStatus() {
-        if (history == null) return;
-        int total = 0;
-        for (Game g : Game.ALL) total += history.size(g);
-        long at = Data.sp(this).getLong("fetchAt", 0);
-        String when;
-        if (at == 0) {
-            when = T.t("not fetched yet");
-        } else {
-            ZonedDateTime z = ZonedDateTime.ofInstant(Instant.ofEpochMilli(at), ZoneId.systemDefault());
-            when = T.f("updated %s, %s", Fmt.shortDate(z.toLocalDate()), String.format(Locale.US, "%02d:%02d", z.getHour(), z.getMinute()));
-        }
-        String log = Data.sp(this).getString("fetchLog", "");
-        int failed = 0;
-        for (String line : log.split("\n")) if (line.contains("\tfail\t")) failed++;
-        String s = T.f("%s draws stored · %s", Fmt.num(total), when);
-        if (failed > 0) s += " · " + T.f("%d source(s) unreachable (see History)", failed);
-        statusLine.setText(s);
+    /** The refresh button turns while the newest results are being fetched. */
+    private void spin() {
+        if (refresh == null) return;
+        refresh.animate().rotationBy(360).setDuration(900).setInterpolator(new android.view.animation.LinearInterpolator())
+                .withEndAction(() -> {
+                    if (fetching) spin();
+                    else refresh.setRotation(0);
+                }).start();
     }
 
     // ------------------------------------------------------------------ choices
@@ -272,7 +251,7 @@ public class MainActivity extends Activity {
     }
 
     void buildSelectors() {
-        // the lottery's draws, then the sections: both segmented controls, the sections the larger
+        // the lottery's draws, then the sections: two segmented controls of the same size
         drawBox.removeAllViews();
         List<Game> games = Game.of(lottery);
         if (games.size() > 1) {
@@ -282,7 +261,7 @@ public class MainActivity extends Activity {
                 gameIdx = idx;
                 buildSelectors();
                 render();
-            }, false, 4);
+            }, 4);
         }
         tabBox.removeAllViews();
         String[] tabs = new String[STATS + 1];
@@ -291,7 +270,7 @@ public class MainActivity extends Activity {
             tab = idx;
             buildSelectors();
             render();
-        }, true, 10);
+        }, 8);
     }
 
     Sel snapshot() {
@@ -300,7 +279,6 @@ public class MainActivity extends Activity {
         s.lottery = lottery;
         s.games = chosenGames();
         s.days = 0; // every tab looks at the whole history
-        s.weekday = weekday;
         s.limit = limit;
         s.checkWager = checkWager;
         s.fetchAt = Data.sp(this).getLong("fetchAt", 0);

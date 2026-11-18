@@ -16,7 +16,7 @@ import android.view.View;
  * units of the icon's size from its centre.
  */
 final class Icon extends View {
-    enum Kind { REFRESH, CHEVRON_RIGHT, CHEVRON_DOWN, PLUS, BELL, BARS }
+    enum Kind { REFRESH, CHEVRON_RIGHT, PLUS, BARS }
 
     private final Glyph glyph;
 
@@ -126,25 +126,10 @@ final class Icon extends View {
                     line(-0.12f, -0.28f, 0.15f, 0);
                     line(0.15f, 0, -0.12f, 0.28f);
                     break;
-                case CHEVRON_DOWN:
-                    bold.setStrokeWidth(Math.max(2.4f, s * 0.15f));
-                    line(-0.28f, -0.12f, 0, 0.15f);
-                    line(0, 0.15f, 0.28f, -0.12f);
-                    break;
                 case PLUS:
                     bold.setStrokeWidth(Math.max(2.2f, s * 0.13f));
                     line(-0.3f, 0, 0.3f, 0);
                     line(0, -0.3f, 0, 0.3f);
-                    break;
-                case BELL:
-                    // a dome flaring to its rim, the rim cut free of it, the clapper below and the knob on top
-                    add(rr(-0.27f, -0.32f, 0.27f, 0.2f, 0.27f));
-                    add(poly(-0.27f, 0f, 0.27f, 0f, 0.42f, 0.22f, -0.42f, 0.22f));
-                    add(rr(-0.42f, 0.16f, 0.42f, 0.27f, 0.05f));
-                    cut(rr(-0.5f, 0.12f, 0.5f, 0.155f, 0.01f));
-                    cut(rr(-0.16f, -0.2f, -0.08f, 0.04f, 0.04f)); // a glint on the dome
-                    add(circle(0, 0.37f, 0.085f));
-                    add(circle(0, -0.37f, 0.07f));
                     break;
                 case BARS:
                     // three bars, the middle one lit by a notch: a ranking

@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  * Only what matters at a glance, for the chosen draw: the latest result, the next draw, today's recommendation, for
- * El Dorado what each bet wins, and the notification switch. Everything else is in the other tabs.
+ * El Dorado what each bet wins, and the notifications switch. Everything else is in the other tabs.
  */
 final class SummaryTab {
     private SummaryTab() {}
@@ -271,28 +271,25 @@ final class SummaryTab {
         c.addView(ui.note(T.t("Net prize, after withholding where it applies.")), ui.matchWrap(2));
     }
 
-    /** The switch for this lottery's notifications, and a way to allow them if the system blocks them. */
+    /**
+     * Notifications: just a switch beside the section's title. It shows on only while results can really be
+     * announced; turning it on when Android blocks LotoLab's notifications asks to allow them (or opens the
+     * settings where that's done).
+     */
     private static void notifications(MainActivity a, LinearLayout body, MainActivity.Sel s) {
-        Ui ui = a.ui;
-        LinearLayout nc = ui.card(body, T.t("NOTIFICATIONS"));
-        boolean on = Notifier.enabled(a, s.lottery);
+        boolean wanted = Notifier.enabled(a, s.lottery);
         boolean allowed = Notifier.allowed(a);
-        nc.addView(ui.toggle(Icon.Kind.BELL, T.f("%s results", s.lottery),
-                T.t("The numbers about ten minutes after each draw."), on, v -> {
-                    Notifier.setEnabled(a, s.lottery, !on);
-                    a.rerenderInPlace();
-                }));
-        if (on && !allowed) {
-            TextView w = ui.body(T.t("Android is blocking notifications for LotoLab."));
-            w.setTextColor(Theme.AMBER);
-            nc.addView(w, ui.matchWrap(10));
-            nc.addView(ui.primaryButton(T.t("Allow notifications"), Icon.Kind.BELL, v -> {
+        a.ui.switchRow(body, T.t("NOTIFICATIONS"), T.f("%s results", s.lottery), wanted && allowed, v -> {
+            boolean on = !(wanted && allowed);
+            Notifier.setEnabled(a, s.lottery, on);
+            if (on && !allowed) {
                 if (Build.VERSION.SDK_INT >= 33 && a.shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
                     a.requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 3);
                 } else {
                     a.startActivity(new Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, a.getPackageName()));
                 }
-            }), ui.matchWrap(8));
-        }
+            }
+            a.rerenderInPlace();
+        });
     }
 }

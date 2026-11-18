@@ -152,26 +152,25 @@ final class Ui {
 
     /**
      * Sections or filters in a glass capsule (a segmented control): a recessed well, the chosen one a lighter lens of
-     * glass with its name in white, the others muted. {@code large} is the size of the tabs; otherwise compact.
+     * glass with its name in white, the others muted. Every segmented control is the same size.
      */
-    LinearLayout segmented(LinearLayout parent, String[] options, int selected, java.util.function.IntConsumer onPick,
-                           boolean large, int topDp) {
+    LinearLayout segmented(LinearLayout parent, String[] options, int selected, java.util.function.IntConsumer onPick, int topDp) {
         LinearLayout track = hbox();
-        track.setBackground(Theme.glass(a, large ? 16 : 13, Glass.Tone.WELL));
-        int pad = dp(large ? 5 : 4);
+        track.setBackground(Theme.glass(a, 13, Glass.Tone.WELL));
+        int pad = dp(4);
         track.setPadding(pad, pad, pad, pad);
         for (int i = 0; i < options.length; i++) {
             final int idx = i;
             boolean on = i == selected;
             TextView t = label(options[i], on ? Theme.TEXT : Theme.MUTED);
-            t.setTextSize(large ? 12 : 10.5f);
-            t.setLetterSpacing(large ? 0.24f : 0.2f);
+            t.setTextSize(10.5f);
+            t.setLetterSpacing(0.2f);
             t.setGravity(Gravity.CENTER);
             t.setMaxLines(1);
-            t.setAutoSizeTextTypeUniformWithConfiguration(7, large ? 12 : 11, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
-            t.setMinHeight(dp(large ? 46 : 38));
+            t.setAutoSizeTextTypeUniformWithConfiguration(7, 11, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
+            t.setMinHeight(dp(38));
             t.setPadding(dp(4), 0, dp(4), 0);
-            if (on) t.setBackground(Theme.glass(a, large ? 11 : 9, Glass.Tone.LENS));
+            if (on) t.setBackground(Theme.glass(a, 9, Glass.Tone.LENS));
             t.setClickable(true);
             t.setFocusable(true);
             if (on) t.setSelected(true);
@@ -288,42 +287,24 @@ final class Ui {
         return i;
     }
 
-    /** A small icon in the key light in a square of lens glass, at the start of a settings row. */
-    View iconSquare(Icon.Kind kind) {
-        Icon i = new Icon(a, kind, Theme.AMBER_LIGHT);
-        int pad = dp(8);
-        i.setPadding(pad, pad, pad, pad);
-        i.setBackground(Theme.glass(a, 8, Glass.Tone.LENS));
-        return i;
-    }
-
-    /** A setting that's on or off: an icon, the title and its explanation, and a switch; the whole row toggles it. */
-    LinearLayout toggle(Icon.Kind icon, String title, String detail, boolean on, View.OnClickListener l) {
+    /**
+     * A setting that's just on or off: its name in spaced amber capitals, as a section title, and a switch beside it;
+     * the whole row toggles it. {@code description} is what a screen reader says.
+     */
+    LinearLayout switchRow(LinearLayout parent, String title, String description, boolean on, View.OnClickListener l) {
         LinearLayout row = hbox();
         row.setGravity(Gravity.CENTER_VERTICAL);
-        row.setPadding(0, dp(4), 0, dp(4));
-        if (icon != null) {
-            LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(dp(34), dp(34));
-            ip.rightMargin = dp(14);
-            row.addView(iconSquare(icon), ip);
-        }
-        LinearLayout words = vbox();
-        words.addView(text(title, 15, Theme.uiMedium(a), Theme.TEXT));
-        if (detail != null) {
-            TextView d = text(detail, Ui.SMALL, Theme.uiMedium(a), Theme.MUTED);
-            d.setPadding(0, dp(4), 0, 0);
-            words.addView(d);
-        }
-        LinearLayout.LayoutParams wp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-        wp.rightMargin = dp(16);
-        row.addView(words, wp);
+        row.setPadding(dp(4), 0, dp(2), 0);
+        row.addView(sectionTitle(title), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         Controls.Switch sw = new Controls.Switch(a);
         sw.setChecked(on);
         row.addView(sw);
         row.setClickable(true);
         row.setFocusable(true);
-        row.setContentDescription(title + (on ? ": on" : ": off"));
+        row.setContentDescription(description);
+        if (android.os.Build.VERSION.SDK_INT >= 30) row.setStateDescription(on ? "on" : "off"); // Android 11+
         row.setOnClickListener(l);
+        parent.addView(row, matchWrap(24));
         return row;
     }
 

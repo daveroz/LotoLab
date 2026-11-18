@@ -77,10 +77,6 @@ final class Es {
                 "HISTORIAL");
         p("%s plays %s",
                 "%s juega %s");
-        p("Every day",
-                "Todos los días");
-        p("No draws on %s in this selection.",
-                "No hay sorteos los %s en esta selección.");
         p("No results stored for this selection.",
                 "No hay resultados guardados para esta selección.");
         p("%s · %d",
@@ -127,16 +123,6 @@ final class Es {
                 "5 de 39 · 4 sorteos por semana");
         p("Loading the draw history…",
                 "Cargando el historial de sorteos…");
-        p("Fetching the newest results…",
-                "Trayendo los resultados más recientes…");
-        p("not fetched yet",
-                "sin actualizar todavía");
-        p("updated %s, %s",
-                "actualizado el %s, %s");
-        p("%s draws stored · %s",
-                "%s sorteos guardados · %s");
-        p("%d source(s) unreachable (see History)",
-                "%d fuente(s) sin respuesta (ver Historial)");
         p("Working it out…",
                 "Calculando…");
         p("SOMETHING WENT WRONG",
@@ -485,11 +471,5 @@ final class Es {
                 "NOTIFICACIONES");
         p("%s results",
                 "Resultados de %s");
-        p("The numbers about ten minutes after each draw.",
-                "Los números unos diez minutos después de cada sorteo.");
-        p("Android is blocking notifications for LotoLab.",
-                "Android está bloqueando las notificaciones de LotoLab.");
-        p("Allow notifications",
-                "Permitir notificaciones");
     }
 }
