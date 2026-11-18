@@ -92,7 +92,7 @@ final class Ui {
         TextView t = text(title, 11.5f, Theme.uiBold(a), Theme.AMBER_LIGHT);
         Theme.label(a, t);
         t.setTextSize(11.5f);
-        t.setSingleLine(true);
+        t.setMaxLines(1);
         t.setEllipsize(android.text.TextUtils.TruncateAt.END);
         return t;
     }
@@ -167,7 +167,7 @@ final class Ui {
             t.setTextSize(large ? 12 : 10.5f);
             t.setLetterSpacing(large ? 0.24f : 0.2f);
             t.setGravity(Gravity.CENTER);
-            t.setSingleLine(true);
+            t.setMaxLines(1);
             t.setAutoSizeTextTypeUniformWithConfiguration(7, large ? 12 : 11, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
             t.setMinHeight(dp(large ? 46 : 38));
             t.setPadding(dp(4), 0, dp(4), 0);
@@ -194,7 +194,7 @@ final class Ui {
             TextView t = label(options[i], on ? Theme.AMBER_LIGHT : Theme.MUTED);
             t.setLetterSpacing(0.12f);
             t.setGravity(Gravity.CENTER);
-            t.setSingleLine(true);
+            t.setMaxLines(1);
             t.setAutoSizeTextTypeUniformWithConfiguration(7, 11, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
             t.setPadding(dp(6), 0, dp(6), 0);
             t.setBackground(on ? Theme.lit(a, 10, false) : Theme.glassPressable(a, 10, Glass.Tone.PANE));
@@ -225,9 +225,12 @@ final class Ui {
     }
 
     private TextView button(String label, Icon.Kind icon, int color, int iconColor, android.graphics.drawable.Drawable bg, View.OnClickListener l) {
-        TextView b = label(label, color);
+        TextView b = new Centred(a);
+        b.setText(label);
+        b.setTextColor(color);
+        Theme.label(a, b);
         b.setTextSize(12);
-        b.setSingleLine(true);
+        b.setMaxLines(1);
         b.setAutoSizeTextTypeUniformWithConfiguration(7, 12, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
         if (icon != null) {
             Icon.Glyph g = new Icon.Glyph(icon, iconColor);
@@ -243,6 +246,28 @@ final class Ui {
         b.setFocusable(true);
         b.setOnClickListener(l);
         return b;
+    }
+
+    /** A button's label with its icon beside it, the two centred together (a plain TextView keeps the icon at the edge). */
+    static final class Centred extends TextView {
+        private final int least;
+
+        Centred(android.content.Context c) {
+            super(c);
+            least = Math.round(Theme.dp(c, 16));
+        }
+
+        @Override
+        protected void onLayout(boolean changed, int l, int t, int r, int b) {
+            super.onLayout(changed, l, t, r, b);
+            android.graphics.drawable.Drawable icon = getCompoundDrawablesRelative()[0];
+            if (icon == null) return;
+            CharSequence shown = getTransformationMethod() != null ? getTransformationMethod().getTransformation(getText(), this) : getText();
+            float text = getPaint().measureText(shown, 0, shown.length());
+            int content = icon.getBounds().width() + getCompoundDrawablePadding() + Math.round(text);
+            int side = Math.max(least, (getWidth() - content) / 2 - least / 4); // a little slack, so the label never has to shrink
+            if (Math.abs(getPaddingLeft() - side) > 1) post(() -> setPaddingRelative(side, getPaddingTop(), side, getPaddingBottom()));
+        }
     }
 
     /** A small action: an icon in a bubble of glass (a rounded square), thumb-sized. */
