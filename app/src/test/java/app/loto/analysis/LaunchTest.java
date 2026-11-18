@@ -64,34 +64,23 @@ public class LaunchTest {
         assertNotNull(a);
         settle(a);
         for (String lottery : Game.LOTTERIES) {
-            for (int tab = 0; tab <= MainActivity.ODDS; tab++) show(a, lottery, 0, tab);
+            for (int tab = 0; tab <= MainActivity.STATS; tab++) show(a, lottery, 0, tab);
         }
         show(a, "Dorado", 1, MainActivity.SUMMARY); // Tarde
-        show(a, "Dorado", 2, MainActivity.PICKS);   // Noche
+        show(a, "Dorado", 2, MainActivity.STATS);   // Noche
         show(a, "Baloto", 1, MainActivity.SUMMARY); // Revancha
+        show(a, "Baloto", 1, MainActivity.STATS);
         // every amount in El Dorado's prize list
         for (double w : new double[]{200, 500, 1000, 2000, 5000}) {
             a.checkWager = w;
             show(a, "Dorado", 0, MainActivity.SUMMARY);
         }
-        for (Pack.Objective o : Pack.Objective.values()) {
-            a.packObjective = o;
-            a.packTarget = 0.9;
-            show(a, "Dorado", 0, MainActivity.ODDS);
-        }
-        // a wrong entry is explained, not a crash
-        show(a, "Baloto", 0, MainActivity.SUMMARY, "5 5 50");
     }
 
     private void show(MainActivity a, String lottery, int game, int tab) throws Exception {
-        show(a, lottery, game, tab, Game.of(lottery).get(0).digits() ? "2820" : "5 13 19 25 29 + 7");
-    }
-
-    private void show(MainActivity a, String lottery, int game, int tab, String check) throws Exception {
         a.lottery = lottery;
         a.gameIdx = game;
         a.tab = tab;
-        a.check = check;
         a.buildSelectors();
         a.render();
         settle(a);

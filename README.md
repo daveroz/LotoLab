@@ -2,10 +2,10 @@
 
 Results, statistics and honest predictions for **Dorado, Baloto and MiLoto**: every daily draw
 (morning, afternoon, night) with its day of the week, years of history, frequency analysis, an audit of
-every result, a daily recommendation chosen by a ranked set of models with its track record, El Dorado's
-official prizes in pesos, a probability-optimized betting pack, and a notification when a result is
-announced. In Spanish or English, following the phone's language. No
-accounts, no API keys, no ads. A native Android app in plain Java, like Worldly.
+every result, the chance of the top prize, a daily recommendation chosen by a ranked set of models, El
+Dorado's official prizes in pesos, and a notification when a result is announced. In Spanish or English,
+following the phone's language. No accounts, no API keys, no ads. A native Android app in plain Java, like
+Worldly.
 
 ## Get the APK
 The newest build is always at
@@ -53,15 +53,13 @@ History bundled with the app (kept current twice a day, see below): Baloto and R
 (every draw in the official archive), MiLoto from October 2023 (practically every draw since it started),
 the chance draws from early 2023. Every result is stored by lottery, draw, date and weekday.
 
-## The five tabs
+## The three tabs
 
 | Tab | What it shows |
 |---|---|
-| **Summary** | Only the essentials: the latest result (its figures in one line: evens, odds, sum, la pata, quinta; and its audit), the next draw, a warning only when data is missing or old; **today's recommendation** (the top-ranked model's pick for the next draw, its probability, and whether any model beats chance); for El Dorado, **what you win**: the net prize of each bet (4 cifras, 3 cifras, pata, uña, combinado) for $200, $500, $1.000, $2.000 or $5.000; for Baloto and MiLoto, a **checker** with one box per ball giving the probability and the prize category in the latest draw; and the notification switch |
+| **Summary** | Only the essentials: the latest result (its figures in one line: evens, odds, sum, la pata, quinta; and its audit), the next draw, a warning only when data is missing or old; **today's recommendation** (the top-ranked model's pick for the next draw, its probability, and whether any model beats chance); for El Dorado, **what you win**: the net prize of each bet (4 cifras, 3 cifras, pata, uña, combinado) for $200, $500, $1.000, $2.000 or $5.000; and the notification switch |
 | **History** | Every stored result grouped by date with the full weekday name and time, filterable by day of the week, each with its audit (how ordinary the draw is, 0–100); the schedule; how much history is stored, any result that should be out but isn't, the last refresh and which sources answered |
-| **Stats** | Hot and cold numbers (most and least frequent; for chance a table of each digit in each position), la pata (two-digit endings), the quinta / superbalota, even and odd, and the sum of the numbers. Every figure with its expected value and a p-value; the depth is folded under ▸ details |
-| **Picks** | The recommendation engine in depth: today's **model ranking** (out-of-sample score with 95% CI, each model's candidate), the **track record** of the daily recommendation replayed over the whole history (30 days, 90 days, 1 year, all; exact and partial hits against random selection, hit rate with its 95% CI, p-values) and per model, the **log of recommendations shown** with their results, and a model explorer (top pick, reasons, alternatives) |
-| **Odds** | The chance of the top prize, El Dorado's official prize plan (what $1.000 wins in each category, net, how it's worked out, and the average return) or every lotto prize tier, the **betting pack**, and what playing every draw for a year adds up to |
+| **Stats** | Three cards, in this order: the **chance of the top prize** (1 in 10,000 for chance, 1 in 15,401,568 for Baloto, 1 in 575,757 for MiLoto); the **hot and cold** digits or numbers (most and least frequent with their expected value and a chi-square p-value; for chance a table of each digit in each position); and today's **model ranking** (out-of-sample score with 95% CI, the Monte Carlo test, each model's candidate). The depth is folded under ▸ details |
 
 ## Notifications
 About ten minutes after each draw of a lottery you follow, the app checks that draw's source (only that
@@ -84,6 +82,22 @@ The carousel shows each lottery's logo from `app/src/main/assets/logos/<lottery>
 transforms, gradients, clip paths) so they stay sharp at any size and keep their proportions. Single-colour
 logos take the theme's amber light as a gradient; multicolour ones are mapped tone by tone onto the theme.
 
+## The app icon
+The launcher icon belongs to the same family as Worldly's and SAB Monitor's: a graphite stage over a tilted
+street grid with its avenue and park, a vignette and a hairline edge, and in the middle a dark disc ringed in
+amber with three coloured dots and an amber marker. LotoLab's disc holds a histogram of draws under the curve
+of a fair draw, and the drawn ball as the marker. It's lit the way Worldly's widgets are since 1.55, as light
+sources in a dark, hazy room: the histogram is a small wall of square lamps with warm, overexposed cores
+(white-hot only at the top of the tallest columns) blooming into the gaps and scattering in a haze above each
+lit column, while the dark lamps catch their neighbours' light; the curve is a thread of light with a tight
+glow and a wide bloom; the ring and the ball glow towards the key light at the top right; the light warms the
+air of the stage, two banks of fog drift over it, and a fine film grain, lighter and darker specks, lies over
+everything. `scripts/render_icon.js` draws it: it writes `assets/icon.svg` (the 512 × 512 master), renders
+the adaptive icon's two layers (`mipmap-*dpi/ic_launcher_background.webp` and `ic_launcher_foreground.webp`,
+WebP because grain makes PNGs several times larger) with Chromium, and writes the silhouette for themed icons
+(`drawable/ic_launcher_monochrome.xml`). Run `node scripts/render_icon.js` after changing it (it needs
+Playwright: `npm i playwright`).
+
 ## The mathematics
 
 **Theoretical probability vs. history.** Odds are computed from the rules only: C(43,5) × 16 =
@@ -92,9 +106,8 @@ combination has exactly that probability in every draw. Frequencies describe the
 shows them next to the theoretical value and never presents a model estimate as a real increase in odds.
 
 **Statistics.** Number frequencies use the chi-square test (for lotto draws Pearson's statistic is scaled by
-(N−1)/(N−k) because each draw holds k different balls); even/odd uses the binomial / hypergeometric
-distribution and sums their exact distribution. The single most extreme value is judged allowing for how
-many values were compared.
+(N−1)/(N−k) because each draw holds k different balls). The single most extreme value is judged allowing
+for how many values were compared.
 
 **The audit of each draw** (100 = completely ordinary): the rarest of its features (sum, even/odd split,
 repeated digits or consecutive numbers, repeats from the draw before), corrected for the number looked at.
@@ -105,9 +118,7 @@ tests), so an "unusual" draw now and then is expected and proves nothing.
 product of its weights divided by the same product summed over all combinations (computed exactly with
 elementary symmetric polynomials), so with equal weights it is exactly the theoretical probability. The
 Bayesian model shrinks each count towards fair by how much the counts vary beyond chance: on fair data
-every number stays equal. "Typical shape" and "least shared" don't change the odds; the second only
-lowers the chance of sharing a jackpot. The backtest replays the last 100 draws, letting the model see
-only earlier results, and compares its hits with chance.
+every number stays equal.
 
 **The daily recommendation.** Five forecasting models (hot numbers, recent form, overdue, Bayesian
 fair-adjusted, and an ensemble that mixes the four by Bayesian model averaging) each give every number a
@@ -120,12 +131,8 @@ models on 99 simulated fair histories of the same length: the recommendation is 
 only if the winner's interval is above 0 *and* it beats the fair simulations (p < 0.05). Ties are broken
 with a seed made from the lottery and the draw date, so the same data always gives the same
 recommendation; it changes when new results change the models, which never makes a number more likely.
-Every recommendation shown is kept on the phone with the time it was generated, and settled against the
-result. The **track record** replays the whole history: before each draw, what the engine would have
-chosen, compared with the result (exact, last three, pata, uña; for lotto numbers matched and 2+ hits),
-against what random selection averages, with binomial p-values and Wilson 95% intervals. On the real
-history every lottery shows no advantage (Monte Carlo p between 0.2 and 0.8) and hit rates in line with
-chance, and the app says so. On simulated draws with a real bias the engine finds it (tested).
+On the real history no lottery shows an advantage, and the app says so. On simulated draws with a real
+bias the engine finds it (tested).
 
 **El Dorado's prizes.** From the official chance prize plan (Decreto 1068 de 2015, compiled by the DIAN,
 as modified by Decreto 1390 de 2024): per peso bet, 4 cifras in order $4.500, 3 cifras $400, 2 cifras (la
@@ -134,18 +141,7 @@ and 1-digit bets are the last digits of the result, and only the highest categor
 is paid on the bet before IVA (19%): $1.000 paid is a bet of $840,34. Prizes above 48 UVT ($2.513.952 in
 2026, UVT $52.374) have 20% withheld. So $1.000 on 4 cifras wins $3.781.513 gross, $3.025.210 net. The
 expected return is 30–42% of what is paid, depending on the bet. Baloto ($6.000, Revancha $3.000 more) and
-MiLoto ($4.000) prizes come from each draw's pool and aren't fixed, so only their categories and odds are
-shown.
-
-**The betting pack.** The fewest bets, across the next three chance draws and the next Baloto, Revancha
-and MiLoto draws, that reach a chosen probability (10% to 90%) of a goal: any prize, winning back at
-least what the pack costs, or the top prize. It's exact, with no double counting: bets on different
-numbers in one chance draw can't both win, so their probabilities add; different draws are independent, so
-the pack misses only if every part misses, 1 − Π(1 − pᵢ); one bet type per draw keeps that exact. Winning
-back the cost uses the fixed chance prizes (a binomial over the draws) and has a ceiling, about 42% for a
-single draw, because more bets cost more than the prizes return; the app says when a goal can't be
-reached. It shows each bet, the individual and combined odds, the total cost in pesos and the expected
-result, which is always negative.
+MiLoto ($4.000) prizes come from each draw's pool and aren't fixed, so the app doesn't show them.
 
 ## Data sources (all free, no key, no account)
 | Data | Source |
@@ -172,10 +168,12 @@ schedules and formats), `Holidays` (Colombian holidays), `Draw`, `History` (CSV 
 `Combi` (combinatorics, distributions), `Analysis` (frequencies, even/odd, endings, sums), `Randomness`
 (the audit of single draws), `Predictor` (the models), `Models`
 (incremental forecasting and scoring), `Recommender` (ranking, Monte Carlo test, track record), `Prizes`
-(El Dorado's prize plan, IVA, withholding), `Pack` (the betting pack), `Odds`, `Fmt`.
+(El Dorado's prize plan, IVA, withholding), `Pack` (the betting pack), `Odds`, `Fmt`. The betting pack, the track
+record, the model explorer and the lotto prize tiers are still in the engine, with their tests, but no screen
+shows them since 1.5.
 Language: `T` (device language, number formats) and `Es` (the Spanish texts), plus `Fmt` for dates and times.
 App: `MainActivity` (carousel, selectors, tabs, background work), `LogoCarousel` + `Svg` (the logos), `SummaryTab`, `HistoryTab`,
-`StatsTab`, `PicksTab`, `OddsTab`, `Charts` (the digit table), `Ui` (cards, expandable details, chips, number tiles, digit boxes, tables), `Data` (bundled + stored
+`StatsTab`, `Charts` (the digit table), `Ui` (cards, expandable details, chips, number tiles, tables), `Data` (bundled + stored
 history, recommendation log), `Fetcher` (sources), `Net`,
 `Notifier` + `DrawAlarmReceiver` + `ResultJobService` + `BootReceiver` (notifications), and from Worldly
 `Theme` and `StageView`.
@@ -187,6 +185,6 @@ lit in the amber key light, labels in spaced capitals, Carbon+ type. The analysi
 "cold" / below expectation and coral for strong deviations.
 
 ## Play responsibly
-Every lottery ticket has a negative expected return. The recommendations and packs are for curiosity and
+Every lottery ticket has a negative expected return. The recommendations are for curiosity and
 statistics, not a way to improve your odds: no model has shown an advantage over a fair draw, and the app
 says so whenever that's the case.

@@ -5,43 +5,69 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 /**
- * Hot and cold numbers, la pata (two-digit endings), the quinta / superbalota, even and odd, and sums: always with
- * what a fair draw would give.
+ * The numbers behind the draw, in three cards: the chance of the top prize (from the rules alone), the hot and cold
+ * digits or numbers (always beside what a fair draw would give), and today's model ranking.
  */
 final class StatsTab {
     private StatsTab() {}
 
     static final class Out {
+        Game game;
+        double jackpot;
         Analysis.Freq freq;
-        Analysis.Dist evenOdd, sums;
-        Analysis.Combos combos;
+        Recommender.Rec rec;
     }
 
     static Object compute(MainActivity.Sel s) {
         Out o = new Out();
+        o.game = s.games.get(0);
+        o.jackpot = Odds.jackpot(o.game);
         Sample sm = s.sample;
         if (sm.size() == 0) return o;
         o.freq = Analysis.frequency(sm);
-        o.evenOdd = Analysis.evenOdd(sm);
-        o.sums = Analysis.sums(sm);
-        if (sm.digits()) o.combos = Analysis.combos(sm);
+        if (sm.size() >= Recommender.WARMUP) {
+            ZonedDateTime now = ZonedDateTime.now(MainActivity.BOGOTA);
+            LocalDate target = SummaryTab.nextDraw(o.game, now);
+            o.rec = Recommender.recommend(sm, target != null ? target : now.toLocalDate(), true);
+        }
         return o;
     }
 
     static void show(MainActivity a, LinearLayout body, MainActivity.Sel s, Object data) {
         Out o = (Out) data;
-        Ui ui = a.ui;
+        odds(a, body, s, o);
         if (o.freq == null) {
             MainActivity.empty(a, body, s);
             return;
         }
-        Game g = s.sample.game;
-        int D = s.sample.size();
+        hotCold(a, body, s, o);
+        if (o.rec != null && !o.rec.ranking.isEmpty()) ranking(a, body, o.rec);
+    }
 
-        // ---- hot & cold ----
+    // ------------------------------------------------------------------ the top prize
+
+    private static void odds(MainActivity a, LinearLayout body, MainActivity.Sel s, Out o) {
+        Ui ui = a.ui;
+        Game g = o.game;
+        double p = o.jackpot;
+        LinearLayout c = ui.card(body, T.f("CHANCE OF THE TOP PRIZE · %s", s.lottery.toUpperCase(T.L)), T.t("theoretical"));
+        c.addView(ui.text(Combi.oneIn(p), 28, Theme.monoBold(a), Theme.LED));
+        c.addView(ui.note(g.digits() ? T.f("%s per bet · 4 cifras: the four digits in order", Combi.percent(p))
+                : g.extraMax > 0 ? T.f("%s per ticket · %d numbers from 1–%d plus the superbalota (1–%d)", Combi.percent(p), g.count, g.max, g.extraMax)
+                : T.f("%s per ticket · %d numbers from 1–%d", Combi.percent(p), g.count, g.max)));
+    }
+
+    // ------------------------------------------------------------------ hot & cold
+
+    private static void hotCold(MainActivity a, LinearLayout body, MainActivity.Sel s, Out o) {
+        Ui ui = a.ui;
+        Game g = o.game;
+        int D = s.sample.size();
         LinearLayout hot = ui.card(body, g.digits() ? T.t("HOT & COLD DIGITS") : T.t("HOT & COLD NUMBERS"), T.t("descriptive"));
         hot.addView(ui.note(MainActivity.scope(s)));
         if (g.digits()) {
@@ -68,58 +94,6 @@ final class StatsTab {
         hd.addView(ui.body(T.f("%s  draws  (a value waits %s draws on average)", ab, Fmt.num(o.freq.meanGap))));
         hd.addView(ui.note(T.f("The single most extreme value, allowing for the %d values compared: p = %s. Being absent for a long "
                 + "time doesn't make a value more likely next.", g.digits() ? 40 : g.max, Combi.pText(o.freq.extremeP()))), ui.matchWrap(6));
-
-        if (g.digits()) {
-            LinearLayout endc = ui.card(body, T.t("TWO-DIGIT ENDINGS (LA PATA)"), T.t("descriptive"));
-            endc.addView(ui.note(T.f("Each of the 100 endings is expected %s times.", Fmt.num(D / 100.0))));
-            List<Analysis.Combo> e2 = o.combos.endings2;
-            for (int i = 0; i < Math.min(3, e2.size()); i++) endc.addView(ui.kv(e2.get(i).label, e2.get(i).count + "×", Theme.AMBER_LIGHT, null));
-            if (e2.size() > 3) {
-                LinearLayout more = ui.details(endc, T.f("%d more", e2.size() - 3));
-                for (int i = 3; i < e2.size(); i++) more.addView(ui.kv(e2.get(i).label, e2.get(i).count + "×", Theme.AMBER_LIGHT, null));
-            }
-            endc.addView(verdict(a, o.combos.ending2MaxP, T.f("Most frequent ending, allowing for 100 endings: p = %s.",
-                    Combi.pText(o.combos.ending2MaxP))));
-        }
-
-        if (o.freq.extraDraws > 0) {
-            LinearLayout ex = ui.card(body, g.extraName.toUpperCase(T.L), T.t("descriptive"));
-            ex.addView(ui.note(T.f("%d draws with a %s. Fair: %s each.", o.freq.extraDraws, g.extraName.toLowerCase(T.L),
-                    Fmt.num(o.freq.extra.get(0).expected))));
-            List<Analysis.Cell> byCount = new java.util.ArrayList<>(o.freq.extra);
-            byCount.sort((x, y) -> Double.compare(y.observed, x.observed));
-            int k = Math.min(3, byCount.size());
-            LinearLayout xc = ui.hbox();
-            xc.addView(cellList(a, T.t("Most frequent"), byCount.subList(0, k)), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-            LinearLayout.LayoutParams xp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-            xp.leftMargin = ui.dp(12);
-            List<Analysis.Cell> least = new java.util.ArrayList<>(byCount.subList(byCount.size() - k, byCount.size()));
-            java.util.Collections.reverse(least);
-            xc.addView(cellList(a, T.t("Least frequent"), least), xp);
-            ex.addView(xc, ui.matchWrap(10));
-            ex.addView(verdict(a, o.freq.extraP, T.f("Chi-square p = %s.", Combi.pText(o.freq.extraP))));
-        }
-
-        // ---- even / odd ----
-        LinearLayout eo = ui.card(body, T.t("EVEN & ODD"), T.t("descriptive"));
-        double evenShare = o.evenOdd.obsMean / g.count, fairShare = o.evenOdd.expMean / g.count;
-        eo.addView(verdict(a, o.evenOdd.p, g.digits()
-                ? T.f("%s of all digits were even and %s odd (fair: %s each). Chi-square p = %s.", Fmt.pct(evenShare), Fmt.pct(1 - evenShare),
-                Fmt.pct(fairShare), Combi.pText(o.evenOdd.p))
-                : T.f("%s of all numbers were even and %s odd (fair: %s even). Chi-square p = %s.", Fmt.pct(evenShare), Fmt.pct(1 - evenShare),
-                Fmt.pct(fairShare), Combi.pText(o.evenOdd.p))));
-        LinearLayout eod = ui.details(eo, T.t("Draw by draw counts"));
-        for (int i = 0; i < o.evenOdd.labels.length; i++) {
-            eod.addView(ui.kv(o.evenOdd.labels[i], Fmt.num(o.evenOdd.observed[i]), Theme.TEXT, T.f("%s expected", Fmt.num(o.evenOdd.expected[i]))));
-        }
-
-        // ---- sums ----
-        LinearLayout sc = ui.card(body, T.t("SUM OF THE NUMBERS"), T.t("descriptive"));
-        int[] mid = Analysis.middleHalf(g);
-        sc.addView(verdict(a, o.sums.p, T.f("Average %.1f (fair %.1f), spread %.1f (fair %.1f). Half of all fair draws total "
-                + "%d–%d. Chi-square p = %s.", o.sums.obsMean, o.sums.expMean, o.sums.obsSd, o.sums.expSd, mid[0], mid[1],
-                Combi.pText(o.sums.p))));
-
     }
 
     private static LinearLayout cellList(MainActivity a, String title, List<Analysis.Cell> cells) {
@@ -138,10 +112,45 @@ final class StatsTab {
         return l;
     }
 
-    static TextView sub(MainActivity a, String s) {
-        TextView t = a.ui.label(s, Theme.DIM);
-        t.setPadding(0, a.ui.dp(12), 0, a.ui.dp(4));
-        return t;
+    // ------------------------------------------------------------------ model ranking
+
+    private static void ranking(MainActivity a, LinearLayout body, Recommender.Rec r) {
+        Ui ui = a.ui;
+        Game g = r.game;
+        LinearLayout c = ui.card(body, T.t("MODEL RANKING"), T.t("predictive evidence"));
+        Recommender.Rank best = r.ranking.get(0);
+        c.addView(ui.note(T.f("Each model forecasts every draw from the earlier ones only. Score: how much more probability its "
+                + "forecasts gave the actual results than a fair guess, over the last %d draws (above 0 = better).", best.n)));
+        float[] w = {2.2f, 1.4f, 2.4f};
+        c.addView(ui.row(new String[]{T.t("Model"), T.t("Score"), T.t("CI (95%)")}, w, true, null), ui.matchWrap(10));
+        int i = 0;
+        for (Recommender.Rank k : r.ranking) {
+            i++;
+            boolean top = i == 1;
+            int col = !Double.isNaN(k.lo) && k.lo > 0 ? Theme.GREEN : !Double.isNaN(k.hi) && k.hi < 0 ? Theme.MUTED : Theme.TEXT;
+            c.addView(ui.row(new String[]{(top ? "★ " : i + ". ") + k.model.shortTitle(), SummaryTab.score(k.mean),
+                    SummaryTab.score(k.lo) + " … " + SummaryTab.score(k.hi)}, w, false,
+                    new int[]{top ? Theme.AMBER_LIGHT : 0, col, 0}));
+        }
+        String evidence = Double.isNaN(r.mcP) ? T.t("Too few draws to test for an advantage.")
+                : r.advantage ? T.f("The top model beats chance (Monte Carlo p = %s, allowing for picking the best of %d).", Combi.pText(r.mcP), r.ranking.size())
+                : T.f("No real advantage: in simulated fair draws the best of %d models scores this well %s of the time (p = %s). "
+                + "The ranking only decides which candidate is shown.", r.ranking.size(), Combi.percent(r.mcP), Combi.pText(r.mcP));
+        c.addView(verdict(a, r.advantage ? 0.01 : 0.5, evidence));
+        LinearLayout cand = ui.details(c, T.t("Each model's candidate today"));
+        for (Recommender.Rank k : r.ranking) {
+            TextView name = ui.text(k.model.title(), 13, Theme.uiSemi(a), k == best ? Theme.AMBER_LIGHT : Theme.TEXT_SOFT);
+            name.setPadding(0, ui.dp(10), 0, ui.dp(6));
+            cand.addView(name);
+            cand.addView(ui.balls(g, k.nums, k.extra, Ui.NUM_S));
+            cand.addView(ui.note(T.f("Model's estimate %s · theoretical %s", Combi.oneIn(k.modelP), Combi.oneIn(r.theoryP))), ui.matchWrap(4));
+        }
+        LinearLayout how = ui.details(c, T.t("How the ranking works"));
+        how.addView(ui.note(T.t("The log score is a proper scoring rule: a model can only score above 0 on average by putting more "
+                + "probability on what actually comes out. The Ensemble mixes the four forecasters by Bayesian model averaging. "
+                + "The Monte Carlo test runs the same models on 99 simulated fair histories of the same length, so picking the best "
+                + "of several doesn't pass for skill. Ties are broken with a seed made from the lottery and the draw date, so the "
+                + "same data always gives the same recommendation.")));
     }
 
     /** A verdict line coloured by its p-value: green within chance, amber below 0.05, coral below 0.001. */

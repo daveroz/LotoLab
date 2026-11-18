@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Only what matters at a glance, for the chosen draw: the latest result, the next draw, today's recommendation, a
- * checker with one box per digit or ball, and the notification switch. Everything else is in the other tabs.
+ * Only what matters at a glance, for the chosen draw: the latest result, the next draw, today's recommendation, for
+ * El Dorado what each bet wins, and the notification switch. Everything else is in the other tabs.
  */
 final class SummaryTab {
     private SummaryTab() {}
@@ -37,19 +37,8 @@ final class SummaryTab {
         long generatedAt;
     }
 
-    /** The lotto checker's answer. */
-    static final class Check {
-        String error;
-        double probability;
-        Draw latest;               // the chosen draw's latest result
-        boolean won;
-        String tier;               // the prize category reached in the latest draw, or null
-        int matched;
-    }
-
     static final class Out {
         final List<Latest> latest = new ArrayList<>();
-        Check check;
         long fetchAt;
         int failedSources;
         boolean stale;
@@ -98,7 +87,6 @@ final class SummaryTab {
             }
             o.latest.add(l);
         }
-        if (!s.games.get(0).digits() && s.check != null && !s.check.trim().isEmpty()) o.check = check(s, o);
         return o;
     }
 
@@ -125,40 +113,6 @@ final class SummaryTab {
             if (at.plusHours(4).isAfter(now)) continue; // not due yet
             return h.on(g, d) == null && h.size(g) > 0 && d.isAfter(h.last(g)) ? d : null;
         }
-        return null;
-    }
-
-    // ------------------------------------------------------------------ the checker
-
-    private static Check check(MainActivity.Sel s, Out o) {
-        Check c = new Check();
-        Game g = s.games.get(0);
-        c.latest = o.latest.get(0).draw;
-        Odds.Check oc = Odds.read(g, s.check);
-        if (oc.error != null) {
-            c.error = oc.error;
-            return c;
-        }
-        c.probability = 1 / (Combi.choose(g.max, g.count) * (g.extraMax > 0 && oc.extra > 0 ? g.extraMax : 1));
-        Draw probe = new Draw(g, null, "", oc.nums, oc.extra);
-        if (c.latest != null) {
-            c.matched = probe.shared(c.latest);
-            c.tier = tierName(g, c.matched, oc.extra > 0 && c.latest.extra == oc.extra);
-            c.won = c.tier != null;
-        }
-        return c;
-    }
-
-    /** The prize tier a ticket reaches, or null when it wins nothing. */
-    static String tierName(Game g, int matched, boolean extraHit) {
-        if (g.extraMax > 0) {
-            if (matched == g.count && extraHit) return T.t("Jackpot (5 + superbalota)");
-            if (extraHit) return T.f("%d + superbalota", matched);
-            if (matched >= 3) return T.f("%d numbers", matched);
-            return null;
-        }
-        if (matched == g.count) return T.t("Jackpot (5 numbers)");
-        if (matched >= 2) return T.f("%d numbers", matched);
         return null;
     }
 
@@ -258,7 +212,7 @@ final class SummaryTab {
         // ---- today's recommendation ----
         for (Latest l : o.latest) if (l.rec != null && l.rec.nums != null) recCard(a, body, l, single);
 
-        checker(a, body, s, o);
+        if (s.games.get(0).digits()) prizes(a, body, s);
         notifications(a, body, s);
     }
 
@@ -281,72 +235,14 @@ final class SummaryTab {
         fig.setPadding(0, ui.dp(10), 0, 0);
         c.addView(fig);
         c.addView(ui.kv(T.t("Probability"), Combi.oneIn(r.theoryP), Theme.AMBER_LIGHT,
-                r.advantage ? T.t("The model beats chance in the tests (see Picks).") : T.t("Same as any other number: no model beats chance.")),
+                r.advantage ? T.t("The model beats chance in the tests (see Stats).") : T.t("Same as any other number: no model beats chance.")),
                 ui.matchWrap(8));
         c.addView(ui.note(T.f("%s · %s", r.model.shortTitle(), when(l.generatedAt))), ui.matchWrap(2));
-        c.addView(ui.secondaryButton(T.t("Model ranking & track record"), v -> {
-            a.tab = MainActivity.PICKS;
+        c.addView(ui.secondaryButton(T.t("Model ranking"), v -> {
+            a.tab = MainActivity.STATS;
             a.buildSelectors();
             a.render();
         }), ui.matchWrap(10));
-    }
-
-    // ------------------------------------------------------------------ checker card
-
-    private static void checker(MainActivity a, LinearLayout body, MainActivity.Sel s, Out o) {
-        Ui ui = a.ui;
-        Game g = s.games.get(0);
-        if (g.digits()) {
-            prizes(a, body, s);
-            return;
-        }
-        LinearLayout ck = ui.card(body, T.t("CHECK A COMBINATION"));
-        final Ui.Slots slots;
-        {
-            ck.addView(ui.note(g.extraMax > 0 ? T.t("Five numbers from 1 to 43, then the superbalota (1–16, optional).")
-                    : T.t("Five numbers from 1 to 39.")));
-            String[] init = new String[g.count + (g.extraMax > 0 ? 1 : 0)];
-            if (s.check != null && !s.check.trim().isEmpty()) {
-                String[] parts = s.check.split("\\+");
-                String[] main = parts[0].trim().split("[^0-9]+");
-                int j = 0;
-                for (String p : main) if (!p.isEmpty() && j < g.count) init[j++] = p;
-                if (parts.length > 1 && g.extraMax > 0) init[g.count] = parts[1].trim();
-            }
-            slots = ui.slots(init.length, 2, g.extraMax > 0 ? g.count : -1, init);
-            ck.addView(slots.row, ui.matchWrap(10));
-        }
-        ck.addView(ui.primaryButton(T.t("Check"), v -> {
-            String[] vals = slots.values();
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < g.count; i++) sb.append(i == 0 ? "" : " ").append(vals[i]);
-            if (g.extraMax > 0 && vals.length > g.count && !vals[g.count].isEmpty()) sb.append(" + ").append(vals[g.count]);
-            a.check = sb.toString();
-            a.rerenderInPlace();
-        }), ui.matchWrap(12));
-
-        Check c = o.check;
-        if (c == null) return;
-        if (c.error != null) {
-            TextView e = ui.body(c.error);
-            e.setTextColor(Theme.CORAL);
-            ck.addView(e, ui.matchWrap(10));
-            // point at the boxes that are wrong
-            String[] vals = slots.values();
-            for (int i = 0; i < vals.length; i++) {
-                boolean bad = i == g.count ? !vals[i].isEmpty() && (parse(vals[i]) < 1 || parse(vals[i]) > g.extraMax)
-                        : parse(vals[i]) < 1 || parse(vals[i]) > g.max || duplicate(vals, i, g.count);
-                if (bad) ui.markSlot(slots.boxes[i], true);
-            }
-            return;
-        }
-        ck.addView(ui.divider());
-        ck.addView(ui.kv(T.t("Probability"), Combi.oneIn(c.probability), Theme.AMBER_LIGHT, null));
-        if (c.latest != null) {
-            String res = c.latest.numbersText() + (c.latest.extra > 0 ? " + " + c.latest.extraText() : "");
-            String line = c.won ? T.f("Latest draw: %s (%s)", c.tier, res) : T.f("Latest draw: no prize, %d matched (%s)", c.matched, res);
-            ck.addView(ui.status(c.won ? Theme.GREEN : Theme.DIM, line, null));
-        }
     }
 
     /** El Dorado: what each bet wins, net, for the amount chosen. */
@@ -375,19 +271,6 @@ final class SummaryTab {
         }
         c.addView(list, ui.matchWrap(8));
         c.addView(ui.note(T.t("Net prize, after withholding where it applies.")), ui.matchWrap(2));
-    }
-
-    private static int parse(String v) {
-        try {
-            return Integer.parseInt(v.trim());
-        } catch (NumberFormatException e) {
-            return -1;
-        }
-    }
-
-    private static boolean duplicate(String[] v, int i, int n) {
-        for (int j = 0; j < n; j++) if (j != i && !v[j].isEmpty() && parse(v[j]) == parse(v[i])) return true;
-        return false;
     }
 
     /** The switch for this lottery's notifications, and a way to allow them if the system blocks them. */

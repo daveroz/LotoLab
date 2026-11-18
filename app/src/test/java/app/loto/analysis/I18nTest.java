@@ -75,7 +75,7 @@ public class I18nTest {
     @Test
     public void everyTextHasSpanish() throws Exception {
         List<String> keys = keys();
-        assertTrue(keys.size() > 300);
+        assertTrue(keys.size() > 200);
         List<String> missing = new ArrayList<>();
         for (String k : keys) {
             String es = Es.MAP.get(k);
