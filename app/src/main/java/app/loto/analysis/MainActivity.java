@@ -24,13 +24,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * The one screen: swipe to a lottery, pick one of its draws (or all of them), then a tab. Summary brings what
- * matters at a glance; the other tabs go deeper. Glass cards over the Worldly stage; each tab's numbers are
- * worked out on a background thread and its cards built when they're ready. Text follows the device language.
+ * The one screen: swipe to a lottery, pick one of its draws, then a tab. Summary brings what matters at a glance;
+ * History and Stats go deeper. Glass cards over the Worldly stage; each tab's numbers are worked out on a background
+ * thread and its cards built when they're ready. Text follows the device language.
  */
 public class MainActivity extends Activity {
-    static final int SUMMARY = 0, HISTORY = 1, STATS = 2, PICKS = 3, ODDS = 4;
-    static final int[] PERIODS = {30, 90, 365, 0};
+    static final int SUMMARY = 0, HISTORY = 1, STATS = 2;
     static final ZoneId BOGOTA = ZoneId.of("America/Bogota");
     private static final int REQ_NOTIFY = 3;
 
@@ -51,19 +50,11 @@ public class MainActivity extends Activity {
     int tab;
     int weekday = -1;  // History filter: -1 all, 0 Monday .. 6 Sunday
     int limit = 40;    // History: days shown
-    Predictor.Model model = Predictor.Model.FREQUENCY;
-    long seed = 1;
-    String check = "";
-    double checkWager = 1000;
-    Pack.Objective packObjective = Pack.Objective.ANY;
-    double packTarget = 0.5;
-    double packStake = 1000;
+    double checkWager = 1000; // El Dorado's prize list on Summary
 
     /** A snapshot of the choice, handed to the background work. */
     static final class Sel {
         double checkWager;
-        Pack.Objective packObjective;
-        double packTarget, packStake;
         long fetchAt;
         String fetchLog;
         android.content.Context ctx;
@@ -73,27 +64,13 @@ public class MainActivity extends Activity {
         int days;
         Sample sample;
         int weekday, limit;
-        Predictor.Model model;
-        long seed;
-        String check;
     }
 
     static String tabName(int i) {
         switch (i) {
             case SUMMARY: return T.t("Summary");
             case HISTORY: return T.t("History");
-            case STATS: return T.t("Stats");
-            case PICKS: return T.t("Picks");
-            default: return T.t("Odds");
-        }
-    }
-
-    static String periodName(int i) {
-        switch (i) {
-            case 0: return T.t("30 days");
-            case 1: return T.t("90 days");
-            case 2: return T.t("1 year");
-            default: return T.t("All");
+            default: return T.t("Stats");
         }
     }
 
@@ -107,9 +84,6 @@ public class MainActivity extends Activity {
         if (Game.of(lottery).isEmpty()) lottery = "Dorado";
         gameIdx = Math.max(0, Math.min(Game.of(lottery).size() - 1, sp.getInt("game", 0)));
         tab = SUMMARY; // Summary first, every time the app opens
-        try {
-            model = Predictor.Model.valueOf(sp.getString("model", "FREQUENCY"));
-        } catch (IllegalArgumentException ignored) { }
         fromIntent(getIntent());
 
         FrameLayout room = new FrameLayout(this);
@@ -149,7 +123,6 @@ public class MainActivity extends Activity {
                     gameIdx = 0; // always the lottery's first draw (Mañana, Baloto...)
                     weekday = -1;
                     limit = 40;
-                    check = "";
                     buildSelectors();
                     render();
                 });
@@ -204,7 +177,6 @@ public class MainActivity extends Activity {
         int idx = g == null ? -1 : games.indexOf(g);
         gameIdx = Math.max(0, idx); // the draw announced, or the lottery's first draw
         tab = SUMMARY;
-        check = "";
         return true;
     }
 
@@ -234,8 +206,7 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
         stage.setRunning(false);
-        Data.sp(this).edit().putString("lottery", lottery).putInt("game", gameIdx)
-                .putString("model", model.name()).apply();
+        Data.sp(this).edit().putString("lottery", lottery).putInt("game", gameIdx).apply();
     }
 
     @Override
@@ -315,7 +286,7 @@ public class MainActivity extends Activity {
         }
         tabBox.removeAllViews();
         LinearLayout tr = ui.chipRow(tabBox, 10, false);
-        for (int i = 0; i <= ODDS; i++) {
+        for (int i = 0; i <= STATS; i++) {
             final int idx = i;
             TextView t = ui.chip(tabName(i).toUpperCase(T.L), i == tab, v -> {
                 tab = idx;
@@ -338,13 +309,7 @@ public class MainActivity extends Activity {
         s.days = 0; // every tab looks at the whole history
         s.weekday = weekday;
         s.limit = limit;
-        s.model = model;
-        s.seed = seed;
-        s.check = check;
         s.checkWager = checkWager;
-        s.packObjective = packObjective;
-        s.packTarget = packTarget;
-        s.packStake = packStake;
         s.fetchAt = Data.sp(this).getLong("fetchAt", 0);
         s.fetchLog = Data.sp(this).getString("fetchLog", "");
         s.ctx = getApplicationContext();
@@ -375,9 +340,7 @@ public class MainActivity extends Activity {
                 switch (t) {
                     case SUMMARY: data = SummaryTab.compute(sel); break;
                     case HISTORY: data = HistoryTab.compute(sel); break;
-                    case STATS: data = StatsTab.compute(sel); break;
-                    case PICKS: data = PicksTab.compute(sel); break;
-                    default: data = OddsTab.compute(sel);
+                    default: data = StatsTab.compute(sel);
                 }
             } catch (Throwable e) {
                 android.util.Log.e("LotoLab", "couldn't work out tab " + t, e);
@@ -397,9 +360,7 @@ public class MainActivity extends Activity {
                     switch (t) {
                         case SUMMARY: SummaryTab.show(this, body, sel, result); break;
                         case HISTORY: HistoryTab.show(this, body, sel, result); break;
-                        case STATS: StatsTab.show(this, body, sel, result); break;
-                        case PICKS: PicksTab.show(this, body, sel, result); break;
-                        default: OddsTab.show(this, body, sel, result);
+                        default: StatsTab.show(this, body, sel, result);
                     }
                 } catch (RuntimeException e) {
                     android.util.Log.e("LotoLab", "couldn't show tab " + t, e);
