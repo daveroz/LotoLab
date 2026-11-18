@@ -8,13 +8,16 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.Locale;
 
-/** Building blocks of every screen, in the Worldly look: glass cards over the stage, lit chips, spaced labels. */
+/**
+ * Building blocks of every screen, in Fuji-App's crystal style over Worldly's stage: cards of glass with their titles
+ * above, segmented controls, equal-cell chips, a switch, solid amber for the key action, icons in bubbles of glass,
+ * lamps for status, and spaced capital labels.
+ */
 final class Ui {
     final Activity a;
 
@@ -79,113 +82,224 @@ final class Ui {
         return t;
     }
 
-    /** A glass panel over the stage, with its title in spaced capitals in the key light. */
+    // ---------------------------------------------------------------- cards
+
+    /** Card corners, as in Fuji-App: rounded squares kept tight. */
+    static final float CARD_RADIUS = 13;
+
+    /** A section title above its card: spaced capitals in the key light. */
+    private TextView sectionTitle(String title) {
+        TextView t = text(title, 11.5f, Theme.uiBold(a), Theme.AMBER_LIGHT);
+        Theme.label(a, t);
+        t.setTextSize(11.5f);
+        t.setSingleLine(true);
+        t.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        return t;
+    }
+
+    /** A card of glass with its title above it, as Fuji-App lays out its sections. Returns the card to fill. */
     LinearLayout card(LinearLayout parent, String title) {
-        LinearLayout c = vbox();
-        c.setBackground(Theme.glass(a, 16));
-        c.setPadding(dp(14), dp(14), dp(14), dp(14));
-        if (title != null) {
-            TextView t = text(title, 11.5f, Theme.uiBold(a), Theme.AMBER_LIGHT);
-            Theme.label(a, t);
-            t.setTextSize(11.5f);
-            t.setPadding(dp(2), 0, 0, dp(10));
-            c.addView(t);
-        }
-        parent.addView(c, matchWrap(14));
-        return c;
+        return card(parent, title, null);
     }
 
     /** A card whose title carries what kind of figures it holds: descriptive, theoretical or predictive evidence. */
     LinearLayout card(LinearLayout parent, String title, String kind) {
-        LinearLayout c = card(parent, null);
-        LinearLayout head = hbox();
-        head.setGravity(Gravity.CENTER_VERTICAL);
-        head.setPadding(dp(2), 0, 0, dp(10));
-        TextView t = text(title, 11.5f, Theme.uiBold(a), Theme.AMBER_LIGHT);
-        Theme.label(a, t);
-        t.setTextSize(11.5f);
-        head.addView(t, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        if (kind != null) head.addView(tag(kind, Theme.COOL), wrap(8));
-        c.addView(head);
+        if (title != null) {
+            LinearLayout head = hbox();
+            head.setGravity(Gravity.CENTER_VERTICAL);
+            head.setPadding(dp(4), 0, dp(2), 0);
+            head.addView(sectionTitle(title), new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+            if (kind != null) head.addView(tag(kind, Theme.COOL), wrap(8));
+            LinearLayout.LayoutParams hp = matchWrap(24);
+            hp.bottomMargin = dp(10);
+            parent.addView(head, hp);
+        }
+        LinearLayout c = vbox();
+        c.setBackground(Theme.glass(a, CARD_RADIUS));
+        c.setPadding(dp(16), dp(14), dp(16), dp(14));
+        parent.addView(c, matchWrap(title == null ? 14 : 0));
         return c;
     }
 
     /**
      * Details that stay folded until tapped, so a card shows its key finding first and keeps the depth one tap
-     * away. Returns the container to fill.
+     * away: a chevron and the title in the key light. Returns the container to fill.
      */
     LinearLayout details(LinearLayout parent, String title) {
         final LinearLayout box = vbox();
         box.setVisibility(View.GONE);
-        final TextView head = text("▸  " + title, 13, Theme.uiSemi(a), Theme.AMBER_LIGHT);
+        LinearLayout head = hbox();
+        head.setGravity(Gravity.CENTER_VERTICAL);
         head.setPadding(0, dp(10), 0, dp(6));
+        final Icon chevron = new Icon(a, Icon.Kind.CHEVRON_RIGHT, Theme.AMBER_LIGHT);
+        head.addView(chevron, new LinearLayout.LayoutParams(dp(14), dp(14)));
+        TextView t = text(title, 13, Theme.uiSemi(a), Theme.AMBER_LIGHT);
+        LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        tp.leftMargin = dp(8);
+        head.addView(t, tp);
         head.setClickable(true);
         head.setOnClickListener(v -> {
             boolean open = box.getVisibility() != View.VISIBLE;
             box.setVisibility(open ? View.VISIBLE : View.GONE);
-            head.setText((open ? "▾  " : "▸  ") + title);
+            chevron.setRotation(open ? 90 : 0);
         });
         parent.addView(head, matchWrap(4));
         parent.addView(box, matchWrap(0));
         return box;
     }
 
-    /** A choice: lit like a lamp when it's the chosen one, a hairline outline otherwise. */
-    TextView chip(String label, boolean on, View.OnClickListener l) {
-        TextView b = text(label, 13, Theme.uiSemi(a), on ? 0xFFFFFFFF : Theme.TEXT_SOFT);
-        b.setGravity(Gravity.CENTER);
-        b.setSingleLine(true);
-        b.setPadding(dp(14), dp(11), dp(14), dp(11));
-        b.setBackground(on ? Theme.lit(a, 14, false)
-                : Theme.pressable(Theme.box(a, Theme.GLASS, Theme.BORDER_STRONG, 14), Theme.well(a, 14, true)));
-        b.setClickable(true);
-        b.setOnClickListener(l);
-        return b;
+    // ---------------------------------------------------------------- choices
+
+    /**
+     * Sections or filters in a glass capsule (a segmented control): a recessed well, the chosen one a lighter lens of
+     * glass with its name in white, the others muted. {@code large} is the size of the tabs; otherwise compact.
+     */
+    LinearLayout segmented(LinearLayout parent, String[] options, int selected, java.util.function.IntConsumer onPick,
+                           boolean large, int topDp) {
+        LinearLayout track = hbox();
+        track.setBackground(Theme.glass(a, large ? 16 : 13, Glass.Tone.WELL));
+        int pad = dp(large ? 5 : 4);
+        track.setPadding(pad, pad, pad, pad);
+        for (int i = 0; i < options.length; i++) {
+            final int idx = i;
+            boolean on = i == selected;
+            TextView t = label(options[i], on ? Theme.TEXT : Theme.MUTED);
+            t.setTextSize(large ? 12 : 10.5f);
+            t.setLetterSpacing(large ? 0.24f : 0.2f);
+            t.setGravity(Gravity.CENTER);
+            t.setSingleLine(true);
+            t.setAutoSizeTextTypeUniformWithConfiguration(7, large ? 12 : 11, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
+            t.setMinHeight(dp(large ? 46 : 38));
+            t.setPadding(dp(4), 0, dp(4), 0);
+            if (on) t.setBackground(Theme.glass(a, large ? 11 : 9, Glass.Tone.LENS));
+            t.setClickable(true);
+            t.setFocusable(true);
+            if (on) t.setSelected(true);
+            t.setOnClickListener(v -> onPick.accept(idx));
+            track.addView(t, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+        }
+        parent.addView(track, matchWrap(topDp));
+        return track;
     }
 
-    /** A row of chips that scrolls sideways when it doesn't fit. */
-    LinearLayout chipRow(LinearLayout parent, int topDp) {
-        return chipRow(parent, topDp, false);
+    /**
+     * A set of choices as equal cells, edge to edge across the card in even rows: the chosen one lit, never bigger or
+     * smaller than the rest. Labels shrink to fit their cell.
+     */
+    Controls.ChipGrid chips(LinearLayout parent, String[] options, int selected, java.util.function.IntConsumer onPick, int topDp) {
+        Controls.ChipGrid grid = new Controls.ChipGrid(a, dp(8), dp(38));
+        for (int i = 0; i < options.length; i++) {
+            final int idx = i;
+            boolean on = i == selected;
+            TextView t = label(options[i], on ? Theme.AMBER_LIGHT : Theme.MUTED);
+            t.setLetterSpacing(0.12f);
+            t.setGravity(Gravity.CENTER);
+            t.setSingleLine(true);
+            t.setAutoSizeTextTypeUniformWithConfiguration(7, 11, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
+            t.setPadding(dp(6), 0, dp(6), 0);
+            t.setBackground(on ? Theme.lit(a, 10, false) : Theme.glassPressable(a, 10, Glass.Tone.PANE));
+            t.setClickable(true);
+            t.setFocusable(true);
+            if (on) t.setSelected(true);
+            t.setOnClickListener(v -> onPick.accept(idx));
+            grid.addView(t);
+        }
+        parent.addView(grid, matchWrap(topDp));
+        return grid;
     }
 
-    /** center: the chips sit in the middle when they fit (the draws under the lottery's emblem). */
-    LinearLayout chipRow(LinearLayout parent, int topDp, boolean center) {
-        HorizontalScrollView hs = new HorizontalScrollView(a);
-        hs.setHorizontalScrollBarEnabled(false);
-        hs.setClipToPadding(false);
-        hs.setFillViewport(center);
-        LinearLayout row = hbox();
-        if (center) row.setGravity(Gravity.CENTER_HORIZONTAL);
-        hs.addView(row, new ViewGroup.LayoutParams(center ? ViewGroup.LayoutParams.MATCH_PARENT : ViewGroup.LayoutParams.WRAP_CONTENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT));
-        parent.addView(hs, matchWrap(topDp));
-        return row;
+    // ---------------------------------------------------------------- buttons
+
+    /** The key action of a screen: solid amber, its label in the night's warm ink. */
+    TextView primaryButton(String label, Icon.Kind icon, View.OnClickListener l) {
+        return button(label, icon, Glass.Key.INK, Glass.Key.INK, Theme.key(a, -1), l);
     }
 
-    TextView primaryButton(String label, View.OnClickListener l) {
-        TextView b = text(label, 13, Theme.uiBold(a), 0xFFFFFFFF);
-        Theme.label(a, b);
-        b.setTextSize(12);
-        b.setLetterSpacing(0.18f);
-        b.setGravity(Gravity.CENTER);
-        b.setPadding(dp(16), dp(15), dp(16), dp(15));
-        b.setBackground(Theme.pressable(Theme.lit(a, 16, false), Theme.lit(a, 16, true)));
-        b.setClickable(true);
-        b.setOnClickListener(l);
-        return b;
+    /** A button of glass, its icon in the key light. */
+    TextView secondaryButton(String label, Icon.Kind icon, View.OnClickListener l) {
+        return button(label, icon, Theme.TEXT, Theme.AMBER_LIGHT, Theme.glassPressable(a, -1, Glass.Tone.PANE), l);
     }
 
     TextView secondaryButton(String label, View.OnClickListener l) {
-        TextView b = text(label, 12, Theme.uiSemi(a), Theme.TEXT_SOFT);
-        Theme.label(a, b);
-        b.setTextSize(11);
-        b.setLetterSpacing(0.14f);
+        return secondaryButton(label, null, l);
+    }
+
+    private TextView button(String label, Icon.Kind icon, int color, int iconColor, android.graphics.drawable.Drawable bg, View.OnClickListener l) {
+        TextView b = label(label, color);
+        b.setTextSize(12);
+        b.setSingleLine(true);
+        b.setAutoSizeTextTypeUniformWithConfiguration(7, 12, 1, android.util.TypedValue.COMPLEX_UNIT_SP);
+        if (icon != null) {
+            Icon.Glyph g = new Icon.Glyph(icon, iconColor);
+            g.setBounds(0, 0, dp(17), dp(17));
+            b.setCompoundDrawablesRelative(g, null, null, null);
+            b.setCompoundDrawablePadding(dp(9));
+        }
         b.setGravity(Gravity.CENTER);
-        b.setPadding(dp(14), dp(12), dp(14), dp(12));
-        b.setBackground(Theme.pressable(Theme.box(a, Theme.GLASS, Theme.BORDER_STRONG, 14), Theme.well(a, 14, true)));
+        b.setMinHeight(dp(48));
+        b.setPadding(dp(16), 0, dp(16), 0);
+        b.setBackground(bg);
         b.setClickable(true);
+        b.setFocusable(true);
         b.setOnClickListener(l);
         return b;
+    }
+
+    /** A small action: an icon in a bubble of glass (a rounded square), thumb-sized. */
+    View iconButton(Icon.Kind kind, String description, int sizeDp, View.OnClickListener l) {
+        Icon i = new Icon(a, kind, Theme.AMBER_LIGHT);
+        int pad = dp(sizeDp) * 3 / 10;
+        i.setPadding(pad, pad, pad, pad);
+        i.setBackground(Theme.glassPressable(a, 0, Glass.Tone.BUBBLE));
+        i.setClickable(true);
+        i.setFocusable(true);
+        i.setContentDescription(description);
+        i.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
+        i.setOnClickListener(v -> {
+            v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
+            l.onClick(v);
+        });
+        i.setLayoutParams(new LinearLayout.LayoutParams(dp(sizeDp), dp(sizeDp)));
+        return i;
+    }
+
+    /** A small icon in the key light in a square of lens glass, at the start of a settings row. */
+    View iconSquare(Icon.Kind kind) {
+        Icon i = new Icon(a, kind, Theme.AMBER_LIGHT);
+        int pad = dp(8);
+        i.setPadding(pad, pad, pad, pad);
+        i.setBackground(Theme.glass(a, 8, Glass.Tone.LENS));
+        return i;
+    }
+
+    /** A setting that's on or off: an icon, the title and its explanation, and a switch; the whole row toggles it. */
+    LinearLayout toggle(Icon.Kind icon, String title, String detail, boolean on, View.OnClickListener l) {
+        LinearLayout row = hbox();
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(0, dp(4), 0, dp(4));
+        if (icon != null) {
+            LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(dp(34), dp(34));
+            ip.rightMargin = dp(14);
+            row.addView(iconSquare(icon), ip);
+        }
+        LinearLayout words = vbox();
+        words.addView(text(title, 15, Theme.uiMedium(a), Theme.TEXT));
+        if (detail != null) {
+            TextView d = text(detail, Ui.SMALL, Theme.uiMedium(a), Theme.MUTED);
+            d.setPadding(0, dp(4), 0, 0);
+            words.addView(d);
+        }
+        LinearLayout.LayoutParams wp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        wp.rightMargin = dp(16);
+        row.addView(words, wp);
+        Controls.Switch sw = new Controls.Switch(a);
+        sw.setChecked(on);
+        row.addView(sw);
+        row.setClickable(true);
+        row.setFocusable(true);
+        row.setContentDescription(title + (on ? ": on" : ": off"));
+        row.setOnClickListener(l);
+        return row;
     }
 
     EditText input(String hint, boolean digitsOnly) {
@@ -261,13 +375,16 @@ final class Ui {
         return box;
     }
 
-    /** A status dot, a title and its explanation. */
+    /** A status lamp blooming in its colour, a title and its explanation. */
     LinearLayout status(int color, String title, String detail) {
         LinearLayout row = hbox();
         row.setPadding(0, dp(6), 0, dp(6));
-        TextView dot = text("●", 12, Typeface.DEFAULT, color);
-        dot.setPadding(0, dp(2), dp(10), 0);
-        row.addView(dot);
+        View lamp = new View(a);
+        lamp.setBackground(new Glass.Lamp(color));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(18), dp(18));
+        lp.rightMargin = dp(8);
+        lp.leftMargin = -dp(4); // the lamp's glow reaches past the margin; its core lines up with the text
+        row.addView(lamp, lp);
         LinearLayout txt = vbox();
         txt.addView(text(title, 14.5f, Theme.uiSemi(a), Theme.TEXT));
         if (detail != null && !detail.isEmpty()) {
@@ -283,8 +400,8 @@ final class Ui {
     TextView tag(String s, int color) {
         TextView t = text(s.toUpperCase(T.L), 10, Theme.uiBold(a), color);
         t.setLetterSpacing(0.16f);
-        t.setPadding(dp(8), dp(3), dp(8), dp(3));
-        t.setBackground(Theme.box(a, (color & 0x00FFFFFF) | 0x22000000, (color & 0x00FFFFFF) | 0x88000000, 8));
+        t.setPadding(dp(8), dp(4), dp(8), dp(4));
+        t.setBackground(Theme.box(a, (color & 0x00FFFFFF) | 0x1F000000, (color & 0x00FFFFFF) | 0x73000000, 7));
         return t;
     }
 
@@ -326,17 +443,6 @@ final class Ui {
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(sizeDp), dp(sizeDp));
         lp.leftMargin = dp(leftDp);
         return lp;
-    }
-
-    /** Scrolls a chip row (from {@link #chipRow}) so the chip at `index` is in view. */
-    void reveal(LinearLayout row, int index) {
-        row.post(() -> {
-            if (index < 0 || index >= row.getChildCount() || !(row.getParent() instanceof HorizontalScrollView)) return;
-            View c = row.getChildAt(index);
-            HorizontalScrollView hs = (HorizontalScrollView) row.getParent();
-            int x = c.getLeft() - dp(24);
-            if (c.getRight() - hs.getScrollX() > hs.getWidth() || c.getLeft() < hs.getScrollX()) hs.scrollTo(Math.max(0, x), 0);
-        });
     }
 
     TextView ball(String s, boolean tile, int color, float sizeDp) {

@@ -485,10 +485,8 @@ final class Es {
                 "NOTIFICACIONES");
         p("%s results",
                 "Resultados de %s");
-        p("On",
-                "Activadas");
-        p("Off",
-                "Desactivadas");
+        p("The numbers about ten minutes after each draw.",
+                "Los números unos diez minutos después de cada sorteo.");
         p("Android is blocking notifications for LotoLab.",
                 "Android está bloqueando las notificaciones de LotoLab.");
         p("Allow notifications",

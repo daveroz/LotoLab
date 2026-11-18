@@ -63,16 +63,15 @@ final class HistoryTab {
             sch.setPadding(0, ui.dp(2), 0, 0);
             res.addView(sch);
         }
-        LinearLayout wd = ui.chipRow(res, 10);
-        for (int i = -1; i < 7; i++) {
-            final int idx = i;
-            wd.addView(ui.chip(i < 0 ? T.t("Every day") : Fmt.dayShort(i), i == s.weekday, v -> {
-                a.weekday = idx;
-                a.limit = 40;
-                a.rerenderInPlace();
-            }), ui.wrap(i < 0 ? 0 : 6));
-        }
-        ui.reveal(wd, s.weekday + 1);
+        // the day of the week as equal cells: every day, then Monday to Sunday
+        String[] days = new String[8];
+        days[0] = T.t("Every day");
+        for (int i = 0; i < 7; i++) days[i + 1] = Fmt.dayShort(i);
+        ui.chips(res, days, s.weekday + 1, i -> {
+            a.weekday = i - 1;
+            a.limit = 40;
+            a.rerenderInPlace();
+        }, 12);
         if (o.days.isEmpty()) {
             TextView none = ui.body(s.weekday >= 0 ? T.f("No draws on %s in this selection.", Fmt.day(s.weekday))
                     : T.t("No results stored for this selection."));
@@ -113,7 +112,7 @@ final class HistoryTab {
             }
         }
         if (o.totalDays > o.days.size()) {
-            res.addView(ui.secondaryButton(T.f("Show %d more days", Math.min(60, o.totalDays - o.days.size())), v -> {
+            res.addView(ui.secondaryButton(T.f("Show %d more days", Math.min(60, o.totalDays - o.days.size())), Icon.Kind.PLUS, v -> {
                 a.limit += 60;
                 a.rerenderInPlace();
             }), ui.matchWrap(14));

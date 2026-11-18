@@ -238,7 +238,7 @@ final class SummaryTab {
                 r.advantage ? T.t("The model beats chance in the tests (see Stats).") : T.t("Same as any other number: no model beats chance.")),
                 ui.matchWrap(8));
         c.addView(ui.note(T.f("%s · %s", r.model.shortTitle(), when(l.generatedAt))), ui.matchWrap(2));
-        c.addView(ui.secondaryButton(T.t("Model ranking"), v -> {
+        c.addView(ui.secondaryButton(T.t("Model ranking"), Icon.Kind.BARS, v -> {
             a.tab = MainActivity.STATS;
             a.buildSelectors();
             a.render();
@@ -249,20 +249,18 @@ final class SummaryTab {
     private static void prizes(MainActivity a, LinearLayout body, MainActivity.Sel s) {
         Ui ui = a.ui;
         LinearLayout c = ui.card(body, T.t("WHAT YOU WIN"));
-        // the five amounts share the row equally, so all fit on a narrow phone
-        LinearLayout wager = ui.hbox();
-        double[] amounts = {200, 500, 1000, 2000, 5000};
-        for (double amt : amounts) {
-            TextView chip = ui.chip(Prizes.cop(amt), Math.abs(s.checkWager - amt) < 0.5, v -> {
-                a.checkWager = amt;
-                a.rerenderInPlace();
-            });
-            chip.setPadding(ui.dp(2), ui.dp(11), ui.dp(2), ui.dp(11));
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-            if (wager.getChildCount() > 0) lp.leftMargin = ui.dp(5);
-            wager.addView(chip, lp);
+        // the five amounts as equal cells across the card
+        final double[] amounts = {200, 500, 1000, 2000, 5000};
+        String[] labels = new String[amounts.length];
+        int chosen = -1;
+        for (int i = 0; i < amounts.length; i++) {
+            labels[i] = Prizes.cop(amounts[i]);
+            if (Math.abs(s.checkWager - amounts[i]) < 0.5) chosen = i;
         }
-        c.addView(wager, ui.matchWrap(0));
+        ui.chips(c, labels, chosen, i -> {
+            a.checkWager = amounts[i];
+            a.rerenderInPlace();
+        }, 0);
         int year = ZonedDateTime.now(MainActivity.BOGOTA).getYear();
         Prizes.Bet[] bets = {Prizes.Bet.FOUR, Prizes.Bet.THREE, Prizes.Bet.TWO, Prizes.Bet.ONE, Prizes.Bet.FOUR_ANY, Prizes.Bet.THREE_ANY};
         LinearLayout list = ui.vbox();
@@ -279,24 +277,16 @@ final class SummaryTab {
         LinearLayout nc = ui.card(body, T.t("NOTIFICATIONS"));
         boolean on = Notifier.enabled(a, s.lottery);
         boolean allowed = Notifier.allowed(a);
-        LinearLayout row = ui.hbox();
-        row.setGravity(Gravity.CENTER_VERTICAL);
-        row.addView(ui.text(T.f("%s results", s.lottery), 14.5f, Theme.uiSemi(a), Theme.TEXT),
-                new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-        row.addView(ui.chip(T.t("On"), on, v -> {
-            Notifier.setEnabled(a, s.lottery, true);
-            a.rerenderInPlace();
-        }));
-        row.addView(ui.chip(T.t("Off"), !on, v -> {
-            Notifier.setEnabled(a, s.lottery, false);
-            a.rerenderInPlace();
-        }), ui.wrap(8));
-        nc.addView(row);
+        nc.addView(ui.toggle(Icon.Kind.BELL, T.f("%s results", s.lottery),
+                T.t("The numbers about ten minutes after each draw."), on, v -> {
+                    Notifier.setEnabled(a, s.lottery, !on);
+                    a.rerenderInPlace();
+                }));
         if (on && !allowed) {
             TextView w = ui.body(T.t("Android is blocking notifications for LotoLab."));
             w.setTextColor(Theme.AMBER);
             nc.addView(w, ui.matchWrap(10));
-            nc.addView(ui.secondaryButton(T.t("Allow notifications"), v -> {
+            nc.addView(ui.primaryButton(T.t("Allow notifications"), Icon.Kind.BELL, v -> {
                 if (Build.VERSION.SDK_INT >= 33 && a.shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
                     a.requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 3);
                 } else {
