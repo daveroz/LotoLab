@@ -15,7 +15,7 @@ import java.util.TreeMap;
  */
 final class History {
     private final Map<String, TreeMap<LocalDate, Draw>> byGame = new HashMap<>();
-    /** Rows that couldn't be read as a valid result: kept so the Integrity tab can report them. */
+    /** Rows that couldn't be read as a valid result: kept so they can be reported. */
     final List<String> rejected = new ArrayList<>();
 
     History() {

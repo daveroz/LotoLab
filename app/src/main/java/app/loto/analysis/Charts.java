@@ -198,52 +198,6 @@ final class Charts {
     }
 
     /** The randomness score as a lit arc. */
-    static final class Gauge extends Base {
-        private final int score;
-        private final int color;
-
-        Gauge(Context c, int score, int color) {
-            super(c, 132);
-            this.score = score;
-            this.color = color;
-        }
-
-        @Override
-        protected void onDraw(Canvas c) {
-            float w = getWidth(), h = getHeight();
-            float r = Math.min(w / 2, h * 0.62f) - 10 * d;
-            float cx = w / 2, cy = h * 0.62f;
-            RectF box = new RectF(cx - r, cy - r, cx + r, cy + r);
-            Paint track = new Paint(Paint.ANTI_ALIAS_FLAG);
-            track.setStyle(Paint.Style.STROKE);
-            track.setStrokeCap(Paint.Cap.ROUND);
-            track.setStrokeWidth(9 * d);
-            track.setColor(0x22AADCFF);
-            c.drawArc(box, 160, 220, false, track);
-            if (score >= 0) {
-                float sweep = 220 * score / 100f;
-                Paint g = new Paint(Paint.ANTI_ALIAS_FLAG);
-                g.setStyle(Paint.Style.STROKE);
-                g.setStrokeCap(Paint.Cap.ROUND);
-                g.setStrokeWidth(14 * d);
-                g.setColor((color & 0x00FFFFFF) | 0x55000000);
-                g.setMaskFilter(new BlurMaskFilter(7 * d, BlurMaskFilter.Blur.NORMAL));
-                c.drawArc(box, 160, sweep, false, g);
-                track.setColor(color);
-                c.drawArc(box, 160, sweep, false, track);
-            }
-            Paint big = new Paint(Paint.ANTI_ALIAS_FLAG);
-            big.setTypeface(Theme.monoBold(getContext()));
-            big.setTextAlign(Paint.Align.CENTER);
-            big.setTextSize(38 * d);
-            big.setColor(Theme.LED);
-            c.drawText(score >= 0 ? String.valueOf(score) : "–", cx, cy + 4 * d, big);
-            txt.setTextSize(10 * d);
-            txt.setColor(Theme.MUTED);
-            c.drawText(T.t("OF 100"), cx, cy + 20 * d, txt);
-        }
-    }
-
     /** Groups a long distribution (sums of lotto draws) into about `bins` wider bins. */
     static double[][] rebin(double[] obs, double[] exp, int bins, String[] outLabels) {
         int first = 0, last = exp.length - 1;

@@ -171,68 +171,22 @@ public class EngineTest {
         assertEquals(1, Analysis.pattern(d)); // 2820: one pair
     }
 
-    // ------------------------------------------------------------ randomness and integrity
+    // ------------------------------------------------------------ the draw audit
 
-    /** On fair simulated draws each test should come out below 0.05 only about 5% of the time. */
+    /** "About 3 in 100 fair draws score below 10" (History says so): the audit must not cry wolf more often. */
     @Test
-    public void testsAreCalibratedOnFairDraws() {
-        for (Game g : new Game[]{Game.BALOTO, Game.DORADO_MANANA}) {
-            int runs = 60, flags = 0, tests = 0, scoreSum = 0;
-            for (int i = 0; i < runs; i++) {
-                Randomness.Report r = Randomness.run(sample(simulate(g, 600, 1000 + i, 0), g));
-                for (TestResult t : r.tests) {
-                    if (!t.enough) continue;
-                    tests++;
-                    if (t.p < 0.05) flags++;
-                }
-                scoreSum += r.score;
+    public void drawAuditIsCalibratedOnFairDraws() {
+        for (Game g : new Game[]{Game.BALOTO, Game.DORADO_MANANA, Game.MILOTO}) {
+            List<Randomness.DrawScore> s = Randomness.drawScores(sample(simulate(g, 4000, 11, 0), g));
+            int below10 = 0, below1 = 0;
+            for (Randomness.DrawScore d : s) {
+                if (d.score < 10) below10++;
+                if (d.score < 1) below1++;
             }
-            double rate = flags / (double) tests;
-            assertTrue(g.name + " false alarm rate " + rate, rate > 0.01 && rate < 0.10);
-            assertTrue(g.name + " average score " + scoreSum / runs, scoreSum / runs >= 90);
+            double r10 = below10 / (double) s.size(), r1 = below1 / (double) s.size();
+            assertTrue(g.name + " below 10: " + r10, r10 > 0.01 && r10 < 0.06);
+            assertTrue(g.name + " below 1: " + r1, r1 < 0.005);
         }
-    }
-
-    @Test
-    public void biasIsDetectedAndReplicated() {
-        History h = simulate(Game.DORADO_MANANA, 1200, 7, 0.08); // 7 forced into the first digit 8% of the time
-        Randomness.Report r = Randomness.run(sample(h, Game.DORADO_MANANA));
-        TestResult freq = null;
-        for (TestResult t : r.tests) if (t.key.equals("freq")) freq = t;
-        assertNotNull(freq);
-        assertTrue(freq.pAdj < 0.01);
-        assertTrue(r.score < 100);
-        Integrity.Report ir = Integrity.run(h, "Dorado", 0);
-        assertEquals(Integrity.Level.PERSISTENT, ir.overall);
-    }
-
-    @Test
-    public void fairDrawsUsuallyLookClean() {
-        int clean = 0;
-        for (int i = 0; i < 10; i++) {
-            Integrity.Report ir = Integrity.run(simulate(Game.BALOTO, 500, 300 + i, 0), "Baloto", 0);
-            if (ir.overall == Integrity.Level.CLEAR) clean++;
-        }
-        assertTrue("clean runs " + clean, clean >= 8);
-    }
-
-    @Test
-    public void missingDaysFollowTheLocalSchedule() {
-        History h = new History();
-        Random r = new Random(3);
-        // daily for 120 days, then weekends only for 120 days (a schedule change, not missing data),
-        // with one real two-week hole in the daily part
-        for (LocalDate d = LocalDate.of(2024, 1, 1); d.isBefore(LocalDate.of(2024, 9, 1)); d = d.plusDays(1)) {
-            boolean daily = d.isBefore(LocalDate.of(2024, 5, 1));
-            boolean weekend = d.getDayOfWeek().getValue() >= 6;
-            boolean hole = !d.isBefore(LocalDate.of(2024, 3, 4)) && d.isBefore(LocalDate.of(2024, 3, 18));
-            if ((daily || weekend) && !hole) {
-                h.put(new Draw(Game.DORADO_NOCHE, d, "", new int[]{r.nextInt(10), r.nextInt(10), r.nextInt(10), r.nextInt(10)}, -1));
-            }
-        }
-        List<String> m = Integrity.missingStretches(sample(h, Game.DORADO_NOCHE));
-        assertEquals(m.toString(), 1, m.size());
-        assertTrue(m.get(0), m.get(0).startsWith("4 Mar 2024"));
     }
 
     @Test

@@ -55,7 +55,7 @@ final class Draw implements Comparable<Draw> {
         return new Draw(g, date, drawNo, n, x);
     }
 
-    /** Whether every number is in range and lotto balls are all different (a data check, see Integrity). */
+    /** Whether every number is in range and lotto balls are all different (a data check). */
     boolean valid() {
         if (game.digits()) {
             for (int v : nums) if (v < 0 || v > 9) return false;

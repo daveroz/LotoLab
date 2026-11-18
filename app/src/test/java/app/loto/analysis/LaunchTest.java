@@ -106,13 +106,13 @@ public class LaunchTest {
         java.lang.reflect.Field f = MainActivity.class.getDeclaredField("body");
         f.setAccessible(true);
         ViewGroup body = (ViewGroup) f.get(a);
-        String working = T.t("Working it out…"), running = T.t("Running every test on every draw…");
+        String working = T.t("Working it out…");
         for (int i = 0; i < 1600; i++) {
             Thread.sleep(25);
             ShadowLooper.idleMainLooper();
             if (i < 8 || body == null || body.getChildCount() == 0) continue;
             String first = text(body.getChildAt(0));
-            if (!first.contains(working) && !first.contains(running)) break;
+            if (!first.contains(working)) break;
         }
         ShadowLooper.idleMainLooper();
         if (!crashes.isEmpty()) throw new AssertionError("crash", crashes.get(0));

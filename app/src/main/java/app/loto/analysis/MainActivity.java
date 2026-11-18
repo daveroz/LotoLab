@@ -29,7 +29,7 @@ import java.util.concurrent.Executors;
  * worked out on a background thread and its cards built when they're ready. Text follows the device language.
  */
 public class MainActivity extends Activity {
-    static final int SUMMARY = 0, HISTORY = 1, STATS = 2, RANDOM = 3, PICKS = 4, INTEGRITY = 5, ODDS = 6;
+    static final int SUMMARY = 0, HISTORY = 1, STATS = 2, PICKS = 3, ODDS = 4;
     static final int[] PERIODS = {30, 90, 365, 0};
     static final ZoneId BOGOTA = ZoneId.of("America/Bogota");
     private static final int REQ_NOTIFY = 3;
@@ -87,9 +87,7 @@ public class MainActivity extends Activity {
             case SUMMARY: return T.t("Summary");
             case HISTORY: return T.t("History");
             case STATS: return T.t("Stats");
-            case RANDOM: return T.t("Randomness");
             case PICKS: return T.t("Picks");
-            case INTEGRITY: return T.t("Integrity");
             default: return T.t("Odds");
         }
     }
@@ -404,7 +402,7 @@ public class MainActivity extends Activity {
         final int t = tab;
         if (!inPlace || body.getChildCount() == 0) {
             body.removeAllViews();
-            body.addView(loading(t == INTEGRITY ? T.t("Running every test on every draw…") : T.t("Working it out…")));
+            body.addView(loading(T.t("Working it out…")));
         }
         worker.execute(() -> {
             Object data;
@@ -414,9 +412,7 @@ public class MainActivity extends Activity {
                     case SUMMARY: data = SummaryTab.compute(sel); break;
                     case HISTORY: data = HistoryTab.compute(sel); break;
                     case STATS: data = StatsTab.compute(sel); break;
-                    case RANDOM: data = RandomTab.compute(sel); break;
                     case PICKS: data = PicksTab.compute(sel); break;
-                    case INTEGRITY: data = IntegrityTab.compute(sel); break;
                     default: data = OddsTab.compute(sel);
                 }
             } catch (Throwable e) {
@@ -438,9 +434,7 @@ public class MainActivity extends Activity {
                         case SUMMARY: SummaryTab.show(this, body, sel, result); break;
                         case HISTORY: HistoryTab.show(this, body, sel, result); break;
                         case STATS: StatsTab.show(this, body, sel, result); break;
-                        case RANDOM: RandomTab.show(this, body, sel, result); break;
                         case PICKS: PicksTab.show(this, body, sel, result); break;
-                        case INTEGRITY: IntegrityTab.show(this, body, sel, result); break;
                         default: OddsTab.show(this, body, sel, result);
                     }
                 } catch (RuntimeException e) {

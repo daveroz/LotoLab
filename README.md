@@ -1,10 +1,10 @@
-# LotoLab (Android app: Colombian lottery results, statistics, randomness and integrity checks)
+# LotoLab (Android app: Colombian lottery results, statistics, recommendations and prizes)
 
 Results, statistics and honest predictions for **Dorado, Baloto and MiLoto**: every daily draw
-(morning, afternoon, night) with its day of the week, years of history, frequency analysis, randomness
-tests, a daily recommendation chosen by a ranked set of models with its track record, El Dorado's official
-prizes in pesos, a probability-optimized betting pack, a careful check for signs of manipulation, and a
-notification when a result is announced. In Spanish or English, following the phone's language. No
+(morning, afternoon, night) with its day of the week, years of history, frequency analysis, an audit of
+every result, a daily recommendation chosen by a ranked set of models with its track record, El Dorado's
+official prizes in pesos, a probability-optimized betting pack, and a notification when a result is
+announced. In Spanish or English, following the phone's language. No
 accounts, no API keys, no ads. A native Android app in plain Java, like Worldly.
 
 ## Get the APK
@@ -53,21 +53,15 @@ History bundled with the app (kept current twice a day, see below): Baloto and R
 (every draw in the official archive), MiLoto from October 2023 (practically every draw since it started),
 the chance draws from early 2023. Every result is stored by lottery, draw, date and weekday.
 
-## The seven tabs
-
-Every card says what kind of figures it holds: **descriptive** (what the history shows, against what fair
-draws produce), **theoretical** (from the rules alone) or **predictive evidence** (how well forecasts made
-before each draw did). Each card shows its key finding first; the depth is folded under ▸ details.
+## The five tabs
 
 | Tab | What it shows |
 |---|---|
-| **Summary** | The latest result with its figures in one line (evens, odds, sum, la pata, quinta) and its randomness audit; the next draw and the schedule; how fresh the data is (when it was updated, a missing result, sources that didn't answer). **Today's recommendation**: the strongest candidate of the top-ranked model for the next draw, with the theoretical probability next to the model's estimate, why that model ranks first (score and 95% CI), whether any model has a real advantage (Monte Carlo test), its track record, and when it was generated. A **checker** with one box per digit or ball: for El Dorado choose 4 cifras, 3 cifras, pata or uña, in order or combinado, and the amount; it shows the probability, the prize in pesos (bet before IVA, multiplier, gross, withholding, net), the expected value, the same number as shorter bets (last three, la pata, la uña), whether it wins the latest result and how often it would have won. For Baloto and MiLoto, five boxes (+ superbalota): the prize category reached in the latest draw and in the history. Then the notification switch |
-| **History** | Every stored result grouped by date with the full weekday name and time, filterable by day of the week, each with its randomness audit. How much history is stored, from when, any result that should be out but isn't, the last refresh and which sources answered |
-| **Stats** | At a glance: every test's verdict in one card. Hot and cold numbers (bars against the fair-draw expectation; for chance a heat map of each digit in each position), the pata and three-digit endings, superbalota / quinta, even/odd, sums, repeats (inside one number, draw to draw, same day, identical results), recurring pairs and triples, shapes, weekdays. Every figure with its expected value and a p-value |
-| **Randomness** | A 0–100 randomness score for the selection and for each draw series, the tests behind it (verdicts first, questions and p-values before and after correction in the details), the most unusual draws and how many chance alone predicts |
+| **Summary** | Only the essentials: the latest result (its figures in one line: evens, odds, sum, la pata, quinta; and its audit), the next draw, a warning only when data is missing or old; **today's recommendation** (the top-ranked model's pick for the next draw, its probability, and whether any model beats chance); a **checker** with one box per digit or ball (for El Dorado: 4 cifras, 3 cifras, pata or uña, in order or combinado, and the amount), which gives the probability, the net prize in pesos and whether it wins the latest result; and the notification switch |
+| **History** | Every stored result grouped by date with the full weekday name and time, filterable by day of the week, each with its audit (how ordinary the draw is, 0–100); the schedule; how much history is stored, any result that should be out but isn't, the last refresh and which sources answered |
+| **Stats** | Hot and cold numbers (bars against the fair-draw expectation; for chance a heat map of each digit in each position), la pata (two-digit endings), the quinta / superbalota, even and odd, and the sum of the numbers. Every figure with its expected value and a p-value; the depth is folded under ▸ details |
 | **Picks** | The recommendation engine in depth: today's **model ranking** (out-of-sample score with 95% CI, each model's candidate), the **track record** of the daily recommendation replayed over the whole history (30 days, 90 days, 1 year, all; exact and partial hits against random selection, hit rate with its 95% CI, p-values) and per model, the **log of recommendations shown** with their results, and a model explorer (top pick, reasons, alternatives) |
-| **Integrity** | Every test on every draw series of the lottery, same-day comparisons between series and a popular-number avoidance test, all corrected together; anything significant is re-tested on each half of the period. Graded as *no sign*, *anomaly (likely chance)*, *persistent deviation* or *data problem*, with what that does and doesn't mean |
-| **Odds** | The chance of the top prize, El Dorado's official prize plan (what $1.000 wins in each category, net, and the average return) or every lotto prize tier, the **betting pack**, and what playing every draw for a year adds up to |
+| **Odds** | The chance of the top prize, El Dorado's official prize plan (what $1.000 wins in each category, net, how it's worked out, and the average return) or every lotto prize tier, the **betting pack**, and what playing every draw for a year adds up to |
 
 ## Notifications
 About ten minutes after each draw of a lottery you follow, the app checks that draw's source (only that
@@ -97,20 +91,15 @@ logos take the theme's amber light as a gradient; multicolour ones are mapped to
 combination has exactly that probability in every draw. Frequencies describe the past; the app always
 shows them next to the theoretical value and never presents a model estimate as a real increase in odds.
 
-**Randomness tests** (each with its p-value): number frequencies (chi-square; for lotto draws Pearson's
-statistic is scaled by (N−1)/(N−k) because each draw holds k different balls), superbalota/quinta
-frequencies, even/odd split (binomial / hypergeometric), sum of the numbers (exact distribution), repeated
-digits (poker test, chance) or consecutive numbers (lotto), repeats from the previous draw, serial
-correlation of the sums, runs above/below the median, waiting times between appearances (gap test,
-geometric with the window correction), independence of neighbouring digits (chance), day-of-week
-dependence, stability between the first and second half of the period, and repeated results.
+**Statistics.** Number frequencies use the chi-square test (for lotto draws Pearson's statistic is scaled by
+(N−1)/(N−k) because each draw holds k different balls); even/odd uses the binomial / hypergeometric
+distribution and sums their exact distribution. The single most extreme value is judged allowing for how
+many values were compared.
 
-**Randomness score.** Running a dozen tests on a fair lottery flags something at p < 0.05 about half the
-time, so the score uses Holm–Bonferroni corrected p-values: a test counts fully unless its corrected
-p-value falls below 0.05 (0.6), 0.01 (0.3) or 0.001 (0). On simulated fair draws each test flags 5% of
-the time at p < 0.05 and 1% at p < 0.01, and the average score is above 90 (checked in the unit tests).
-Single draws get a typicality score (100 = completely ordinary): the rarest of their features (sum,
-even/odd, repeated digits, runs, repeats from the draw before), corrected for the number looked at.
+**The audit of each draw** (100 = completely ordinary): the rarest of its features (sum, even/odd split,
+repeated digits or consecutive numbers, repeats from the draw before), corrected for the number looked at.
+On simulated fair draws about 3 in 100 score below 10 and about 1 in 1,000 below 1 (checked in the unit
+tests), so an "unusual" draw now and then is expected and proves nothing.
 
 **Predictions.** Weight models give each number a weight; a lotto combination's model probability is the
 product of its weights divided by the same product summed over all combinations (computed exactly with
@@ -158,18 +147,6 @@ single draw, because more bets cost more than the prizes return; the app says wh
 reached. It shows each bet, the individual and combined odds, the total cost in pesos and the expected
 result, which is always negative.
 
-**Integrity.** An unusual pattern alone doesn't prove anything: with dozens of tests some always come out
-low by chance. So: (1) all tests across all draw series are corrected together; (2) whatever survives is
-re-tested on the first and second half of the period, because a systematic effect shows in both and a
-coincidence rarely does; (3) the data is checked for impossible values and for days without results on
-which the series normally draws (judged against the surrounding weeks, since schedules change: Dorado
-Noche went from daily to weekends and back). Even a persistent deviation has ordinary explanations (ball
-weight or wear, a machine change, publishing errors); the app says so, and points to what real evidence
-of manipulation is (audits, inspection of the equipment, draw records, the regulator).
-
-Checked against the real history (all of it, as of November 2026), every lottery scores 100 and shows no
-sign of irregularities: all differences are within what fair draws produce.
-
 ## Data sources (all free, no key, no account)
 | Data | Source |
 |---|---|
@@ -192,14 +169,13 @@ sign of irregularities: all differences are within what fair draws produce.
 ## Code map (`app/src/main/java/app/loto/analysis/`)
 Engine (plain Java, no Android, tested on the JVM in `app/src/test`): `Game` (the six draw series, their
 schedules and formats), `Holidays` (Colombian holidays), `Draw`, `History` (CSV store), `Sample`,
-`Combi` (combinatorics, distributions, Holm), `Analysis` (frequencies, repeats, even/odd, combinations,
-sums), `Randomness` + `TestResult` (tests, score, single draws), `Integrity`, `Predictor` (the models), `Models`
+`Combi` (combinatorics, distributions), `Analysis` (frequencies, even/odd, endings, sums), `Randomness`
+(the audit of single draws), `Predictor` (the models), `Models`
 (incremental forecasting and scoring), `Recommender` (ranking, Monte Carlo test, track record), `Prizes`
 (El Dorado's prize plan, IVA, withholding), `Pack` (the betting pack), `Odds`, `Fmt`.
 Language: `T` (device language, number formats) and `Es` (the Spanish texts), plus `Fmt` for dates and times.
 App: `MainActivity` (carousel, selectors, tabs, background work), `LogoCarousel` + `Svg` (the logos), `SummaryTab`, `HistoryTab`,
-`StatsTab`, `RandomTab`, `PicksTab`, `IntegrityTab`, `OddsTab`, `Charts` (bars, distributions, heat map,
-gauge), `Ui` (cards, expandable details, chips, number tiles, digit boxes, tables), `Data` (bundled + stored
+`StatsTab`, `PicksTab`, `OddsTab`, `Charts` (bars, distributions, heat map), `Ui` (cards, expandable details, chips, number tiles, digit boxes, tables), `Data` (bundled + stored
 history, recommendation log), `Fetcher` (sources), `Net`,
 `Notifier` + `DrawAlarmReceiver` + `ResultJobService` + `BootReceiver` (notifications), and from Worldly
 `Theme` and `StageView`.

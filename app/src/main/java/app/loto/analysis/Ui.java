@@ -431,14 +431,6 @@ final class Ui {
     }
 
     /** Colour for a p-value: green when expected, amber for a raw blip, coral for a corrected deviation. */
-    static int pColor(TestResult t) {
-        if (!t.enough) return Theme.DIM;
-        if (t.flagged()) return Theme.CORAL;
-        if (t.p < 0.05) return Theme.AMBER;
-        return Theme.GREEN;
-    }
-
-    /** Colour for a z score: warm for above expectation, cool for below, neutral near it. */
     static int zColor(double z) {
         if (z >= 2) return Theme.AMBER;
         if (z >= 1) return Theme.AMBER_LIGHT;

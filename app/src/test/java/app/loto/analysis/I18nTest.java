@@ -111,11 +111,12 @@ public class I18nTest {
         for (int i = 0; i < 300; i++) {
             h.put(new Draw(Game.DORADO_MANANA, d.plusDays(i), "", new int[]{r.nextInt(10), r.nextInt(10), r.nextInt(10), r.nextInt(10)}, -1));
         }
-        Integrity.Report ir = Integrity.run(h, "Dorado", 0);
-        assertTrue(ir.headline, ir.headline.startsWith("Sin señales") || ir.headline.startsWith("Anomalía") || ir.headline.startsWith("Desviación"));
         List<Game> one = new ArrayList<>();
         one.add(Game.DORADO_MANANA);
-        Randomness.Report rep = Randomness.run(h.sample(one, 0));
-        assertEquals("Frecuencia de los números", rep.tests.get(0).name);
+        List<Randomness.DrawScore> scores = Randomness.drawScores(h.sample(one, 0));
+        assertEquals(300, scores.size());
+        boolean ordinary = false;
+        for (Randomness.DrawScore ds : scores) ordinary |= ds.reasons.contains("Nada fuera de lo común.");
+        assertTrue(ordinary);
     }
 }

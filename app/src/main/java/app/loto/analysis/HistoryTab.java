@@ -58,6 +58,11 @@ final class HistoryTab {
 
         LinearLayout res = ui.card(body, T.t("HISTORY"));
         res.addView(ui.note(MainActivity.scope(s)));
+        for (Game g : s.games) {
+            TextView sch = ui.note(T.f("%s plays %s", g.name, g.scheduleText()));
+            sch.setPadding(0, ui.dp(2), 0, 0);
+            res.addView(sch);
+        }
         LinearLayout wd = ui.chipRow(res, 10);
         for (int i = -1; i < 7; i++) {
             final int idx = i;
@@ -118,7 +123,7 @@ final class HistoryTab {
             String key = g0.digits() ? T.t("The blue tile is the quinta (fifth digit), where it was published.")
                     : g0.extraMax > 0 ? T.t("The red ball is the superbalota.") : null;
             String audit = T.t("Audit: how ordinary each draw is, from 100 (completely typical) down; unusual draws are "
-                    + "expected now and then (about 1 in 10 scores below 10). Details in Randomness.");
+                    + "expected now and then (about 3 in 100 fair draws score below 10).");
             TextView k = ui.note(key == null ? audit : key + " " + audit);
             k.setPadding(0, ui.dp(12), 0, 0);
             res.addView(k);
