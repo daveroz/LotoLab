@@ -2,7 +2,7 @@ name: Build APK
 # Builds LotoLab on every push (and on demand from the Actions tab). Every run uploads LotoLab.apk
 # as an artifact. Runs on main that are signed with the fixed key also publish it to the "latest"
 # release, which gives a stable download link that always has the newest build:
-# https://github.com/daveroz/Loto-App/releases/download/latest/LotoLab.apk
+# https://github.com/daveroz/LotoLab/releases/download/latest/LotoLab.apk
 on:
   push:
   workflow_dispatch:

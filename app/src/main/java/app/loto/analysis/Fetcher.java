@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 final class Fetcher {
     private Fetcher() {}
 
-    static final String REPO = "https://raw.githubusercontent.com/daveroz/Loto-App/HEAD/app/src/main/assets/history/";
+    static final String REPO = "https://raw.githubusercontent.com/daveroz/LotoLab/HEAD/app/src/main/assets/history/";
     private static final Map<String, String> ASTRO = new HashMap<>();
     static {
         ASTRO.put("dorado-manana", "dorado-manana");

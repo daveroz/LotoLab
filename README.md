@@ -8,7 +8,7 @@ accounts, no API keys, no ads. A native Android app in plain Java, like Worldly.
 
 ## Get the APK
 The newest build is always at
-**https://github.com/daveroz/Loto-App/releases/download/latest/LotoLab.apk**
+**https://github.com/daveroz/LotoLab/releases/download/latest/LotoLab.apk**
 (GitHub Actions builds it on every push; builds of the default branch are published there). Each run's **Actions** page also has
 `LotoLab.apk` to download directly, not inside a zip.
 
