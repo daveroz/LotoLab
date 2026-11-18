@@ -20,7 +20,7 @@ final class Predictor {
     private Predictor() {}
 
     enum Model {
-        FREQUENCY, RECENT, OVERDUE, BAYES, BALANCED, UNPOPULAR, RANDOM;
+        FREQUENCY, RECENT, OVERDUE, BAYES, ENSEMBLE, BALANCED, UNPOPULAR, RANDOM;
 
         String title() {
             switch (this) {
@@ -28,9 +28,19 @@ final class Predictor {
                 case RECENT: return T.t("Recent form");
                 case OVERDUE: return T.t("Overdue");
                 case BAYES: return T.t("Bayesian (fair-adjusted)");
+                case ENSEMBLE: return T.t("Ensemble (performance-weighted)");
                 case BALANCED: return T.t("Typical shape");
                 case UNPOPULAR: return T.t("Least shared");
                 default: return T.t("Quick pick");
+            }
+        }
+
+        /** A short name for tables. */
+        String shortTitle() {
+            switch (this) {
+                case BAYES: return T.t("Bayesian");
+                case ENSEMBLE: return T.t("Ensemble");
+                default: return title();
             }
         }
 
@@ -42,6 +52,8 @@ final class Predictor {
                         + "\"due\": this is the gambler's fallacy, shown for comparison.");
                 case BAYES: return T.t("Starts from a fair draw and moves away from it only as far as the data's real "
                         + "variation supports. If frequencies vary no more than chance, every number stays equal.");
+                case ENSEMBLE: return T.t("Mixes the four forecasting models, each weighted by how well it predicted the last "
+                        + "200 draws (Bayesian model averaging on the log score). It leans on whichever model works, if any does.");
                 case BALANCED: return T.t("A random combination with the shape most draws have: usual even/odd split, sum in "
                         + "the middle half, no long runs. Typical shapes are common only because there are more of them.");
                 case UNPOPULAR: return T.t("Avoids what most people play (birthdays 1–31, dates, patterns, sequences). Same "
@@ -98,95 +110,36 @@ final class Predictor {
         double[] extra;
     }
 
+    /**
+     * The weights of a model after seeing the sample. The forecasting models come from {@link Models}, the same code
+     * that scores and ranks them, so every screen agrees; the shape models weigh numbers evenly (least shared
+     * prefers numbers above 31).
+     */
     static Weights weights(Model m, Sample s) {
         Game g = s.game;
-        int D = s.size();
-        Weights out = new Weights();
-        int rows = g.digits() ? g.count : 1, cols = g.digits() ? 10 : g.max + 1;
-        out.w = new double[rows][cols];
-        int lo = g.digits() ? 0 : 1;
-        int exLo = g.digits() ? 0 : 1, exHi = g.digits() ? 9 : g.extraMax;
-        out.extra = exHi > 0 ? new double[exHi + 1] : null;
         switch (m) {
             case FREQUENCY:
+            case RECENT:
+            case OVERDUE:
             case BAYES:
+            case ENSEMBLE:
+                return Models.over(s, m == Model.ENSEMBLE).weights(m);
+            default: {
+                Weights out = new Weights();
+                int rows = g.digits() ? g.count : 1, cols = g.digits() ? 10 : g.max + 1;
+                out.w = new double[rows][cols];
                 for (double[] r : out.w) Arrays.fill(r, 1);
+                int exHi = g.digits() ? 9 : g.extraMax;
+                out.extra = exHi > 0 ? new double[exHi + 1] : null;
                 if (out.extra != null) Arrays.fill(out.extra, 1);
-                for (Draw d : s.draws) {
-                    add(out, g, d, 1);
+                if (m == Model.UNPOPULAR && !g.digits()) for (int v = 32; v <= g.max; v++) out.w[0][v] = 2.5;
+                if (!g.digits()) {
+                    out.w[0][0] = 0;
+                    if (out.extra != null) out.extra[0] = 0;
                 }
-                if (m == Model.BAYES) shrink(out, g, D, s.withExtra().size());
-                break;
-            case RECENT: {
-                double half = Math.max(10, Math.min(60, D / 8.0));
-                double lambda = Math.pow(0.5, 1 / half), mass = 0;
-                for (int t = 0; t < D; t++) {
-                    double wt = Math.pow(lambda, D - 1 - t);
-                    mass += wt;
-                    add(out, g, s.draws.get(t), wt);
-                }
-                double prior = 0.1 * mass * (g.digits() ? 0.1 : g.count / (double) g.max) + 1e-6;
-                for (double[] r : out.w) for (int v = lo; v < r.length; v++) r[v] += prior;
-                if (out.extra != null) for (int v = exLo; v < out.extra.length; v++) out.extra[v] += prior;
-                break;
+                return out;
             }
-            case OVERDUE: {
-                Analysis.Freq f = Analysis.frequency(s);
-                if (g.digits()) {
-                    for (int i = 0; i < g.count; i++) for (int v = 0; v < 10; v++) out.w[i][v] = f.positions[i][v].gap + 1;
-                } else {
-                    for (Analysis.Cell c : f.values) out.w[0][c.value] = c.gap + 1;
-                }
-                if (out.extra != null) {
-                    Arrays.fill(out.extra, 1);
-                    for (Analysis.Cell c : f.extra) out.extra[c.value] = c.gap + 1;
-                }
-                break;
-            }
-            case UNPOPULAR:
-                for (double[] r : out.w) Arrays.fill(r, 1);
-                if (!g.digits()) for (int v = 32; v <= g.max; v++) out.w[0][v] = 2.5;
-                if (out.extra != null) Arrays.fill(out.extra, 1);
-                break;
-            default:
-                for (double[] r : out.w) Arrays.fill(r, 1);
-                if (out.extra != null) Arrays.fill(out.extra, 1);
         }
-        if (!g.digits()) out.w[0][0] = 0;
-        if (out.extra != null && !g.digits()) out.extra[0] = 0;
-        return out;
-    }
-
-    private static void add(Weights out, Game g, Draw d, double wt) {
-        if (g.digits()) {
-            for (int i = 0; i < g.count; i++) out.w[i][d.nums[i]] += wt;
-        } else {
-            for (int v : d.nums) if (v >= 1 && v <= g.max) out.w[0][v] += wt;
-        }
-        if (out.extra != null && d.extra >= 0 && d.extra < out.extra.length) out.extra[d.extra] += wt;
-    }
-
-    /** Empirical Bayes: keep only the part of each count's deviation that exceeds chance variation. */
-    private static void shrink(Weights out, Game g, int D, int extraDraws) {
-        for (double[] r : out.w) {
-            int lo = g.digits() ? 0 : 1;
-            int n = r.length - lo;
-            double p = g.digits() ? 0.1 : g.count / (double) g.max;
-            shrinkRow(r, lo, n, D * p, D * p * (1 - p));
-        }
-        if (out.extra != null && extraDraws > 0) {
-            int lo = g.digits() ? 0 : 1, n = out.extra.length - lo;
-            double p = 1.0 / n;
-            shrinkRow(out.extra, lo, n, extraDraws * p, extraDraws * p * (1 - p));
-        }
-    }
-
-    private static void shrinkRow(double[] r, int lo, int n, double e, double var) {
-        double obsVar = 0;
-        for (int v = lo; v < r.length; v++) obsVar += (r[v] - 1 - e) * (r[v] - 1 - e);
-        obsVar /= n;
-        double keep = obsVar > var ? 1 - var / obsVar : 0;
-        for (int v = lo; v < r.length; v++) r[v] = Math.max(0.01, e + keep * (r[v] - 1 - e)) + 1e-9;
     }
 
     // ================================================================ combination probabilities
@@ -357,7 +310,7 @@ final class Predictor {
         Game g = s.game;
         Random rnd = new Random(seed);
         Weights wt = weights(m, s);
-        r.hasTop = m == Model.FREQUENCY || m == Model.RECENT || m == Model.OVERDUE || m == Model.BAYES;
+        r.hasTop = m == Model.FREQUENCY || m == Model.RECENT || m == Model.OVERDUE || m == Model.BAYES || m == Model.ENSEMBLE;
         Analysis.Freq f = Analysis.frequency(s);
         List<int[]> picks = new ArrayList<>();
         if (r.hasTop) picks.add(topCombination(g, wt));
@@ -424,6 +377,7 @@ final class Predictor {
                                 Analysis.pos(i), v, c.gap);
                         break;
                     case BAYES:
+                    case ENSEMBLE:
                         line = T.f("%s digit %d: estimated %s chance (fair: 10%%).", Analysis.pos(i), v,
                                 Fmt.pct(wt.w[i][v] / sum(wt.w[i])));
                         break;
@@ -456,6 +410,7 @@ final class Predictor {
                         line = T.f("%02d: not drawn for %d draws (typical wait %s).", v, c.gap, Fmt.num(f.meanGap));
                         break;
                     case BAYES:
+                    case ENSEMBLE:
                         line = T.f("%02d: estimated %s chance per draw (fair: %s).", v,
                                 Fmt.pct(g.count * wt.w[0][v] / sum(wt.w[0])), Fmt.pct(g.count / (double) g.max));
                         break;
@@ -480,6 +435,15 @@ final class Predictor {
             sg.reasons.add(T.t("Not a date, no repeated digits, no sequence or mirror, doesn't start with 0–2 like most years and dates."));
         }
         if (m == Model.RANDOM) sg.reasons.add(T.t("Drawn uniformly at random, like a quick pick."));
+        if (m == Model.ENSEMBLE) {
+            double[] a = Models.over(s, true).ensembleWeights();
+            StringBuilder mix = new StringBuilder();
+            for (int j = 0; j < Models.BASE.length; j++) {
+                if (mix.length() > 0) mix.append(" · ");
+                mix.append(Models.BASE[j].title()).append(' ').append(Fmt.pct(a[j]));
+            }
+            sg.reasons.add(0, T.f("Mix: %s", mix));
+        }
         sg.reasons.add(shape(g, sg.nums));
     }
 
@@ -527,7 +491,7 @@ final class Predictor {
         for (int t = D - B; t < D; t++) {
             Sample train = s.upTo(t);
             int[] pick;
-            if (m == Model.FREQUENCY || m == Model.RECENT || m == Model.OVERDUE || m == Model.BAYES) {
+            if (m == Model.FREQUENCY || m == Model.RECENT || m == Model.OVERDUE || m == Model.BAYES || m == Model.ENSEMBLE) {
                 pick = topCombination(g, weights(m, train));
             } else {
                 Weights wt = weights(m, train);

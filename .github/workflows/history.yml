@@ -1,5 +1,5 @@
 name: Update draw history
-# Twice a day, adds the newest Dorado, Paisita, Baloto, Revancha and MiLoto results to
+# Twice a day, adds the newest Dorado, Baloto, Revancha and MiLoto results to
 # app/src/main/assets/history/*.csv and commits them to the default branch. The app downloads these
 # files from raw.githubusercontent.com, so it has the full history even after weeks offline, and every
 # new APK build bundles them. Run it from the Actions tab with "backfill" to walk the whole archive again.

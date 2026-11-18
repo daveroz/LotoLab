@@ -2,7 +2,7 @@
 """Keeps the bundled draw history (app/src/main/assets/history/*.csv) up to date.
 
 Sources (all public, no key, no account):
-  * Dorado Mañana / Tarde / Noche, Paisita Día / Noche / 3: astroluna.co. Its game page lists the last 100
+  * Dorado Mañana / Tarde / Noche: astroluna.co. Its game page lists the last 100
     draws (number + quinta); each per-date page links to the draw before it, so --backfill walks back
     to the first draw the site still has (early 2023).
   * Baloto + Revancha: baloto.com/resultados (official, paginated back to May 2021).
@@ -34,9 +34,6 @@ CHANCE = {  # file id -> astroluna slug
     "dorado-manana": "dorado-manana",
     "dorado-tarde": "dorado-tarde",
     "dorado-noche": "dorado-noche",
-    "paisita-dia": "paisita-dia",
-    "paisita-noche": "paisita-noche",
-    "paisita-3": "paisita-tres",
 }
 PAUSE = 0.6  # seconds between requests to the same site
 

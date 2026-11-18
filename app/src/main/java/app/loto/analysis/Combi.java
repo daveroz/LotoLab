@@ -175,10 +175,13 @@ final class Combi {
     static String percent(double p) {
         double v = p * 100;
         if (v == 0) return "0%";
+        if (v >= 100) return "100%";
+        if (v > 99.9) return "> " + String.format(T.L, "%.1f%%", 99.9); // never rounds a near-certainty up to 100%
         if (v >= 10) return String.format(T.L, "%.1f%%", v);
         if (v >= 1) return String.format(T.L, "%.2f%%", v);
-        if (v >= 0.01) return String.format(T.L, "%.3f%%", v);
-        return String.format(T.L, "%.2e%%", v);
+        // three significant digits, in plain decimals (0.0101%, 0.00000649%)
+        int dec = Math.min(12, 2 - (int) Math.floor(Math.log10(v)));
+        return String.format(T.L, "%." + dec + "f%%", v);
     }
 
     /** A p-value for people: "0.43", "0.004", "< 0.0001" (with a decimal comma in Spanish). */

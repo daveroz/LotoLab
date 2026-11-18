@@ -10,7 +10,7 @@ import java.util.Map;
 final class Es {
     private Es() {}
 
-    static final Map<String, String> MAP = new HashMap<>(842);
+    static final Map<String, String> MAP = new HashMap<>(1176);
 
     private static void p(String en, String es) {
         MAP.put(en, es);
@@ -75,8 +75,6 @@ final class Es {
                 "Tarde");
         p("Evening / Night",
                 "Noche");
-        p("3 (%s)",
-                "3 (%s)");
         p("(holidays: Sunday time)",
                 "(festivos: horario del domingo)");
         p("(no draw on public holidays)",
@@ -105,6 +103,12 @@ final class Es {
                 "%s sorteos");
         p("None yet.",
                 "Todavía ninguno.");
+        p("missing the result of %s",
+                "falta el resultado del %s");
+        p("Not refreshed yet on this phone.",
+                "Aún no se ha actualizado en este teléfono.");
+        p("Last refresh: %s.",
+                "Última actualización: %s.");
         p("Bundled with the app, completed from the repository's copy (updated twice a day) and from the sites below each time the app refreshes. Results are only ever added, never removed.",
                 "Viene con la app, se completa con la copia del repositorio (actualizada dos veces al día) y con los sitios de abajo cada vez que la app se actualiza. Los resultados solo se agregan, nunca se borran.");
         p("LAST REFRESH",
@@ -181,6 +185,8 @@ final class Es {
                 "limpio");
         p("INTEGRITY CHECK · %s",
                 "REVISIÓN DE INTEGRIDAD · %s");
+        p("descriptive",
+                "descriptivo");
         p("Every draw of %s (all its draw times) · %s · %s draws",
                 "Todos los sorteos de %s (todos sus horarios) · %s · %s sorteos");
         p("Tests run",
@@ -199,6 +205,8 @@ final class Es {
                 "TODAS LAS REVISIONES");
         p("Each draw series tested on its own, plus same-day comparisons between series and a test for results avoiding the numbers people bet most.",
                 "Cada serie de sorteos probada por separado, más comparaciones del mismo día entre series y una prueba de resultados que eviten los números que más juega la gente.");
+        p("All %d tests",
+                "Las %d pruebas");
         p("n/a",
                 "n/d");
         p("p-value on its own → after correction. Green: as expected · amber: below 0.05 only before correction · coral: significant after it · grey: not enough data.",
@@ -207,12 +215,14 @@ final class Es {
                 "UNA ANOMALÍA NO ES EVIDENCIA DE MANIPULACIÓN");
         p("Statistics can show that results are unlikely under a fair draw. It can't show why. In every long series of fair draws some patterns look suspicious, and with enough tests something always comes out \"significant\".",
                 "La estadística puede mostrar que unos resultados son improbables en un sorteo justo. No puede mostrar por qué. En toda serie larga de sorteos justos algunos patrones parecen sospechosos, y con suficientes pruebas siempre sale algo \"significativo\".");
+        p("Ordinary explanations, and where real evidence comes from",
+                "Explicaciones comunes y de dónde vienen las pruebas reales");
         p("Even a persistent deviation has ordinary explanations: balls of slightly different weight or wear, a drawing machine that changed, errors or gaps in the published results, or a change in how results are recorded. Deliberate interference is one possibility among these, not the default.",
                 "Incluso una desviación persistente tiene explicaciones comunes: balotas de peso o desgaste ligeramente distinto, una máquina de sorteo que cambió, errores o huecos en los resultados publicados, o un cambio en cómo se registran. Una interferencia deliberada es una posibilidad entre ellas, no la explicación por defecto.");
         p("Real evidence of manipulation comes from outside the numbers: independent audits, inspection of the balls and machines, the draw videos and records, witnesses. Concerns go to the game's operator and its regulator (Coljuegos for Baloto and MiLoto; the departmental authority that licenses each chance game).",
                 "La evidencia real de una manipulación viene de fuera de los números: auditorías independientes, inspección de las balotas y las máquinas, los videos y registros de los sorteos, testigos. Las inquietudes se dirigen al operador del juego y a su regulador (Coljuegos para Baloto y MiLoto; la autoridad departamental que autoriza cada chance).");
-        p("HOW THE CHECK WORKS",
-                "CÓMO FUNCIONA LA REVISIÓN");
+        p("How the check works",
+                "Cómo funciona la revisión");
         p("1. Every randomness test runs on every draw series separately.\n2. Draws held on the same day are compared: do they share more numbers than chance?\n3. Popular-number test: rigged results might avoid what people bet most (birthdays, dates).\n4. All p-values are corrected together (Holm–Bonferroni), so running many tests doesn't manufacture findings.\n5. Anything that survives is re-tested on the first and second half of the period. A systematic effect shows in both; a coincidence rarely does.\n6. The data is checked for impossible values and unexplained breaks in the schedule.",
                 "1. Cada prueba de aleatoriedad se corre por separado en cada serie de sorteos.\n2. Se comparan los sorteos del mismo día: ¿comparten más números que por azar?\n3. Prueba de números populares: unos resultados amañados podrían evitar lo que más juega la gente (cumpleaños, fechas).\n4. Todos los valores p se corrigen juntos (Holm–Bonferroni), así que correr muchas pruebas no fabrica hallazgos.\n5. Lo que sobrevive se vuelve a probar en la primera y la segunda mitad del período. Un efecto sistemático aparece en ambas; una coincidencia, rara vez.\n6. Se revisan los datos en busca de valores imposibles y huecos en el calendario sin explicación.");
         p("Lottery: %s. Swipe left or right to change.",
@@ -243,8 +253,6 @@ final class Es {
                 "Traer los resultados más recientes");
         p("Chance · 3 draws a day",
                 "Chance · 3 sorteos al día");
-        p("Chance · day, night and Saturday",
-                "Chance · día, noche y sábado");
         p("5 of 43 + superbalota",
                 "5 de 43 + superbalota");
         p("5 of 39 · 4 draws a week",
@@ -341,30 +349,20 @@ final class Es {
                 "La superbalota debe estar entre 1 y %d.");
         p("CHANCE OF THE TOP PRIZE · %s",
                 "PROBABILIDAD DEL PREMIO MAYOR · %s");
-        p("%s per ticket · 4 cifras: the four digits in order",
+        p("theoretical",
+                "teórico");
+        p("%s per bet · 4 cifras: the four digits in order",
                 "%s por apuesta · 4 cifras: las cuatro cifras en orden");
         p("%s per ticket · %d numbers from 1–%d plus the superbalota (1–%d)",
                 "%s por apuesta · %d números del 1 al %d más la superbalota (1–%d)");
         p("%s per ticket · %d numbers from 1–%d",
                 "%s por apuesta · %d números del 1 al %d");
-        p("Revancha is a second draw for the same ticket, with the same odds: playing both gives two independent chances, about 1 in 7,700,784 of at least one jackpot.",
-                "Revancha es un segundo sorteo para el mismo tiquete, con las mismas probabilidades: jugar ambos da dos oportunidades independientes, más o menos 1 entre 7.700.784 de ganar al menos un premio mayor.");
-        p("EVERY PRIZE TIER",
-                "TODOS LOS NIVELES DE PREMIO");
-        p("Each bet is placed separately (4, 3, 2 or 1 cifra, combinado). Prize amounts vary by operator and are not shown.",
-                "Cada apuesta se hace por separado (4, 3, 2 o 1 cifra, combinado). El valor de los premios depende del operador y no se muestra.");
-        p("Chance of winning any prize: %s.",
-                "Probabilidad de ganar algún premio: %s.");
-        p("EVERY POSSIBLE COMBINATION",
-                "TODAS LAS COMBINACIONES POSIBLES");
-        p("There are %s possible 4-digit numbers (0000–9999). Each one has exactly the same probability, %s (%s), in every draw.",
-                "Hay %s números posibles de 4 cifras (0000–9999). Cada uno tiene exactamente la misma probabilidad, %s (%s), en cada sorteo.");
-        p("There are %s possible combinations. Each one has exactly the same probability, %s (%s), in every draw.",
-                "Hay %s combinaciones posibles. Cada una tiene exactamente la misma probabilidad, %s (%s), en cada sorteo.");
-        p("0000 is exactly as likely as 4817. Numbers \"due\" to come out, or that came out yesterday, have the same chance as any other.",
-                "El 0000 es exactamente igual de probable que el 4817. Los números que \"ya deben salir\", o que salieron ayer, tienen la misma probabilidad que cualquier otro.");
-        p("01 02 03 04 05 is exactly as likely as any random-looking combination; it only looks special. What differs between combinations is how many other people play them, which matters if a jackpot is shared.",
-                "01 02 03 04 05 es exactamente igual de probable que cualquier combinación que parezca aleatoria; solo se ve especial. Lo que cambia entre combinaciones es cuánta gente más las juega, y eso importa si el premio mayor se reparte.");
+        p("All %s numbers from 0000 to 9999 have exactly this probability in every draw: 0000 is as likely as 4817, and a number that came out yesterday or is \"due\" is no different.",
+                "Los %s números de 0000 a 9999 tienen exactamente esta probabilidad en cada sorteo: 0000 es tan probable como 4817, y un número que salió ayer o que \"ya debe salir\" no es distinto.");
+        p("All %s combinations have exactly this probability in every draw: 01 02 03 04 05 is as likely as any other. What differs is how many people play them, which matters only if a jackpot is shared.",
+                "Las %s combinaciones tienen exactamente esta probabilidad en cada sorteo: 01 02 03 04 05 es tan probable como cualquier otra. Lo que cambia es cuánta gente las juega, y eso solo importa si un premio mayor se comparte.");
+        p("Revancha is a second draw for the same ticket with the same odds: playing both gives two independent chances, about 1 in 7,700,784 of at least one jackpot.",
+                "La Revancha es un segundo sorteo para el mismo tiquete con las mismas probabilidades: jugar ambos da dos oportunidades independientes, cerca de 1 entre 7.700.784 de ganar al menos un premio mayor.");
         p("PLAYING EVERY DRAW FOR A YEAR",
                 "JUGAR TODOS LOS SORTEOS DURANTE UN AÑO");
         p("Draws in a year",
@@ -373,28 +371,220 @@ final class Es {
                 "Premio mayor al menos una vez");
         p("With one ticket per draw. On average that's one win every %s years.",
                 "Con una apuesta por sorteo. En promedio, una victoria cada %s años.");
-        p("2 cifras at least once",
-                "2 cifras al menos una vez");
+        p("La pata at least once",
+                "La pata al menos una vez");
         p("Last two digits, one bet per draw.",
                 "Las dos últimas cifras, una apuesta por sorteo.");
         p("Any prize at least once",
                 "Algún premio al menos una vez");
+        p("EL DORADO PRIZE PLAN",
+                "PLAN DE PREMIOS DE EL DORADO");
+        p("official rules",
+                "reglas oficiales");
+        p("What a bet paid at %s wins, by category. Probability and average return are per bet.",
+                "Lo que gana una apuesta de %s, por categoría. La probabilidad y el retorno promedio son por apuesta.");
+        p("(all digits different)",
+                "(todas las cifras distintas)");
+        p("%s · × %s · %s Average return %s.",
+                "%s · × %s · %s Retorno promedio %s.");
+        p("How the prize is worked out",
+                "Cómo se calcula el premio");
+        p("Paid (IVA included)",
+                "Pagado (IVA incluido)");
+        p("Bet value before IVA (19%)",
+                "Valor apostado sin IVA (19%)");
+        p("× 4,500 (4 cifras)",
+                "× 4.500 (4 cifras)");
+        p("Gross prize",
+                "Premio bruto");
+        p("Withholding 20%",
+                "Retención 20%");
+        p("Only on prizes above 48 UVT = %s (UVT %d: %s).",
+                "Solo en premios de más de 48 UVT = %s (UVT %d: %s).");
+        p("Net prize",
+                "Premio neto");
+        p("Only the highest category hit is paid. The 4, 3, 2 and 1-digit bets look at the last digits of the result: for 4817, la pata is 17 and the last three are 817. Sources: Decreto 1068 de 2015 (chance prize plan) as modified by Decreto 1390 de 2024; Estatuto Tributario on withholding; DIAN for the UVT.",
+                "Solo se paga la categoría más alta acertada. Las apuestas de 4, 3, 2 y 1 cifra miran las últimas cifras del resultado: en 4817, la pata es 17 y las tres últimas son 817. Fuentes: Decreto 1068 de 2015 (plan de premios del chance), modificado por el Decreto 1390 de 2024; Estatuto Tributario para la retención; DIAN para la UVT.");
+        p("EVERY PRIZE TIER",
+                "TODOS LOS NIVELES DE PREMIO");
+        p("Ticket %s (IVA included).",
+                "Tiquete %s (IVA incluido).");
+        p("Ticket %s; Revancha %s more (IVA included).",
+                "Tiquete %s; Revancha %s más (IVA incluido).");
+        p("Chance of winning any prize: %s. Prize amounts come from the pool of each draw and aren't fixed, so they aren't estimated here.",
+                "Probabilidad de ganar algún premio: %s. Los montos salen del acumulado de cada sorteo y no son fijos, así que aquí no se estiman.");
+        p("Any prize",
+                "Algún premio");
+        p("Win back the cost",
+                "Recuperar lo apostado");
+        p("Top prize",
+                "Premio mayor");
+        p("BETTING PACK",
+                "PAQUETE DE APUESTAS");
+        p("The fewest bets, across the next draws of every lottery, that reach the chance you choose.",
+                "La menor cantidad de apuestas, entre los próximos sorteos de todas las loterías, que alcanza la probabilidad que elijas.");
+        p("Goal",
+                "Objetivo");
+        p("Chance to reach",
+                "Probabilidad buscada");
+        p("Each chance bet",
+                "Cada apuesta de chance");
+        p("No upcoming draws found in the next week.",
+                "No hay sorteos en la próxima semana.");
+        p("%s: %s · %d bets · total cost",
+                "%s: %s · %d apuestas · costo total");
+        p("%s isn't reachable for this goal: more bets cost more than the fixed prizes return, so this is the highest chance of winning back the cost.",
+                "%s no se puede alcanzar con este objetivo: más apuestas cuestan más de lo que devuelven los premios fijos, así que esta es la mayor probabilidad de recuperar lo apostado.");
+        p("%s isn't reachable within three chance draws and the next lotto draws; this is the closest.",
+                "%s no se alcanza con tres sorteos de chance y los próximos sorteos de lotería; esto es lo más cercano.");
+        p("%d × %s at %s · each %s · this draw %s",
+                "%d × %s a %s · cada una %s · este sorteo %s");
+        p("1 ticket · %s %s",
+                "1 tiquete · %s %s");
+        p("jackpot",
+                "premio mayor");
+        p("any prize",
+                "algún premio");
+        p("+ %d more different endings",
+                "+ %d terminaciones distintas más");
+        p("A winning bet pays %s net.",
+                "Una apuesta ganadora paga %s netos.");
+        p("Best single bet",
+                "Mejor apuesta individual");
+        p("Whole pack",
+                "Todo el paquete");
+        p("Total cost",
+                "Costo total");
+        p("Expected chance prizes",
+                "Premios de chance esperados");
+        p("Expected prizes",
+                "Premios esperados");
+        p("Lotto prizes depend on the pool and aren't included.",
+                "Los premios de lotería dependen del acumulado y no se incluyen.");
+        p("Expected result",
+                "Resultado esperado");
+        p("On average the pack returns %s of its cost.",
+                "En promedio el paquete devuelve el %s de su costo.");
+        p("How the pack is worked out",
+                "Cómo se calcula el paquete");
+        p("Bets on different numbers in the same draw can't both win, so their chances add (3 different patas: 3 in 100). Different draws are independent, so the pack misses only if every part misses: 1 − (1 − p₁)(1 − p₂)…. One bet type per draw keeps that exact, without counting any overlap twice. Revancha uses the same numbers as Baloto but is a separate draw. Chance prizes follow the official plan (IVA and withholding included); lotto prizes depend on the pool, so lotto tickets don't count towards winning back the cost.",
+                "Apuestas a números distintos en el mismo sorteo no pueden ganar a la vez, así que sus probabilidades se suman (3 patas distintas: 3 entre 100). Sorteos distintos son independientes, así que el paquete pierde solo si fallan todas sus partes: 1 − (1 − p₁)(1 − p₂)…. Un solo tipo de apuesta por sorteo mantiene el cálculo exacto, sin contar dos veces ninguna coincidencia. La Revancha usa los mismos números del Baloto pero es otro sorteo. Los premios del chance siguen el plan oficial (con IVA y retención); los de lotería dependen del acumulado, así que esos tiquetes no cuentan para recuperar lo apostado.");
+        p("The numbers come from each draw's recommended model, only so the list is concrete: every number has the same chance. No pack changes the odds of a single bet, nothing is guaranteed, and every pack loses money on average.",
+                "Los números vienen del modelo recomendado para cada sorteo, solo para que la lista sea concreta: todos tienen la misma probabilidad. Ningún paquete cambia la probabilidad de una apuesta, nada está garantizado y todo paquete pierde dinero en promedio.");
+        p("All four digits",
+                "Las cuatro cifras");
+        p("Last three digits",
+                "Las tres últimas cifras");
+        p("La pata (last two)",
+                "La pata (dos últimas)");
+        p("La uña (last digit)",
+                "La uña (última cifra)");
+        p("No hit (%s)",
+                "Sin acierto (%s)");
+        p("%d of %d",
+                "%d de %d");
+        p("superbalota",
+                "superbalota");
+        p("EXPLORE A MODEL",
+                "EXPLORA UN MODELO");
+        p("model ranking",
+                "ranking de modelos");
+        p("Every model's own top pick, its reasons and alternatives.",
+                "La mejor opción de cada modelo, sus razones y alternativas.");
         p("Highest estimated probability under this model",
                 "La probabilidad estimada más alta según este modelo");
         p("Suggested combination",
                 "Combinación sugerida");
-        p("MORE FROM THIS MODEL",
-                "MÁS DE ESTE MODELO");
+        p("Why these numbers",
+                "Por qué estos números");
+        p("%d more from this model",
+                "%d más de este modelo");
         p("New suggestions",
                 "Nuevas sugerencias");
-        p("BACKTEST",
-                "PRUEBA HACIA ATRÁS");
-        p("A model that has found a real bias should match more than chance here, draw after draw. In a fair lottery every model, including quick pick, averages the same.",
-                "Un modelo que haya encontrado un sesgo real debería acertar más que el azar aquí, sorteo tras sorteo. En una lotería justa todos los modelos, incluida la jugada al azar, rinden igual en promedio.");
+        p("Backtest",
+                "Prueba histórica");
         p("THEORY VS. HISTORY",
                 "TEORÍA VS. HISTORIA");
-        p("Every single combination has a theoretical probability of %s in every draw, fixed by the rules. The models only reweight numbers by past frequencies: if the draw is fair, the past doesn't change the next result and no model beats the theoretical odds. The expected return of every ticket is negative; the suggestions are for curiosity, not a way to improve your odds.",
-                "Cada combinación tiene una probabilidad teórica de %s en cada sorteo, fijada por las reglas. Los modelos solo reponderan los números según las frecuencias pasadas: si el sorteo es justo, el pasado no cambia el próximo resultado y ningún modelo supera las probabilidades teóricas. El rendimiento esperado de toda apuesta es negativo; las sugerencias son por curiosidad, no una forma de mejorar tus probabilidades.");
+        p("Every combination has a theoretical probability of %s in every draw, fixed by the rules. The models only reweight numbers by past results: in a fair draw no model beats the theoretical odds, and a recommendation that changes from day to day doesn't make any number more likely. Every ticket's expected return is negative.",
+                "Cada combinación tiene una probabilidad teórica de %s en cada sorteo, fijada por las reglas. Los modelos solo reponderan los números según resultados pasados: en un sorteo justo ningún modelo supera la probabilidad teórica, y que la recomendación cambie de un día a otro no hace más probable ningún número. El retorno esperado de todo tiquete es negativo.");
+        p("MODEL RANKING · %s",
+                "RANKING DE MODELOS · %s");
+        p("MODEL RANKING",
+                "RANKING DE MODELOS");
+        p("predictive evidence",
+                "evidencia predictiva");
+        p("Each model forecasts every draw from the earlier ones only. Score: how much more probability its forecasts gave the actual results than a fair guess, over the last %d draws (above 0 = better).",
+                "Cada modelo pronostica cada sorteo solo con los anteriores. Puntaje: cuánta más probabilidad dieron sus pronósticos a los resultados reales que una elección justa, en los últimos %d sorteos (más de 0 = mejor).");
+        p("Model",
+                "Modelo");
+        p("Score",
+                "Puntaje");
+        p("CI (95%)",
+                "IC (95%)");
+        p("Too few draws to test for an advantage.",
+                "Muy pocos sorteos para probar si hay ventaja.");
+        p("The top model beats chance (Monte Carlo p = %s, allowing for picking the best of %d).",
+                "El mejor modelo supera al azar (Monte Carlo p = %s, teniendo en cuenta que se elige el mejor de %d).");
+        p("No real advantage: in simulated fair draws the best of %d models scores this well %s of the time (p = %s). The ranking only decides which candidate is shown.",
+                "Sin ventaja real: en sorteos justos simulados el mejor de %d modelos obtiene este puntaje el %s de las veces (p = %s). El ranking solo decide qué candidato se muestra.");
+        p("Each model's candidate today",
+                "El candidato de cada modelo hoy");
+        p("Model's estimate %s · theoretical %s",
+                "Estimación del modelo %s · teórica %s");
+        p("How the ranking works",
+                "Cómo funciona el ranking");
+        p("The log score is a proper scoring rule: a model can only score above 0 on average by putting more probability on what actually comes out. The Ensemble mixes the four forecasters by Bayesian model averaging. The Monte Carlo test runs the same models on 99 simulated fair histories of the same length, so picking the best of several doesn't pass for skill. Ties are broken with a seed made from the lottery and the draw date, so the same data always gives the same recommendation.",
+                "El puntaje logarítmico es una regla de puntuación propia: un modelo solo puede superar 0 en promedio si le da más probabilidad a lo que de verdad sale. El Ensamble combina los cuatro pronosticadores con promedio bayesiano de modelos. La prueba de Monte Carlo corre los mismos modelos sobre 99 historiales justos simulados del mismo largo, para que elegir el mejor de varios no pase por habilidad. Los empates se resuelven con una semilla hecha de la lotería y la fecha del sorteo, así que los mismos datos siempre dan la misma recomendación.");
+        p("TRACK RECORD · %s",
+                "HISTORIAL DE ACIERTOS · %s");
+        p("TRACK RECORD",
+                "HISTORIAL DE ACIERTOS");
+        p("The daily recommendation replayed: before every past draw, what it would have chosen from the earlier results only, against what came out. Expected = what random picks average.",
+                "La recomendación diaria repetida en el pasado: antes de cada sorteo, lo que habría elegido solo con los resultados anteriores, frente a lo que salió. Esperado = el promedio de elegir al azar.");
+        p("Pata",
+                "Pata");
+        p("2+ hit",
+                "2+ aciertos");
+        p("Period",
+                "Período");
+        p("Draws",
+                "Sorteos");
+        p("Expected",
+                "Esperado");
+        p("All four digits %d times (%s expected), last three %d (%s), la pata %d (%s), la uña %d (%s). Pata hit rate %s, 95%% CI %s–%s; random: 1%%.",
+                "Las cuatro cifras %d veces (%s esperadas), las tres últimas %d (%s), la pata %d (%s), la uña %d (%s). Tasa de acierto de la pata %s, IC 95%% %s–%s; al azar: 1%%.");
+        p("%s numbers matched in all (%s expected); 2 or more in %d draws (%s expected), 3 or more in %d. 2+ rate %s, 95%% CI %s–%s; random: %s.",
+                "%s números acertados en total (%s esperados); 2 o más en %d sorteos (%s esperados), 3 o más en %d. Tasa de 2+ %s, IC 95%% %s–%s; al azar: %s.");
+        p("Superbalota right %d of %d (%s expected).",
+                "Superbalota acertada %d de %d (%s esperadas).");
+        p("More hits than chance over the whole history. With several periods and models compared, confirm it holds in new draws.",
+                "Más aciertos que el azar en todo el historial. Como se comparan varios períodos y modelos, confirma que se mantenga en sorteos nuevos.");
+        p("No better than random selection: the hits are what chance alone gives.",
+                "No es mejor que elegir al azar: los aciertos son los que da el azar.");
+        p("By model · %s",
+                "Por modelo · %s");
+        p("last %d days",
+                "últimos %d días");
+        p("all history",
+                "todo el historial");
+        p("With 5 models and 4 periods, a p below 0.05 somewhere is expected by chance about once in a while; only a result that keeps holding in new draws would point to a real edge.",
+                "Con 5 modelos y 4 períodos, es normal que por azar aparezca de vez en cuando una p menor que 0,05; solo un resultado que se mantenga en sorteos nuevos indicaría una ventaja real.");
+        p("RECOMMENDATIONS SHOWN · %s",
+                "RECOMENDACIONES MOSTRADAS · %s");
+        p("The log starts with today's recommendation: every one the app shows is kept here with its result.",
+                "El registro empieza con la recomendación de hoy: cada una que muestra la app se guarda aquí con su resultado.");
+        p("%d settled: %d with all four digits, %d more with at least la pata.",
+                "%d con resultado: %d con las cuatro cifras, %d más con al menos la pata.");
+        p("%d settled: %d jackpots, %d more with 2 or more numbers.",
+                "%d con resultado: %d premios mayores, %d más con 2 o más números.");
+        p("Draw of %s",
+                "Sorteo del %s");
+        p("generated %s",
+                "generada %s");
+        p("Waiting for the result",
+                "Esperando el resultado");
+        p("Result: %s",
+                "Resultado: %s");
         p("Theoretical probability",
                 "Probabilidad teórica");
         p("Model's estimate",
@@ -411,12 +601,18 @@ final class Es {
                 "Atrasados");
         p("Bayesian (fair-adjusted)",
                 "Bayesiano (ajustado a lo justo)");
+        p("Ensemble (performance-weighted)",
+                "Ensamble (ponderado por desempeño)");
         p("Typical shape",
                 "Forma típica");
         p("Least shared",
                 "Menos compartida");
         p("Quick pick",
                 "Al azar");
+        p("Bayesian",
+                "Bayesiano");
+        p("Ensemble",
+                "Ensamble");
         p("Favours the numbers drawn most often in the period.",
                 "Favorece los números que más han salido en el período.");
         p("Like hot numbers, but recent draws count more (weights halve every few dozen draws).",
@@ -425,6 +621,8 @@ final class Es {
                 "Favorece los números que llevan más tiempo sin salir. En un sorteo justo ningún número \"ya debe salir\": es la falacia del jugador, que se muestra para comparar.");
         p("Starts from a fair draw and moves away from it only as far as the data's real variation supports. If frequencies vary no more than chance, every number stays equal.",
                 "Parte de un sorteo justo y se aleja de él solo tanto como lo justifica la variación real de los datos. Si las frecuencias no varían más que por azar, todos los números quedan iguales.");
+        p("Mixes the four forecasting models, each weighted by how well it predicted the last 200 draws (Bayesian model averaging on the log score). It leans on whichever model works, if any does.",
+                "Combina los cuatro modelos de pronóstico, cada uno ponderado según qué tan bien predijo los últimos 200 sorteos (promedio bayesiano de modelos sobre el puntaje logarítmico). Se apoya en el modelo que funcione, si alguno funciona.");
         p("A random combination with the shape most draws have: usual even/odd split, sum in the middle half, no long runs. Typical shapes are common only because there are more of them.",
                 "Una combinación al azar con la forma que tienen la mayoría de los sorteos: el reparto par/impar usual, la suma en la mitad central, sin series largas. Las formas típicas son comunes solo porque hay más combinaciones con esa forma.");
         p("Avoids what most people play (birthdays 1–31, dates, patterns, sequences). Same odds, but if it wins, the prize is less likely to be split.",
@@ -471,6 +669,8 @@ final class Es {
                 "No es una fecha, no repite cifras, no es secuencia ni espejo, y no empieza por 0–2 como la mayoría de años y fechas.");
         p("Drawn uniformly at random, like a quick pick.",
                 "Elegida de forma aleatoria uniforme, como una jugada al azar.");
+        p("Mix: %s",
+                "Mezcla: %s");
         p("Shape: %d even / %d odd (%s of fair draws) · sum %d (half of fair draws: %d–%d)",
                 "Forma: %d pares / %d impares (%s de los sorteos justos) · suma %d (la mitad de los sorteos justos: %d–%d)");
         p("consecutive pairs: %d",
@@ -487,12 +687,44 @@ final class Es {
                 "No es mejor que el azar (p = %s).");
         p("Last two digits right: %d times (%s expected).",
                 "Últimas dos cifras acertadas: %d veces (%s esperadas).");
+        p("4 cifras",
+                "4 cifras");
+        p("3 cifras",
+                "3 cifras");
+        p("Pata (2 cifras)",
+                "Pata (2 cifras)");
+        p("Uña (1 cifra)",
+                "Uña (1 cifra)");
+        p("4 cifras combinado",
+                "4 cifras combinado");
+        p("3 cifras combinado",
+                "3 cifras combinado");
+        p("Uña",
+                "Uña");
+        p("All four digits, in order.",
+                "Las cuatro cifras, en orden.");
+        p("The last three digits, in order.",
+                "Las tres últimas cifras, en orden.");
+        p("The last two digits, in order (la pata).",
+                "Las dos últimas cifras, en orden (la pata).");
+        p("The last digit (la uña).",
+                "La última cifra (la uña).");
+        p("The four digits in any order.",
+                "Las cuatro cifras en cualquier orden.");
+        p("The last three digits in any order.",
+                "Las tres últimas cifras en cualquier orden.");
         p("All %s draws together",
                 "Todos los sorteos de %s juntos");
         p("RANDOMNESS SCORE",
                 "PUNTAJE DE ALEATORIEDAD");
+        p("How it's scored, and pattern or coincidence?",
+                "Cómo se puntúa, y ¿patrón o coincidencia?");
         p("How it's scored: each test counts fully unless its corrected p-value is below 0.05 (0.6), 0.01 (0.3) or 0.001 (0). A fair lottery scores 90–100 most of the time; the score measures how well the results fit a fair draw, not whether the lottery is honest.",
                 "Cómo se calcula: cada prueba cuenta completa salvo que su valor p corregido quede por debajo de 0,05 (0,6), 0,01 (0,3) o 0,001 (0). Una lotería justa saca 90–100 la mayor parte del tiempo; el puntaje mide qué tan bien encajan los resultados con un sorteo justo, no si la lotería es honesta.");
+        p("A p-value is how often a fair draw would produce a result at least this far from expectation. At p = 0.05 that's 1 time in 20, so running a dozen tests on a perfectly fair lottery flags something about half the time. That's why the score uses corrected p-values (Holm–Bonferroni), and why a single low p-value is a coincidence until it repeats.",
+                "Un valor p indica con qué frecuencia un sorteo justo daría un resultado al menos así de lejos de lo esperado. Con p = 0,05 es 1 vez de cada 20, así que correr una docena de pruebas sobre una lotería perfectamente justa marca algo más o menos la mitad de las veces. Por eso el puntaje usa valores p corregidos (Holm–Bonferroni), y por eso un valor p bajo aislado es una coincidencia hasta que se repita.");
+        p("A pattern is worth taking seriously when it survives the correction, is large enough to matter, and shows up again in new draws. The Integrity tab checks exactly that, split by period.",
+                "Vale la pena tomar en serio un patrón cuando sobrevive a la corrección, es lo bastante grande para importar y vuelve a aparecer en sorteos nuevos. La pestaña Integridad revisa justamente eso, dividiendo el período.");
         p("SCORE BY DRAW · %s",
                 "PUNTAJE POR SORTEO · %s");
         p("%d / 100",
@@ -501,6 +733,8 @@ final class Es {
                 "%s · %s sorteos");
         p("THE TESTS",
                 "LAS PRUEBAS");
+        p("What each test checks",
+                "Qué revisa cada prueba");
         p("p = %s · corrected %s",
                 "p = %s · corregido %s");
         p("χ² %.1f, df %d",
@@ -513,12 +747,8 @@ final class Es {
                 "¿Hay más sorteos inusuales de lo que da el azar? Prueba binomial sobre los sorteos por debajo de 10.");
         p("Most unusual in this period",
                 "Los más inusuales del período");
-        p("PATTERN OR COINCIDENCE?",
-                "¿PATRÓN O COINCIDENCIA?");
-        p("A p-value is how often a fair draw would produce a result at least this far from expectation. At p = 0.05 that's 1 time in 20, so running a dozen tests on a perfectly fair lottery flags something about half the time. That's why the score uses corrected p-values (Holm–Bonferroni), and why a single low p-value is a coincidence until it repeats.",
-                "Un valor p indica con qué frecuencia un sorteo justo daría un resultado al menos así de lejos de lo esperado. Con p = 0,05 es 1 vez de cada 20, así que correr una docena de pruebas sobre una lotería perfectamente justa marca algo más o menos la mitad de las veces. Por eso el puntaje usa valores p corregidos (Holm–Bonferroni), y por eso un valor p bajo aislado es una coincidencia hasta que se repita.");
-        p("A pattern is worth taking seriously when it survives the correction, is large enough to matter, and shows up again in new draws. The Integrity tab checks exactly that, split by period.",
-                "Vale la pena tomar en serio un patrón cuando sobrevive a la corrección, es lo bastante grande para importar y vuelve a aparecer en sorteos nuevos. La pestaña Integridad revisa justamente eso, dividiendo el período.");
+        p("%d more",
+                "%d más");
         p("Consistent with a fair random draw",
                 "Consistente con un sorteo aleatorio justo");
         p("Small deviations, typical of chance",
@@ -649,30 +879,46 @@ final class Es {
                 "Inusual");
         p("Very unusual",
                 "Muy inusual");
+        p("AT A GLANCE",
+                "DE UN VISTAZO");
+        p("Digit frequencies",
+                "Frecuencia de las cifras");
+        p("Even & odd",
+                "Pares e impares");
+        p("Sums",
+                "Sumas");
+        p("Repeats from draw to draw",
+                "Repeticiones de un sorteo al siguiente");
+        p("Repeated digits in a number",
+                "Cifras repetidas en un número");
+        p("Descriptive: what happened in these draws, compared with what fair draws produce. With this many checks, one \"unusual\" now and then is expected by chance; the Randomness and Integrity tabs weigh them together.",
+                "Descriptivo: lo que pasó en estos sorteos, comparado con lo que producen sorteos justos. Con tantas revisiones, es normal que por azar alguna salga \"inusual\" de vez en cuando; las pestañas Aleatoriedad e Integridad las evalúan en conjunto.");
         p("HOT & COLD DIGITS",
                 "CIFRAS CALIENTES Y FRÍAS");
         p("HOT & COLD NUMBERS",
                 "NÚMEROS CALIENTES Y FRÍOS");
-        p("How often each digit came up in each position. A fair draw gives every cell %s. Warm cells came up more, cool ones less.",
-                "Cuántas veces salió cada cifra en cada posición. Un sorteo justo da %s en cada casilla. Las casillas cálidas salieron más; las frías, menos.");
+        p("How often each digit came up in each position. A fair draw gives every cell %s; warm cells came up more, cool ones less.",
+                "Cuántas veces salió cada cifra en cada posición. Un sorteo justo da %s en cada casilla; las cálidas salieron más, las frías menos.");
         p("Times each number was drawn. The dashed line is a fair draw's expectation (%s each).",
                 "Veces que salió cada número. La línea punteada es lo que espera un sorteo justo (%s cada uno).");
         p("Most frequent",
                 "Los más frecuentes");
         p("Least frequent",
                 "Los menos frecuentes");
-        p("Longest absent",
-                "Más tiempo sin salir");
-        p("%s  draws  (a value waits %s draws on average)",
-                "%s  sorteos  (un valor espera %s sorteos en promedio)");
-        p("Are these differences real? Overall chi-square p = %s: %s The single most extreme value, allowing for the %d values compared: p = %s.",
-                "¿Son reales estas diferencias? Chi-cuadrado general p = %s: %s El valor más extremo, teniendo en cuenta los %d valores comparados: p = %s.");
+        p("Overall chi-square p = %s: %s",
+                "Chi cuadrado global p = %s: %s");
         p("the spread is what fair draws produce.",
                 "la dispersión es la que producen los sorteos justos.");
         p("more spread than fair draws usually produce.",
                 "más dispersión de la que suelen producir los sorteos justos.");
-        p("TWO-DIGIT ENDINGS (2 CIFRAS)",
-                "TERMINACIONES DE DOS CIFRAS (2 CIFRAS)");
+        p("Longest absent and the most extreme value",
+                "Las más ausentes y el valor más extremo");
+        p("%s  draws  (a value waits %s draws on average)",
+                "%s  sorteos  (un valor espera %s sorteos en promedio)");
+        p("The single most extreme value, allowing for the %d values compared: p = %s. Being absent for a long time doesn't make a value more likely next.",
+                "El valor más extremo, teniendo en cuenta los %d valores comparados: p = %s. Llevar mucho tiempo sin salir no hace más probable que salga.");
+        p("TWO-DIGIT ENDINGS (LA PATA)",
+                "TERMINACIONES DE DOS CIFRAS (LA PATA)");
         p("Each of the 100 endings is expected %s times.",
                 "Se espera que cada una de las 100 terminaciones salga %s veces.");
         p("Most frequent ending, allowing for 100 endings: p = %s.",
@@ -681,8 +927,44 @@ final class Es {
                 "%d sorteos con %s. Justo: %s cada una.");
         p("Chi-square p = %s.",
                 "Chi-cuadrado p = %s.");
+        p("EVEN & ODD",
+                "PARES E IMPARES");
+        p("%dE",
+                "%dP");
+        p("Draws by number of even digits (0E = all odd). Bars: observed; dots: a fair draw.",
+                "Sorteos según la cantidad de cifras pares (0P = todas impares). Barras: lo observado; puntos: un sorteo justo.");
+        p("Draws by number of even numbers (0E = all odd). Bars: observed; dots: a fair draw.",
+                "Sorteos según la cantidad de números pares (0P = todos impares). Barras: lo observado; puntos: un sorteo justo.");
+        p("%s of all digits were even and %s odd (fair: %s each). Chi-square p = %s.",
+                "El %s de las cifras fueron pares y el %s impares (justo: %s cada uno). Chi cuadrado p = %s.");
+        p("%s of all numbers were even and %s odd (fair: %s even). Chi-square p = %s.",
+                "El %s de los números fueron pares y el %s impares (justo: %s pares). Chi cuadrado p = %s.");
+        p("Draw by draw counts",
+                "Conteo por sorteo");
+        p("%s expected",
+                "%s esperados");
+        p("SUM OF THE NUMBERS",
+                "SUMA DE LOS NÚMEROS");
+        p("Draws by the total of their digits; dots show a fair draw.",
+                "Sorteos según el total de sus cifras; los puntos muestran un sorteo justo.");
+        p("Draws by the total of their numbers; dots show a fair draw.",
+                "Sorteos según el total de sus números; los puntos muestran un sorteo justo.");
+        p("Average %.1f (fair %.1f), spread %.1f (fair %.1f). Half of all fair draws total %d–%d. Chi-square p = %s.",
+                "Promedio %.1f (justo %.1f), dispersión %.1f (justo %.1f). La mitad de los sorteos justos suma %d–%d. Chi-cuadrado p = %s.");
         p("REPEATED NUMBERS",
                 "NÚMEROS REPETIDOS");
+        p("Pairs of identical results",
+                "Pares de resultados idénticos");
+        p("%s expected by chance (the birthday problem) · p = %s",
+                "%s esperados por azar (el problema del cumpleaños) · p = %s");
+        p("Same pata as the draw before",
+                "Misma pata que el sorteo anterior");
+        p("%s expected · p = %s",
+                "%s esperados · p = %s");
+        p("Numbers repeated from one draw to the next: p = %s.",
+                "Números repetidos de un sorteo al siguiente: p = %s.");
+        p("Inside a draw, draw to draw, same day",
+                "Dentro de un sorteo, entre sorteos, el mismo día");
         p("Inside one number",
                 "Dentro de un número");
         p("%s expected (%s of fair draws)",
@@ -693,16 +975,8 @@ final class Es {
                 "Dentro de un sorteo");
         p("%d draws",
                 "%d sorteos");
-        p("%s expected",
-                "%s esperados");
         p("From one draw to the next",
                 "De un sorteo al siguiente");
-        p("Same last two digits as the draw before",
-                "Mismas dos últimas cifras que el sorteo anterior");
-        p("%s expected · p = %s",
-                "%s esperados · p = %s");
-        p("Draw-to-draw repeats, p = %s.",
-                "Repeticiones de sorteo a sorteo, p = %s.");
         p("Between draws on the same day",
                 "Entre sorteos del mismo día");
         p("%d days · %s in common, %s expected · p = %s",
@@ -713,70 +987,66 @@ final class Es {
                 "%d idénticos");
         p("The same result more than once",
                 "El mismo resultado más de una vez");
-        p("Pairs of identical results",
-                "Pares de resultados idénticos");
-        p("%s expected by chance (the birthday problem) · p = %s",
-                "%s esperados por azar (el problema del cumpleaños) · p = %s");
-        p("EVEN & ODD",
-                "PARES E IMPARES");
-        p("%dE",
-                "%dP");
-        p("Draws by number of even digits (0E = all odd). Bars: observed; dots: a fair draw.",
-                "Sorteos según la cantidad de cifras pares (0P = todas impares). Barras: lo observado; puntos: un sorteo justo.");
-        p("Draws by number of even numbers (0E = all odd). Bars: observed; dots: a fair draw.",
-                "Sorteos según la cantidad de números pares (0P = todos impares). Barras: lo observado; puntos: un sorteo justo.");
-        p("%s of all digits were even (fair: %s). Chi-square p = %s.",
-                "El %s de todas las cifras fueron pares (justo: %s). Chi-cuadrado p = %s.");
-        p("%s of all numbers were even (fair: %s). Chi-square p = %s.",
-                "El %s de todos los números fueron pares (justo: %s). Chi-cuadrado p = %s.");
         p("RECURRING COMBINATIONS & PATTERNS",
                 "COMBINACIONES Y PATRONES RECURRENTES");
-        p("Most frequent three-digit endings (3 cifras)",
-                "Terminaciones de tres cifras más frecuentes (3 cifras)");
+        p("Most frequent last three digits",
+                "Tres últimas cifras más frecuentes");
         p("Most frequent of the 1,000 endings: p = %s.",
                 "La más frecuente de las 1.000 terminaciones: p = %s.");
         p("Pairs drawn together most often",
                 "Parejas que más han salido juntas");
         p("With %s possible pairs some are bound to come up often: the top pair's p, allowing for that, is %s.",
                 "Con %s parejas posibles, algunas van a salir seguido por fuerza: el valor p de la pareja más frecuente, teniendo eso en cuenta, es %s.");
+        p("More pairs and triples",
+                "Más parejas y tríos");
         p("Triples drawn together most often",
                 "Tríos que más han salido juntos");
         p("Out of %s possible triples: p = %s.",
                 "De %s tríos posibles: p = %s.");
         p("Shapes",
                 "Formas");
-        p("SUM OF THE NUMBERS",
-                "SUMA DE LOS NÚMEROS");
-        p("Draws by the total of their digits; dots show a fair draw.",
-                "Sorteos según el total de sus cifras; los puntos muestran un sorteo justo.");
-        p("Draws by the total of their numbers; dots show a fair draw.",
-                "Sorteos según el total de sus números; los puntos muestran un sorteo justo.");
-        p("Average %.1f (fair %.1f), spread %.1f (fair %.1f). Half of all fair draws total %d–%d. Chi-square p = %s.",
-                "Promedio %.1f (justo %.1f), dispersión %.1f (justo %.1f). La mitad de los sorteos justos suma %d–%d. Chi-cuadrado p = %s.");
         p("BY DAY OF THE WEEK",
                 "POR DÍA DE LA SEMANA");
-        p("Top endings: %s",
-                "Terminaciones más frecuentes: %s");
-        p("Top numbers: %s",
-                "Números más frecuentes: %s");
         p("Too few draws per weekday to test whether the numbers depend on the day.",
                 "Muy pocos sorteos por día de la semana para probar si los números dependen del día.");
         p("Do numbers depend on the weekday? p = %s: no sign they do.",
                 "¿Los números dependen del día de la semana? p = %s: no hay señales de que así sea.");
         p("Do numbers depend on the weekday? p = %s.",
                 "¿Los números dependen del día de la semana? p = %s.");
+        p("Each day",
+                "Cada día");
+        p("Top endings: %s",
+                "Terminaciones más frecuentes: %s");
+        p("Top numbers: %s",
+                "Números más frecuentes: %s");
         p("Very unlikely by chance",
                 "Muy improbable por azar");
         p("Unusual (p < 0.05)",
                 "Inusual (p < 0,05)");
         p("Within chance",
                 "Dentro del azar");
+        p("Fill in all %d boxes with one digit each.",
+                "Llena las %d casillas con una cifra cada una.");
+        p("%d matched",
+                "%d acertados");
+        p("Jackpot (5 + superbalota)",
+                "Premio mayor (5 + superbalota)");
+        p("%d + superbalota",
+                "%d + superbalota");
+        p("Jackpot (5 numbers)",
+                "Premio mayor (5 números)");
         p("in %d min",
                 "en %d min");
         p("in %d h %d min",
                 "en %d h %d min");
         p("in %d days",
                 "en %d días");
+        p("Evens %d · Odds %d · Sum %d",
+                "Pares %d · Impares %d · Suma %d");
+        p("Pata %d%d",
+                "Pata %d%d");
+        p("Quinta %d",
+                "Quinta %d");
         p("LATEST RESULT",
                 "ÚLTIMO RESULTADO");
         p("LATEST RESULTS",
@@ -793,54 +1063,118 @@ final class Es {
                 "Próximo sorteo: %s · %s (%s)");
         p("No draw scheduled in the next week.",
                 "No hay sorteos programados en la próxima semana.");
+        p("The result of %s isn't in yet, so the data may be incomplete. Tap ↻ to check again.",
+                "El resultado del %s aún no ha llegado, así que los datos pueden estar incompletos. Toca ↻ para buscar de nuevo.");
         p("Plays %s",
                 "Juega %s");
-        p("SUGGESTED PICK",
-                "JUGADA SUGERIDA");
-        p("Model: %s · from %s draws of %s",
-                "Modelo: %s · a partir de %s sorteos de %s");
-        p("In a fair draw every combination has the same chance; the model only reflects past frequencies. Other models, alternatives and the reasoning are in Picks.",
-                "En un sorteo justo todas las combinaciones tienen la misma probabilidad; el modelo solo refleja frecuencias pasadas. Los demás modelos, las alternativas y el razonamiento están en Jugadas.");
-        p("Open Picks",
-                "Abrir Jugadas");
+        p("Results not fetched yet: showing the bundled history.",
+                "Aún no se han descargado resultados: se muestra el historial incluido.");
+        p("Data updated %s.",
+                "Datos actualizados %s.");
+        p("More than 6 hours since the last update: newer results may be missing. Tap ↻.",
+                "Han pasado más de 6 horas desde la última actualización: pueden faltar resultados nuevos. Toca ↻.");
+        p("%d source(s) didn't answer on the last update (details in History).",
+                "%d fuente(s) no respondieron en la última actualización (detalles en Historial).");
+        p("TODAY'S RECOMMENDATION",
+                "RECOMENDACIÓN DE HOY");
+        p("RECOMMENDATION · %s",
+                "RECOMENDACIÓN · %s");
+        p("For the draw of %s",
+                "Para el sorteo del %s");
+        p("%s · ranked 1st of %d models",
+                "%s · 1.º de %d modelos");
+        p("Ranked first over the last %d draws, where its forecasts were exactly a fair guess's: it found nothing to prefer.",
+                "Quedó primero en los últimos %d sorteos, donde sus pronósticos fueron exactamente los de una elección justa: no encontró nada que preferir.");
+        p("Ranked first: over the last %d draws its forecasts gave the actual results %s probability compared with a fair guess (95%% CI %s to %s).",
+                "Quedó primero: en los últimos %d sorteos sus pronósticos dieron a los resultados reales un %s de probabilidad frente a una elección justa (IC 95%% %s a %s).");
+        p("Better than chance in the tests (Monte Carlo p = %s). Still check the track record before relying on it.",
+                "Mejor que el azar en las pruebas (Monte Carlo p = %s). Aun así revisa el historial de aciertos antes de confiar en él.");
+        p("No model shows a real advantage over chance (Monte Carlo p = %s): this number is as likely as any other, %s.",
+                "Ningún modelo muestra una ventaja real sobre el azar (Monte Carlo p = %s): este número es tan probable como cualquier otro, %s.");
+        p("Track record: %s past draws replayed · last two digits right %d times (%s expected, p = %s).",
+                "Historial: %s sorteos pasados repetidos · las dos últimas cifras acertadas %d veces (%s esperadas, p = %s).");
+        p("Track record: %s past draws replayed · %s numbers matched (%s expected, p = %s).",
+                "Historial: %s sorteos pasados repetidos · %s números acertados (%s esperados, p = %s).");
+        p("Generated %s from the results up to %s. It changes as new results arrive; its probability doesn't.",
+                "Generada %s con los resultados hasta el %s. Cambia cuando llegan resultados nuevos; su probabilidad no.");
+        p("Model ranking & track record",
+                "Ranking de modelos e historial");
         p("CHECK A NUMBER",
                 "REVISAR UN NÚMERO");
         p("CHECK A COMBINATION",
                 "REVISAR UNA COMBINACIÓN");
-        p("Type a 4-digit number to see its odds and how it compares with the suggested pick.",
-                "Escribe un número de 4 cifras para ver sus probabilidades y cómo se compara con la jugada sugerida.");
-        p("Type 5 numbers (and optionally + the superbalota) to compare them with the suggested pick, e.g. 5 13 19 25 29 + 7.",
-                "Escribe 5 números (y si quieres, + la superbalota) para compararlos con la jugada sugerida, p. ej. 5 13 19 25 29 + 7.");
-        p("Type 5 numbers to compare them with the suggested pick, e.g. 5 13 19 25 29.",
-                "Escribe 5 números para compararlos con la jugada sugerida, p. ej. 5 13 19 25 29.");
+        p("Choose the bet, type the digits and what you pay.",
+                "Elige la apuesta, escribe las cifras y cuánto pagas.");
+        p("In order",
+                "En orden");
+        p("Any order (combinado)",
+                "En cualquier orden (combinado)");
+        p("Pays %s pesos per peso bet.",
+                "Paga %s pesos por cada peso apostado.");
+        p("Five numbers from 1 to 43, then the superbalota (1–16, optional).",
+                "Cinco números del 1 al 43 y luego la superbalota (1–16, opcional).");
+        p("Five numbers from 1 to 39.",
+                "Cinco números del 1 al 39.");
         p("Check",
                 "Revisar");
-        p("Yours",
-                "El tuyo");
-        p("Suggested",
-                "Sugerido");
-        p("Times drawn (in %s)",
-                "Veces que salió (en %s)");
-        p("Last three digits seen",
-                "Tres últimas cifras vistas");
-        p("Last two digits seen",
-                "Dos últimas cifras vistas");
-        p("Same digits, any order",
-                "Mismas cifras, en cualquier orden");
-        p("Draws matching 3+ of them",
-                "Sorteos con 3+ de ellos");
-        p("Draws matching 4+ of them",
-                "Sorteos con 4+ de ellos");
-        p("Fair draws with this shape",
-                "Sorteos justos con esta forma");
-        p("Both have exactly the same chance in a fair draw: %s.",
-                "Ambos tienen exactamente la misma probabilidad en un sorteo justo: %s.");
-        p("The model rates the suggested pick %.2f× yours, from past frequencies only; that isn't a real difference in odds unless the draw is biased.",
-                "El modelo califica la jugada sugerida %.2f× la tuya, solo por frecuencias pasadas; no es una diferencia real de probabilidades a menos que el sorteo esté sesgado.");
+        p("%s · %s",
+                "%s · %s");
+        p("Chance of winning this bet in one draw.",
+                "Probabilidad de ganar esta apuesta en un sorteo.");
+        p("If it wins",
+                "Si gana");
+        p("IVA %s",
+                "IVA %s");
+        p("Winning category",
+                "Categoría ganadora");
+        p("× %s per peso bet (official plan)",
+                "× %s por peso apostado (plan oficial)");
+        p("Withholding",
+                "Retención");
+        p("20%% when the prize exceeds 48 UVT (%s)",
+                "20%% cuando el premio supera 48 UVT (%s)");
+        p("Expected value: %s per bet; on average it returns %s of what you pay.",
+                "Valor esperado: %s por apuesta; en promedio devuelve el %s de lo que pagas.");
+        p("The same number as a shorter bet",
+                "El mismo número en apuestas más cortas");
+        p("%s · net prize for %s%s",
+                "%s · premio neto por %s%s");
+        p("wins in the latest draw",
+                "gana en el último sorteo");
+        p("Wins in the latest %s (%s: %s)",
+                "Gana en el último %s (%s: %s)");
+        p("Doesn't win in the latest %s (%s: %s)",
+                "No gana en el último %s (%s: %s)");
+        p("once",
+                "una vez");
+        p("%d times",
+                "%d veces");
+        p("In %s past draws it would have won %s (%s expected)%s.",
+                "En %s sorteos pasados habría ganado %s (%s esperadas)%s.");
+        p(", last on %s",
+                ", la última el %s");
+        p("The recommendation's %s is %s. Model's estimate: yours %s, the recommendation's %s; theoretical: %s both.",
+                "En la recomendación, %s es %s. Estimación del modelo: la tuya %s, la de la recomendación %s; teórica: %s ambas.");
+        p("Jackpot probability",
+                "Probabilidad del premio mayor");
+        p("Probability of these 5 numbers",
+                "Probabilidad de estos 5 números");
+        p("The same as any other combination.",
+                "La misma de cualquier otra combinación.");
+        p("Prize in the latest %s (%s): %s",
+                "Premio en el último %s (%s): %s");
+        p("No prize in the latest %s (%s: %s) · %s",
+                "Sin premio en el último %s (%s: %s) · %s");
+        p("In %s past draws: all five %d times, four or more %d, three or more %d.",
+                "En %s sorteos pasados: los cinco %d veces, cuatro o más %d, tres o más %d.");
+        p("Prize amounts depend on the pool and aren't fixed, so only the categories are shown (all tiers in Odds).",
+                "Los montos dependen del acumulado y no son fijos, así que solo se muestran las categorías (todas en Probabilidades).");
+        p("Recommendation: %s. Model's estimate: yours %s, the recommendation's %s; theoretical: %s both.",
+                "Recomendación: %s. Estimación del modelo: la tuya %s, la de la recomendación %s; teórica: %s ambas.");
         p("NOTIFICATIONS",
                 "NOTIFICACIONES");
-        p("A notification as soon as each %s result is announced, with its numbers and whether it was an ordinary or unusual draw.",
-                "Una notificación apenas se anuncie cada resultado de %s, con sus números y si fue un sorteo ordinario o inusual.");
+        p("%s results",
+                "Resultados de %s");
         p("On",
                 "Activadas");
         p("Off",

@@ -97,7 +97,6 @@ public class I18nTest {
         assertEquals("mar 17 nov 2026", Fmt.date(LocalDate.of(2026, 11, 17)));
         assertEquals("0,43", Combi.pText(0.4312));
         assertEquals("Ordinario", Randomness.drawLabel(80));
-        assertEquals("3 (sáb)", Game.PAISITA_3.shortName());
         T.init(Locale.US);
         assertEquals("1 in 15,401,568", Combi.oneIn(1 / 15401568.0));
         assertEquals("Ordinary", Randomness.drawLabel(80));

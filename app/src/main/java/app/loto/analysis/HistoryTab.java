@@ -76,7 +76,7 @@ final class HistoryTab {
         }
         boolean several = s.games.size() > 1;
         for (LocalDate day : o.days.keySet()) {
-            TextView h = ui.text(Fmt.dayHeading(day), 12, Theme.uiBold(a), Theme.AMBER_LIGHT);
+            TextView h = ui.text(Fmt.dayHeading(day), 13, Theme.uiBold(a), Theme.AMBER_LIGHT);
             h.setPadding(0, ui.dp(16), 0, ui.dp(2));
             res.addView(h);
             for (Draw d : o.days.get(day)) {
@@ -85,11 +85,11 @@ final class HistoryTab {
                 row.setPadding(0, ui.dp(6), 0, ui.dp(2));
                 int time = d.game.usualTime(day);
                 LinearLayout who = ui.vbox();
-                who.addView(ui.text(several ? d.game.shortName() : d.game.name, 13, Theme.uiSemi(a), Theme.TEXT));
+                who.addView(ui.text(several ? d.game.shortName() : d.game.name, 14, Theme.uiSemi(a), Theme.TEXT));
                 String sub = (time >= 0 ? Fmt.time(time) : d.game.slot.label()) + (d.drawNo.isEmpty() ? "" : " · #" + d.drawNo);
-                who.addView(ui.text(sub, 10, Theme.monoMedium(a), Theme.DIM));
+                who.addView(ui.text(sub, Ui.SMALL, Theme.monoMedium(a), Theme.DIM));
                 row.addView(who, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-                row.addView(ui.balls(d.game, d.nums, d.extra, d.game.digits() ? 26 : 25));
+                row.addView(ui.balls(d.game, d.nums, d.extra, Ui.NUM_S));
                 res.addView(row);
                 Randomness.DrawScore ds = o.audits.get(key(d));
                 if (ds != null) {
@@ -99,7 +99,7 @@ final class HistoryTab {
                     ar.addView(ui.tag(T.f("%s · %d", ds.label(), ds.score), SummaryTab.auditColor(ds.score)));
                     if (ds.score < 50) {
                         TextView why = ui.note(String.join(" ", ds.reasons));
-                        why.setTextSize(11);
+                        why.setTextSize(Ui.SMALL);
                         why.setPadding(ui.dp(8), 0, 0, 0);
                         ar.addView(why, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
                     }
@@ -126,11 +126,18 @@ final class HistoryTab {
 
         // ---- coverage ----
         LinearLayout cov = ui.card(body, T.t("HISTORY STORED"));
+        java.time.ZonedDateTime now = java.time.ZonedDateTime.now(MainActivity.BOGOTA);
         for (Game g : Game.of(s.lottery)) {
             int n = s.h.size(g);
-            cov.addView(ui.kv(g.name, T.f("%s draws", Fmt.num(n)), Theme.TEXT,
-                    n == 0 ? T.t("None yet.") : Fmt.shortDate(s.h.first(g)) + " – " + Fmt.shortDate(s.h.last(g)) + " · " + g.source));
+            LocalDate missing = SummaryTab.missing(s.h, g, now);
+            cov.addView(ui.kv(g.name, T.f("%s draws", Fmt.num(n)), missing != null ? Theme.AMBER : Theme.TEXT,
+                    n == 0 ? T.t("None yet.") : Fmt.shortDate(s.h.first(g)) + " – " + Fmt.shortDate(s.h.last(g)) + " · " + g.source
+                            + (missing != null ? " · " + T.f("missing the result of %s", Fmt.dayMonthInline(missing)) : "")));
         }
+        long at = Data.sp(a).getLong("fetchAt", 0);
+        TextView up = ui.note(at == 0 ? T.t("Not refreshed yet on this phone.") : T.f("Last refresh: %s.", SummaryTab.when(at)));
+        if (at == 0 || System.currentTimeMillis() - at > 6 * 3600_000L) up.setTextColor(Theme.AMBER);
+        cov.addView(up, ui.matchWrap(4));
         cov.addView(ui.note(T.t("Bundled with the app, completed from the repository's copy (updated twice a day) and from "
                 + "the sites below each time the app refreshes. Results are only ever added, never removed.")));
 

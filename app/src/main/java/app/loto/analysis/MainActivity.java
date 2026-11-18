@@ -55,9 +55,21 @@ public class MainActivity extends Activity {
     Predictor.Model model = Predictor.Model.FREQUENCY;
     long seed = 1;
     String check = "";
+    Prizes.Bet checkBet = Prizes.Bet.FOUR;
+    double checkWager = 1000;
+    Pack.Objective packObjective = Pack.Objective.ANY;
+    double packTarget = 0.5;
+    double packStake = 1000;
 
     /** A snapshot of the choice, handed to the background work. */
     static final class Sel {
+        Prizes.Bet checkBet;
+        double checkWager;
+        Pack.Objective packObjective;
+        double packTarget, packStake;
+        long fetchAt;
+        String fetchLog;
+        android.content.Context ctx;
         History h;
         String lottery;
         List<Game> games;
@@ -99,7 +111,7 @@ public class MainActivity extends Activity {
         SharedPreferences sp = Data.sp(this);
         lottery = sp.getString("lottery", "Dorado");
         if (Game.of(lottery).isEmpty()) lottery = "Dorado";
-        gameIdx = sp.getInt("game", Game.of(lottery).size() > 1 ? Game.of(lottery).size() : 0);
+        gameIdx = Math.max(0, Math.min(Game.of(lottery).size(), sp.getInt("game", 0)));
         periodIdx = Math.max(0, Math.min(PERIODS.length - 1, sp.getInt("period", 3)));
         tab = SUMMARY; // Summary first, every time the app opens
         try {
@@ -136,15 +148,13 @@ public class MainActivity extends Activity {
         col.addView(head);
 
         // ---- the lotteries: swipe through their emblems ----
-        String[] subs = {T.t("Chance · 3 draws a day"), T.t("Chance · day, night and Saturday"),
-                T.t("5 of 43 + superbalota"), T.t("5 of 39 · 4 draws a week")};
-        int[] res = {R.drawable.logo_dorado, R.drawable.logo_paisita, R.drawable.logo_baloto, R.drawable.logo_miloto};
-        int[] colors = {0xFFF2B230, 0xFF3FAE6A, 0xFFF5A623, 0xFF8E7CF0};
-        carousel = new LogoCarousel(this, Game.LOTTERIES, Game.LOTTERIES, subs, res, colors,
+        String[] subs = {T.t("Chance · 3 draws a day"), T.t("5 of 43 + superbalota"), T.t("5 of 39 · 4 draws a week")};
+        int[] colors = {0xFFF2B230, 0xFFEB9438, 0xFFE08A33};
+        carousel = new LogoCarousel(this, Game.LOTTERIES, subs, colors,
                 java.util.Arrays.asList(Game.LOTTERIES).indexOf(lottery), i -> {
                     lottery = Game.LOTTERIES[i];
-                    int n = Game.of(lottery).size();
-                    gameIdx = n > 1 ? n : 0;
+                    gameIdx = 0; // always the lottery's first draw (Mañana, Baloto...), never "all"
+                    checkBet = Prizes.Bet.FOUR;
                     weekday = -1;
                     limit = 40;
                     check = "";
@@ -202,7 +212,7 @@ public class MainActivity extends Activity {
         List<Game> games = Game.of(l);
         Game g = Game.byId(i.getStringExtra("game"));
         int idx = g == null ? -1 : games.indexOf(g);
-        gameIdx = idx >= 0 ? idx : (games.size() > 1 ? games.size() : 0);
+        gameIdx = Math.max(0, idx); // the draw announced, or the lottery's first draw
         tab = SUMMARY;
         check = "";
         return true;
@@ -368,6 +378,14 @@ public class MainActivity extends Activity {
         s.model = model;
         s.seed = seed;
         s.check = check;
+        s.checkBet = checkBet;
+        s.checkWager = checkWager;
+        s.packObjective = packObjective;
+        s.packTarget = packTarget;
+        s.packStake = packStake;
+        s.fetchAt = Data.sp(this).getLong("fetchAt", 0);
+        s.fetchLog = Data.sp(this).getString("fetchLog", "");
+        s.ctx = getApplicationContext();
         return s;
     }
 

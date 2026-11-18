@@ -141,7 +141,7 @@ public class EngineTest {
         assertEquals(-1, Game.DORADO_MANANA.timeOn(LocalDate.of(2026, 11, 16)));
         assertEquals(Game.hm(11, 0), Game.DORADO_MANANA.timeOn(LocalDate.of(2026, 11, 17)));
         assertEquals("11:00 a.m.", Fmt.time(Game.DORADO_MANANA.timeOn(LocalDate.of(2026, 11, 17))));
-        assertEquals(Game.hm(14, 0), Game.PAISITA_DIA.timeOn(LocalDate.of(2026, 11, 16)));
+        assertEquals(Game.hm(19, 25), Game.DORADO_NOCHE.timeOn(LocalDate.of(2026, 11, 16))); // holiday: Sunday time
         assertEquals("Mon–Sat 11:00 a.m. (no draw on public holidays)", Game.DORADO_MANANA.scheduleText());
         assertEquals("Mon, Tue, Thu, Fri 10:00 p.m.", Game.MILOTO.scheduleText());
         assertEquals(2, Game.DORADO_MANANA.longestRegularGap());

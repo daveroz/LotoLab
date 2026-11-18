@@ -1,5 +1,6 @@
 package app.loto.analysis;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -61,29 +62,70 @@ public class LaunchTest {
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> crashes.add(e));
         MainActivity a = Robolectric.buildActivity(MainActivity.class).setup().get();
         assertNotNull(a);
-        settle();
-        for (String lottery : Game.LOTTERIES) show(a, lottery, 0, MainActivity.SUMMARY);
-        for (int tab = 0; tab <= MainActivity.ODDS; tab++) show(a, "Dorado", 3, tab);
-        show(a, "Baloto", 2, MainActivity.HISTORY);
+        settle(a);
+        for (String lottery : Game.LOTTERIES) {
+            for (int tab = 0; tab <= MainActivity.ODDS; tab++) show(a, lottery, 0, tab);
+        }
+        show(a, "Dorado", 3, MainActivity.SUMMARY); // all three draws at once
+        show(a, "Dorado", 3, MainActivity.PICKS);
+        show(a, "Baloto", 1, MainActivity.SUMMARY); // Revancha
+        // every El Dorado bet format in the checker, and every pack goal
+        for (Prizes.Bet b : Prizes.Bet.values()) {
+            a.checkBet = b;
+            show(a, "Dorado", 0, MainActivity.SUMMARY, "2820".substring(4 - b.digits));
+        }
+        for (Pack.Objective o : Pack.Objective.values()) {
+            a.packObjective = o;
+            a.packTarget = 0.9;
+            show(a, "Dorado", 0, MainActivity.ODDS);
+        }
+        // a wrong entry is explained, not a crash
+        show(a, "Baloto", 0, MainActivity.SUMMARY, "5 5 50");
     }
 
     private void show(MainActivity a, String lottery, int game, int tab) throws Exception {
+        show(a, lottery, game, tab, Game.of(lottery).get(0).digits() ? "2820" : "5 13 19 25 29 + 7");
+    }
+
+    private void show(MainActivity a, String lottery, int game, int tab, String check) throws Exception {
         a.lottery = lottery;
         a.gameIdx = game;
         a.tab = tab;
-        a.check = Game.of(lottery).get(0).digits() ? "2820" : "5 13 19 25 29 + 7";
+        a.check = check;
         a.buildSelectors();
         a.render();
-        settle();
-        assertTrue(lottery + " tab " + tab + " shows nothing", textCount(a.getWindow().getDecorView()) > 3);
+        settle(a);
+        View root = a.getWindow().getDecorView();
+        assertTrue(lottery + " tab " + tab + " shows nothing", textCount(root) > 3);
+        String all = text(root);
+        assertFalse(lottery + " tab " + tab + " failed: " + all, all.contains(T.t("SOMETHING WENT WRONG")));
     }
 
-    private void settle() throws Exception {
-        for (int i = 0; i < 50; i++) {
+    /** Waits for the background work to finish (the loading card to go), then for the main thread. */
+    private void settle(MainActivity a) throws Exception {
+        java.lang.reflect.Field f = MainActivity.class.getDeclaredField("body");
+        f.setAccessible(true);
+        ViewGroup body = (ViewGroup) f.get(a);
+        String working = T.t("Working it out…"), running = T.t("Running every test on every draw…");
+        for (int i = 0; i < 1600; i++) {
             Thread.sleep(25);
             ShadowLooper.idleMainLooper();
+            if (i < 8 || body == null || body.getChildCount() == 0) continue;
+            String first = text(body.getChildAt(0));
+            if (!first.contains(working) && !first.contains(running)) break;
         }
+        ShadowLooper.idleMainLooper();
         if (!crashes.isEmpty()) throw new AssertionError("crash", crashes.get(0));
+    }
+
+    private static String text(View v) {
+        if (v instanceof TextView) return ((TextView) v).getText().toString();
+        StringBuilder sb = new StringBuilder();
+        if (v instanceof ViewGroup) {
+            ViewGroup g = (ViewGroup) v;
+            for (int i = 0; i < g.getChildCount(); i++) sb.append(text(g.getChildAt(i))).append('\n');
+        }
+        return sb.toString();
     }
 
     private static int textCount(View v) {

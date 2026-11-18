@@ -31,9 +31,6 @@ final class Fetcher {
         ASTRO.put("dorado-manana", "dorado-manana");
         ASTRO.put("dorado-tarde", "dorado-tarde");
         ASTRO.put("dorado-noche", "dorado-noche");
-        ASTRO.put("paisita-dia", "paisita-dia");
-        ASTRO.put("paisita-noche", "paisita-noche");
-        ASTRO.put("paisita-3", "paisita-tres");
     }
 
     private static final Pattern ASTRO_ROW = Pattern.compile("<tr>\\s*<td>\\s*\\S+\\s+(\\d{1,2})\\s+([a-zA-Z]+)\\s+(\\d{4})\\s*</td>\\s*"

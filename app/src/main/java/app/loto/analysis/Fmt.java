@@ -57,6 +57,12 @@ final class Fmt {
         return DAYS_EN[d.getDayOfWeek().getValue() - 1] + " " + d.getDayOfMonth() + " " + MONTHS_EN[d.getMonthValue() - 1];
     }
 
+    /** dayMonth for the middle of a sentence: "Tuesday 17 November" / "martes 17 de noviembre". */
+    static String dayMonthInline(LocalDate d) {
+        if (T.es) return DAYS_ES[d.getDayOfWeek().getValue() - 1] + " " + d.getDayOfMonth() + " de " + MONTHS_ES[d.getMonthValue() - 1];
+        return dayMonth(d);
+    }
+
     /** Minutes after midnight as "3:30 p.m." / "3:30 p. m.". */
     static String time(int minutes) {
         if (minutes < 0) return "–";

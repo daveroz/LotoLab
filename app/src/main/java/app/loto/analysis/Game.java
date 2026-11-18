@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * One draw series: a lottery's draw at one time of day (Dorado Mañana, Paisita Noche, Baloto...). Two kinds:
+ * One draw series: a lottery's draw at one time of day (Dorado Mañana, Dorado Noche, Baloto...). Two kinds:
  * DIGITS games (the Colombian chance: a 4-digit number 0000-9999, each digit drawn from its own urn, plus an
  * optional fifth digit, the "quinta") and LOTTO games (5 different balls from 1..max, plus Baloto's superbalota).
  * Plain Java, no Android, so the statistics can be tested on any JVM.
@@ -28,7 +28,7 @@ final class Game {
     }
 
     final String id;          // also the history file name
-    final String lottery;     // Dorado, Paisita, Baloto, MiLoto
+    final String lottery;     // Dorado, Baloto, MiLoto
     final String name;        // Dorado Mañana
     private final String shortName;
     final Slot slot;
@@ -82,12 +82,6 @@ final class Game {
     static final Game DORADO_NOCHE = new Game("dorado-noche", "Dorado", "Dorado Noche", "Noche", Slot.NIGHT,
             Kind.DIGITS, 4, 9, 9, "Quinta",
             new int[]{hm(22, 5), hm(22, 5), hm(22, 5), hm(22, 5), hm(22, 5), hm(22, 15), hm(19, 25)}, true, ASTRO);
-    static final Game PAISITA_DIA = new Game("paisita-dia", "Paisita", "Paisita Día", "Día", Slot.AFTERNOON,
-            Kind.DIGITS, 4, 9, 9, "Quinta", week(hm(13, 0), hm(14, 0)), true, ASTRO);
-    static final Game PAISITA_NOCHE = new Game("paisita-noche", "Paisita", "Paisita Noche", "Noche", Slot.NIGHT,
-            Kind.DIGITS, 4, 9, 9, "Quinta", week(hm(18, 0), hm(20, 0)), true, ASTRO);
-    static final Game PAISITA_3 = new Game("paisita-3", "Paisita", "Paisita 3", "3", Slot.NIGHT,
-            Kind.DIGITS, 4, 9, 9, "Quinta", days(hm(22, 0), DayOfWeek.SATURDAY), false, ASTRO);
     static final Game BALOTO = new Game("baloto", "Baloto", "Baloto", "Baloto", Slot.NIGHT, Kind.LOTTO, 5, 43, 16,
             "Superbalota", days(hm(23, 0), DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.SATURDAY), true, OFFICIAL);
     static final Game REVANCHA = new Game("revancha", "Baloto", "Baloto Revancha", "Revancha", Slot.NIGHT, Kind.LOTTO, 5,
@@ -96,9 +90,8 @@ final class Game {
     static final Game MILOTO = new Game("miloto", "MiLoto", "MiLoto", "MiLoto", Slot.NIGHT, Kind.LOTTO, 5, 39, 0, null,
             days(hm(22, 0), DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), true, OFFICIAL);
 
-    static final Game[] ALL = {DORADO_MANANA, DORADO_TARDE, DORADO_NOCHE, PAISITA_DIA, PAISITA_NOCHE, PAISITA_3,
-            BALOTO, REVANCHA, MILOTO};
-    static final String[] LOTTERIES = {"Dorado", "Paisita", "Baloto", "MiLoto"};
+    static final Game[] ALL = {DORADO_MANANA, DORADO_TARDE, DORADO_NOCHE, BALOTO, REVANCHA, MILOTO};
+    static final String[] LOTTERIES = {"Dorado", "Baloto", "MiLoto"};
 
     static List<Game> of(String lottery) {
         List<Game> out = new ArrayList<>();
@@ -113,9 +106,9 @@ final class Game {
 
     boolean digits() { return kind == Kind.DIGITS; }
 
-    /** "Mañana", "Noche", "Revancha"; Paisita 3 is "3 (Sat)" / "3 (sáb)". */
+    /** "Mañana", "Noche", "Revancha". */
     String shortName() {
-        return this == PAISITA_3 ? T.f("3 (%s)", Fmt.dayShort(5)) : shortName;
+        return shortName;
     }
 
     /** The draw time on that date in minutes after midnight, or -1 if there's no draw (holidays included). */
