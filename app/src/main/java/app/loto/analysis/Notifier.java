@@ -110,8 +110,16 @@ final class Notifier {
         return out;
     }
 
-    /** Arms the alarm for the next check and makes sure the periodic backstop job exists. */
+    /** Arms the alarm for the next check and makes sure the periodic backstop job exists. Never throws. */
     static void schedule(Context c) {
+        try {
+            arm(c);
+        } catch (RuntimeException e) {
+            android.util.Log.w("LotoLab", "couldn't schedule the result check", e);
+        }
+    }
+
+    private static void arm(Context c) {
         Context app = c.getApplicationContext();
         AlarmManager am = app.getSystemService(AlarmManager.class);
         PendingIntent pi = PendingIntent.getBroadcast(app, 0, new Intent(app, DrawAlarmReceiver.class),
@@ -138,12 +146,16 @@ final class Notifier {
 
     /** Runs a check as soon as there's a network (from the alarm). */
     static void runSoon(Context c) {
-        Context app = c.getApplicationContext();
-        JobScheduler js = app.getSystemService(JobScheduler.class);
-        if (js == null) return;
-        js.schedule(new JobInfo.Builder(JOB_NOW, new ComponentName(app, ResultJobService.class))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .build());
+        try {
+            Context app = c.getApplicationContext();
+            JobScheduler js = app.getSystemService(JobScheduler.class);
+            if (js == null) return;
+            js.schedule(new JobInfo.Builder(JOB_NOW, new ComponentName(app, ResultJobService.class))
+                    .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                    .build());
+        } catch (RuntimeException e) {
+            android.util.Log.w("LotoLab", "couldn't start the result check", e);
+        }
     }
 
     /** The background check (off the main thread): fetch what's due, announce it, arm the next alarm. */
@@ -176,6 +188,7 @@ final class Notifier {
 
     /** The app is open and showing them: don't announce these later. */
     static void markSeen(Context c, List<Draw> fresh) {
+        if (fresh.isEmpty() && Data.sp(c).getBoolean("announceReady", false)) return;
         SharedPreferences sp = Data.sp(c);
         Set<String> seen = seen(sp);
         for (Draw d : fresh) seen.add(key(d));
@@ -195,7 +208,11 @@ final class Notifier {
             seen.add(k);
             // the very first check only learns what's there; old results and unfollowed lotteries stay quiet
             if (!ready || !can || d.date.isBefore(yesterday) || !enabled(c, d.game.lottery)) continue;
-            post(c, h, d);
+            try {
+                post(c, h, d);
+            } catch (RuntimeException e) {
+                android.util.Log.w("LotoLab", "couldn't post a notification", e);
+            }
         }
         saveSeen(sp, seen);
     }

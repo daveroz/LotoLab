@@ -3,6 +3,8 @@
 
     <!-- Fetches the newest results from the lottery sites and the repository's history copy -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 14+ refuses (with a crash) to schedule a job that waits for a network without this -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Announces new results (Android 13+ asks the user) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Re-arms the after-draw check when the phone restarts -->

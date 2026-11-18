@@ -61,7 +61,15 @@ final class LogoCarousel extends View {
                 Bitmap b = BitmapFactory.decodeStream(in);
                 if (b != null) custom = new BitmapDrawable(getResources(), b);
             } catch (Exception ignored) { } // no official logo supplied: the built-in emblem
-            logos[i] = custom != null ? custom : c.getDrawable(logoRes[i]);
+            Drawable builtIn = null;
+            if (custom == null) {
+                try {
+                    builtIn = c.getDrawable(logoRes[i]);
+                } catch (RuntimeException e) {
+                    android.util.Log.e("LotoLab", "emblem " + keys[i] + " couldn't be loaded", e);
+                }
+            }
+            logos[i] = custom != null ? custom : builtIn != null ? builtIn : disc(colors[i]);
         }
         name.setTypeface(Theme.uiBold(c));
         name.setTextAlign(Paint.Align.CENTER);
@@ -79,6 +87,14 @@ final class LogoCarousel extends View {
     }
 
     int index() { return index; }
+
+    /** A plain lit disc in the lottery's colour, if its emblem can't be drawn. */
+    private static Drawable disc(int color) {
+        android.graphics.drawable.GradientDrawable g = new android.graphics.drawable.GradientDrawable();
+        g.setShape(android.graphics.drawable.GradientDrawable.OVAL);
+        g.setColor(color);
+        return g;
+    }
 
     private void updateDescription() {
         setContentDescription(T.f("Lottery: %s. Swipe left or right to change.", names[index]));

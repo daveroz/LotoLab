@@ -10,8 +10,8 @@ android {
         applicationId 'app.loto.analysis'
         minSdk 26
         targetSdk 34
-        versionCode 2
-        versionName '1.1'
+        versionCode 3
+        versionName '1.1.1'
     }
 
     compileOptions {
@@ -44,10 +44,13 @@ android {
 
     testOptions {
         unitTests.returnDefaultValues = true
+        unitTests.includeAndroidResources = true
     }
 }
 
 dependencies {
     // The statistics engine is plain Java, so its tests run on the build machine's JVM.
     testImplementation 'junit:junit:4.13.2'
+    // Starts the real activity on the JVM (Robolectric), so a crash on opening fails the build.
+    testImplementation 'org.robolectric:robolectric:4.14.1'
 }

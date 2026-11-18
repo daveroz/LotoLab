@@ -166,7 +166,14 @@ public class MainActivity extends Activity {
         // Load the history off the main thread (the bundled files hold several thousand draws).
         body.addView(loading(T.t("Loading the draw history…")));
         worker.execute(() -> {
-            History h = Data.history(this);
+            History loaded;
+            try {
+                loaded = Data.history(this);
+            } catch (Throwable e) {
+                android.util.Log.e("LotoLab", "couldn't load the history", e);
+                loaded = new History();
+            }
+            final History h = loaded;
             runOnUiThread(() -> {
                 history = h;
                 buildSelectors();
@@ -244,13 +251,19 @@ public class MainActivity extends Activity {
         fetching = true;
         statusLine.setText(T.t("Fetching the newest results…"));
         new Thread(() -> {
-            Fetcher.Status st = Fetcher.refresh(getApplicationContext(), history, everything);
-            Notifier.markSeen(getApplicationContext(), st.fresh); // shown here, no need to announce them later
-            Notifier.schedule(getApplicationContext());
+            Fetcher.Status got = null;
+            try {
+                got = Fetcher.refresh(getApplicationContext(), history, everything);
+                Notifier.markSeen(getApplicationContext(), got.fresh); // shown here, no need to announce them later
+                Notifier.schedule(getApplicationContext());
+            } catch (Throwable e) {
+                android.util.Log.e("LotoLab", "refresh failed", e); // keep what's stored; try again later
+            }
+            final Fetcher.Status st = got;
             runOnUiThread(() -> {
                 fetching = false;
                 updateStatus();
-                if (st.added > 0 || tab == HISTORY || tab == SUMMARY) render(true);
+                if (st == null || st.added > 0 || tab == HISTORY || tab == SUMMARY) render(true);
             });
         }).start();
     }
@@ -388,8 +401,9 @@ public class MainActivity extends Activity {
                     case INTEGRITY: data = IntegrityTab.compute(sel); break;
                     default: data = OddsTab.compute(sel);
                 }
-            } catch (RuntimeException e) {
-                data = e;
+            } catch (Throwable e) {
+                android.util.Log.e("LotoLab", "couldn't work out tab " + t, e);
+                data = e instanceof RuntimeException ? e : new RuntimeException(e);
             }
             final Object result = data;
             runOnUiThread(() -> {
@@ -401,14 +415,21 @@ public class MainActivity extends Activity {
                     c.addView(ui.body(T.f("This view couldn't be worked out: %s", ((RuntimeException) result).getMessage())));
                     return;
                 }
-                switch (t) {
-                    case SUMMARY: SummaryTab.show(this, body, sel, result); break;
-                    case HISTORY: HistoryTab.show(this, body, sel, result); break;
-                    case STATS: StatsTab.show(this, body, sel, result); break;
-                    case RANDOM: RandomTab.show(this, body, sel, result); break;
-                    case PICKS: PicksTab.show(this, body, sel, result); break;
-                    case INTEGRITY: IntegrityTab.show(this, body, sel, result); break;
-                    default: OddsTab.show(this, body, sel, result);
+                try {
+                    switch (t) {
+                        case SUMMARY: SummaryTab.show(this, body, sel, result); break;
+                        case HISTORY: HistoryTab.show(this, body, sel, result); break;
+                        case STATS: StatsTab.show(this, body, sel, result); break;
+                        case RANDOM: RandomTab.show(this, body, sel, result); break;
+                        case PICKS: PicksTab.show(this, body, sel, result); break;
+                        case INTEGRITY: IntegrityTab.show(this, body, sel, result); break;
+                        default: OddsTab.show(this, body, sel, result);
+                    }
+                } catch (RuntimeException e) {
+                    android.util.Log.e("LotoLab", "couldn't show tab " + t, e);
+                    body.removeAllViews();
+                    LinearLayout c = ui.card(body, T.t("SOMETHING WENT WRONG"));
+                    c.addView(ui.body(T.f("This view couldn't be worked out: %s", String.valueOf(e))));
                 }
                 if (inPlace) scroll.post(() -> scroll.scrollTo(0, y));
             });
