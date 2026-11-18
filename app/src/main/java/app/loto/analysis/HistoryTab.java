@@ -13,8 +13,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Every stored result by date, with its weekday and time, filterable by day of the week, each with its
- * randomness audit (ordinary or unusual, and why). Then how much history is stored and where it comes from.
+ * Every stored result by date, with its weekday and time, each with its randomness audit (ordinary or unusual, and
+ * why). Then how much history is stored and where it comes from.
  */
 final class HistoryTab {
     private HistoryTab() {}
@@ -32,7 +32,6 @@ final class HistoryTab {
         Out o = new Out();
         TreeMap<LocalDate, List<Draw>> all = new TreeMap<>(java.util.Collections.reverseOrder());
         for (Draw d : s.sample.draws) {
-            if (s.weekday >= 0 && d.date.getDayOfWeek().getValue() - 1 != s.weekday) continue;
             List<Draw> l = all.get(d.date);
             if (l == null) all.put(d.date, l = new ArrayList<>());
             l.add(d);
@@ -63,18 +62,8 @@ final class HistoryTab {
             sch.setPadding(0, ui.dp(2), 0, 0);
             res.addView(sch);
         }
-        // the day of the week as equal cells: every day, then Monday to Sunday
-        String[] days = new String[8];
-        days[0] = T.t("Every day");
-        for (int i = 0; i < 7; i++) days[i + 1] = Fmt.dayShort(i);
-        ui.chips(res, days, s.weekday + 1, i -> {
-            a.weekday = i - 1;
-            a.limit = 40;
-            a.rerenderInPlace();
-        }, 12);
         if (o.days.isEmpty()) {
-            TextView none = ui.body(s.weekday >= 0 ? T.f("No draws on %s in this selection.", Fmt.day(s.weekday))
-                    : T.t("No results stored for this selection."));
+            TextView none = ui.body(T.t("No results stored for this selection."));
             none.setPadding(0, ui.dp(12), 0, 0);
             res.addView(none);
         }

@@ -27,7 +27,8 @@ and aren't published to the `latest` release. (The same keystore as Worldly's wo
 ## Install & use
 1. Install the APK (allow "install unknown apps").
 2. Open **LotoLab**. The bundled history loads at once; the newest results are fetched in the background
-   (↻ fetches again).
+   (the ↻ button in the top corner fetches again, and turns while it does). The screen starts straight
+   with the lotteries' logos: there's no title bar.
 3. Swipe left or right through the lotteries' logos (or tap the one at the side), choose one of its draws
    (Mañana / Tarde / Noche, Baloto / Revancha), then a tab. Switching lottery always starts on its first draw
    (Dorado Mañana, Baloto). It opens on **Summary**; the other tabs are for going deeper, always over the
@@ -57,8 +58,8 @@ the chance draws from early 2023. Every result is stored by lottery, draw, date 
 
 | Tab | What it shows |
 |---|---|
-| **Summary** | Only the essentials: the latest result (its figures in one line: evens, odds, sum, la pata, quinta; and its audit), the next draw, a warning only when data is missing or old; **today's recommendation** (the top-ranked model's pick for the next draw, its probability, and whether any model beats chance); for El Dorado, **what you win**: the net prize of each bet (4 cifras, 3 cifras, pata, uña, combinado) for $200, $500, $1.000, $2.000 or $5.000; and the notification switch |
-| **History** | Every stored result grouped by date with the full weekday name and time, filterable by day of the week, each with its audit (how ordinary the draw is, 0–100); the schedule; how much history is stored, any result that should be out but isn't, the last refresh and which sources answered |
+| **Summary** | Only the essentials: the latest result (its figures in one line: evens, odds, sum, la pata, quinta; and its audit), the next draw, a warning only when data is missing or old; **today's recommendation** (the top-ranked model's pick for the next draw, its probability, and whether any model beats chance); for El Dorado, **what you win**: the net prize of each bet (4 cifras, 3 cifras, pata, uña, combinado) for $200, $500, $1.000, $2.000 or $5.000; and **notifications**: just a switch beside the title (turning it on when Android blocks LotoLab's notifications asks to allow them) |
+| **History** | Every stored result grouped by date with the full weekday name and time, each with its audit (how ordinary the draw is, 0–100); the schedule; how much history is stored, any result that should be out but isn't, the last refresh and which sources answered |
 | **Stats** | Three cards, in this order: the **chance of the top prize** (1 in 10,000 for chance, 1 in 15,401,568 for Baloto, 1 in 575,757 for MiLoto); the **hot and cold** digits or numbers (most and least frequent with their expected value and a chi-square p-value; for chance a table of each digit in each position); and today's **model ranking** (out-of-sample score with 95% CI, the Monte Carlo test, each model's candidate). The depth is folded under ▸ details |
 
 ## Notifications
@@ -189,12 +190,12 @@ glass picks up the stage's key light behind it (cards near the top right glow a 
 warms where the light falls) and is redrawn as the page scrolls under it. Section titles sit above their cards
 in spaced amber capitals.
 
-Controls are Fuji-App's: the sections (Summary, History, Stats) and the lottery's draws are segmented controls,
-a recessed well with the chosen one a lighter lens of glass; sets of choices (the day of the week, the amount
-bet) are equal cells across the card, the chosen one lit (an amber wash with the light bleeding in from a
+Controls are Fuji-App's: the lottery's draws and the sections (Summary, History, Stats) are two segmented
+controls of the same size, a recessed well with the chosen one a lighter lens of glass; a set of choices (the
+amount bet) is equal cells across the card, the chosen one lit (an amber wash with the light bleeding in from a
 glowing edge, inside its bounds, so it's never bigger than the others); notifications are a glass switch; the
-key action of a card is solid amber; small actions are icons in bubbles of glass; status lights are lamps
-blooming in their colour. Icons are solid, drawn in code (`Icon`). Carbon+ type throughout. The analysis adds
+key action of a card is solid amber; small actions are icons in bubbles of glass (refresh sits alone in the top
+corner); status lights are lamps blooming in their colour. Icons are solid, drawn in code (`Icon`). Carbon+ type throughout. The analysis adds
 a cool blue for "cold" / below expectation and coral for strong deviations.
 
 ## Play responsibly
