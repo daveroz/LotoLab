@@ -106,11 +106,19 @@ final class Ui {
 
     /** A row of chips that scrolls sideways when it doesn't fit. */
     LinearLayout chipRow(LinearLayout parent, int topDp) {
+        return chipRow(parent, topDp, false);
+    }
+
+    /** center: the chips sit in the middle when they fit (the draws under the lottery's emblem). */
+    LinearLayout chipRow(LinearLayout parent, int topDp, boolean center) {
         HorizontalScrollView hs = new HorizontalScrollView(a);
         hs.setHorizontalScrollBarEnabled(false);
         hs.setClipToPadding(false);
+        hs.setFillViewport(center);
         LinearLayout row = hbox();
-        hs.addView(row);
+        if (center) row.setGravity(Gravity.CENTER_HORIZONTAL);
+        hs.addView(row, new ViewGroup.LayoutParams(center ? ViewGroup.LayoutParams.MATCH_PARENT : ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
         parent.addView(hs, matchWrap(topDp));
         return row;
     }
@@ -216,7 +224,7 @@ final class Ui {
 
     /** A small lit tag ("AS EXPECTED", "DEVIATION"). */
     TextView tag(String s, int color) {
-        TextView t = text(s.toUpperCase(Locale.US), 9, Theme.uiBold(a), color);
+        TextView t = text(s.toUpperCase(T.L), 9, Theme.uiBold(a), color);
         t.setLetterSpacing(0.16f);
         t.setPadding(dp(8), dp(3), dp(8), dp(3));
         t.setBackground(Theme.box(a, (color & 0x00FFFFFF) | 0x22000000, (color & 0x00FFFFFF) | 0x88000000, 8));

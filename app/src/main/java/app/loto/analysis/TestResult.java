@@ -31,11 +31,11 @@ final class TestResult {
     boolean flagged() { return enough && pAdj < 0.05; }
 
     String verdict() {
-        if (!enough) return "Not enough data";
-        if (pAdj < 0.001) return "Strong deviation";
-        if (pAdj < 0.01) return "Clear deviation";
-        if (pAdj < 0.05) return "Deviation";
-        if (p < 0.05) return "Chance-level blip";
-        return "As expected";
+        if (!enough) return T.t("Not enough data");
+        if (pAdj < 0.001) return T.t("Strong deviation");
+        if (pAdj < 0.01) return T.t("Clear deviation");
+        if (pAdj < 0.05) return T.t("Deviation");
+        if (p < 0.05) return T.t("Chance-level blip");
+        return T.t("As expected");
     }
 }

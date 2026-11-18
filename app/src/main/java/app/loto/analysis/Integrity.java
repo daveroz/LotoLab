@@ -90,26 +90,26 @@ final class Integrity {
             for (Sample x : samples) if (x.label().equals(t.game)) s = x;
             double[] halves = replicate(h, games, days, s, t);
             boolean persistent = halves != null && halves[0] < 0.05 && halves[1] < 0.05;
-            String ev = String.format(Locale.US, "%s · %s. p = %s, %s after correcting for %d tests.", t.game, t.detail,
+            String ev = T.f("%s · %s. p = %s, %s after correcting for %d tests.", t.game, t.detail,
                     Combi.pText(t.p), Combi.pText(t.pAdj), r.usable);
             if (halves != null) {
-                ev += String.format(Locale.US, " First half p = %s, second half p = %s.", Combi.pText(halves[0]), Combi.pText(halves[1]));
+                ev += " " + T.f("First half p = %s, second half p = %s.", Combi.pText(halves[0]), Combi.pText(halves[1]));
             }
             if (persistent) {
                 r.findings.add(new Finding(Level.PERSISTENT, t.name + " — " + t.game, ev,
-                        "The deviation is there in both halves of the period, so it's unlikely to be a one-off coincidence. "
+                        T.t("The deviation is there in both halves of the period, so it's unlikely to be a one-off coincidence. "
                                 + "It points to something systematic: worn or unevenly weighted balls, a machine or procedure "
                                 + "that changed, errors in the published results, or deliberate interference. Statistics can't "
-                                + "tell these apart."));
+                                + "tell these apart.")));
             } else {
                 r.findings.add(new Finding(Level.ANOMALY, t.name + " — " + t.game, ev,
-                        "Significant over the whole period but not in both halves on its own, which is what a chance "
-                                + "fluctuation (or a short-lived problem) looks like. Worth watching as new draws arrive."));
+                        T.t("Significant over the whole period but not in both halves on its own, which is what a chance "
+                                + "fluctuation (or a short-lived problem) looks like. Worth watching as new draws arrive.")));
             }
         }
         for (String issue : r.dataIssues) {
-            r.findings.add(new Finding(Level.DATA, "Data check", issue,
-                    "A gap or error in the published results, not a sign of how the draws were made."));
+            r.findings.add(new Finding(Level.DATA, T.t("Data check"), issue,
+                    T.t("A gap or error in the published results, not a sign of how the draws were made.")));
         }
 
         boolean persistent = false, anomaly = false;
@@ -119,24 +119,24 @@ final class Integrity {
         }
         if (r.usable == 0) {
             r.overall = Level.CLEAR;
-            r.headline = "Not enough data";
-            r.explanation = "This period has too few draws to test. Choose a longer period.";
+            r.headline = T.t("Not enough data");
+            r.explanation = T.t("This period has too few draws to test. Choose a longer period.");
         } else if (persistent) {
             r.overall = Level.PERSISTENT;
-            r.headline = "Persistent deviation from randomness";
-            r.explanation = "At least one pattern is both statistically significant after correction and present in both halves "
+            r.headline = T.t("Persistent deviation from randomness");
+            r.explanation = T.t("At least one pattern is both statistically significant after correction and present in both halves "
                     + "of the period. That is a reason to look closer, not proof of manipulation: proving manipulation needs "
-                    + "evidence such as audits, inspection of the balls and machines, or the draw records.";
+                    + "evidence such as audits, inspection of the balls and machines, or the draw records.");
         } else if (anomaly) {
             r.overall = Level.ANOMALY;
-            r.headline = "Statistical anomaly, most likely chance";
-            r.explanation = "Something came out significant after correction, but it doesn't hold up in both halves of the "
+            r.headline = T.t("Statistical anomaly, most likely chance");
+            r.explanation = T.t("Something came out significant after correction, but it doesn't hold up in both halves of the "
                     + "period. Unusual patterns turn up in every long run of fair draws; this one isn't persistent enough to "
-                    + "suggest a systematic cause.";
+                    + "suggest a systematic cause.");
         } else {
             r.overall = Level.CLEAR;
-            r.headline = "No sign of irregularities";
-            r.explanation = String.format(Locale.US, "None of the %d tests shows a deviation that survives the correction for "
+            r.headline = T.t("No sign of irregularities");
+            r.explanation = T.f("None of the %d tests shows a deviation that survives the correction for "
                     + "multiple testing. %d came out below p = 0.05 on their own, about what chance alone produces (%.1f "
                     + "expected). The draws look like fair random draws.", r.usable, r.rawFlags, r.expectedRawFlags);
         }
@@ -145,9 +145,9 @@ final class Integrity {
 
     /** Would the draws avoid the numbers people bet most (birthdays)? An operator rigging results might. */
     static TestResult popular(Sample s) {
-        TestResult t = new TestResult("popular", "Popular-number avoidance", s.digits()
-                ? "Do numbers that look like a birthday (DDMM, e.g. 2512) come up less often than they should?"
-                : "Do the numbers 1 to 31 (birthday picks) come up less often than they should?");
+        TestResult t = new TestResult("popular", T.t("Popular-number avoidance"), s.digits()
+                ? T.t("Do numbers that look like a birthday (DDMM, e.g. 2512) come up less often than they should?")
+                : T.t("Do the numbers 1 to 31 (birthday picks) come up less often than they should?"));
         int D = s.size();
         t.game = s.label();
         if (s.digits()) {
@@ -157,7 +157,7 @@ final class Integrity {
             t.stat = dates;
             t.p = Combi.binomTwoSided(D, p, dates);
             t.enough = D * p >= 5;
-            t.detail = String.format(Locale.US, "%d date-like results (%s expected).", dates, Fmt.num(D * p));
+            t.detail = T.f("%d date-like results (%s expected).", dates, Fmt.num(D * p));
             t.direction = dates < D * p ? "fewer" : "more";
         } else {
             Game g = s.game;
@@ -170,7 +170,7 @@ final class Integrity {
             t.stat = z;
             t.p = Combi.zTwoSided(z);
             t.enough = D >= 30;
-            t.detail = String.format(Locale.US, "%d of %d balls were 31 or lower (%s expected).", low, D * g.count, Fmt.num(mean));
+            t.detail = T.f("%d of %d balls were 31 or lower (%s expected).", low, D * g.count, Fmt.num(mean));
             t.direction = low < mean ? "fewer" : "more";
         }
         return t;
@@ -178,8 +178,8 @@ final class Integrity {
 
     static List<TestResult> sameDayTests(Analysis.SameDay sd) {
         List<TestResult> out = new ArrayList<>();
-        TestResult t = new TestResult("sameday", "Same-day overlap",
-                "Do two draws held on the same day have more (or fewer) numbers in common than chance?");
+        TestResult t = new TestResult("sameday", T.t("Same-day overlap"),
+                T.t("Do two draws held on the same day have more (or fewer) numbers in common than chance?"));
         t.game = sd.pair;
         t.stat = sd.shared.chi;
         t.df = sd.shared.df;
@@ -190,16 +190,16 @@ final class Integrity {
             o += m * sd.shared.observed[m];
             e += m * sd.shared.expected[m];
         }
-        t.detail = String.format(Locale.US, "%d days with both draws: %s numbers in common (%s expected).", sd.days, Fmt.num(o), Fmt.num(e));
+        t.detail = T.f("%d days with both draws: %s numbers in common (%s expected).", sd.days, Fmt.num(o), Fmt.num(e));
         t.direction = o > e ? "more" : "fewer";
         out.add(t);
-        TestResult id = new TestResult("identical", "Identical results on the same day",
-                "Do both draws ever give exactly the same result on one day, more often than chance?");
+        TestResult id = new TestResult("identical", T.t("Identical results on the same day"),
+                T.t("Do both draws ever give exactly the same result on one day, more often than chance?"));
         id.game = sd.pair;
         id.stat = sd.identical;
         id.p = Combi.poissonUpper(sd.expectedIdentical, sd.identical);
         id.enough = sd.days >= 30;
-        id.detail = String.format(Locale.US, "%d identical (%s expected).", sd.identical, Fmt.num(sd.expectedIdentical));
+        id.detail = T.f("%d identical (%s expected).", sd.identical, Fmt.num(sd.expectedIdentical));
         id.direction = "identical";
         out.add(id);
         return out;
@@ -250,11 +250,11 @@ final class Integrity {
         Game g = s.game;
         int bad = 0;
         for (Draw d : s.draws) if (!d.valid()) bad++;
-        if (bad > 0) r.dataIssues.add(String.format(Locale.US, "%s: %d result(s) with impossible values (out of range or a "
+        if (bad > 0) r.dataIssues.add(T.f("%s: %d result(s) with impossible values (out of range or a "
                 + "repeated ball).", g.name, bad));
         int rejected = 0;
         for (String line : h.rejected) if (line.startsWith(g.name + " ")) rejected++;
-        if (rejected > 0) r.dataIssues.add(String.format(Locale.US, "%s: %d row(s) in the history couldn't be read.", g.name, rejected));
+        if (rejected > 0) r.dataIssues.add(T.f("%s: %d row(s) in the history couldn't be read.", g.name, rejected));
         List<String> breaks = missingStretches(s);
         if (!breaks.isEmpty()) {
             StringBuilder sb = new StringBuilder();
@@ -263,9 +263,10 @@ final class Integrity {
                 sb.append(breaks.get(i));
             }
             r.dataIssues.add(breaks.size() == 1
-                    ? String.format(Locale.US, "%s: no results for %s, when it normally draws.", g.name, sb)
-                    : String.format(Locale.US, "%s: %d stretches with no results on days it normally draws%s: %s.",
-                    g.name, breaks.size(), breaks.size() > 4 ? ", the latest" : "", sb));
+                    ? T.f("%s: no results for %s, when it normally draws.", g.name, sb)
+                    : breaks.size() > 4 ? T.f("%s: %d stretches with no results on days it normally draws, the latest: %s.",
+                    g.name, breaks.size(), sb)
+                    : T.f("%s: %d stretches with no results on days it normally draws: %s.", g.name, breaks.size(), sb));
         }
     }
 
@@ -311,6 +312,6 @@ final class Integrity {
     }
 
     private static String stretch(LocalDate a, LocalDate b, int days) {
-        return a.equals(b) ? Fmt.shortDate(a) : Fmt.shortDate(a) + " – " + Fmt.shortDate(b) + " (" + days + " draw days)";
+        return a.equals(b) ? Fmt.shortDate(a) : T.f("%s – %s (%d draw days)", Fmt.shortDate(a), Fmt.shortDate(b), days);
     }
 }

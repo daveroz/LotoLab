@@ -3,7 +3,6 @@ package app.loto.analysis;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Does the sample look like a fair random draw? A battery of classic tests (frequencies, even/odd, sums, the
@@ -25,19 +24,18 @@ final class Randomness {
         String label() { return label(score); }
 
         static String label(int score) {
-            if (score < 0) return "Not enough data";
-            if (score >= 90) return "Consistent with a fair random draw";
-            if (score >= 70) return "Small deviations, typical of chance";
-            if (score >= 40) return "Notable deviations";
-            return "Strong deviations from randomness";
+            if (score < 0) return T.t("Not enough data");
+            if (score >= 90) return T.t("Consistent with a fair random draw");
+            if (score >= 70) return T.t("Small deviations, typical of chance");
+            if (score >= 40) return T.t("Notable deviations");
+            return T.t("Strong deviations from randomness");
         }
 
         String summary() {
-            if (usable == 0) return "Too few draws in this period for the tests to say anything. Choose a longer period.";
-            double expected = usable * 0.05;
-            return String.format(Locale.US, "%d of %d tests came out below p = 0.05 on their own (about %.1f would by chance "
-                    + "alone). After correcting for running %d tests, %d remain%s.", rawFlags, usable, expected, usable,
-                    adjustedFlags, adjustedFlags == 1 ? "s" : "");
+            if (usable == 0) return T.t("Too few draws in this period for the tests to say anything. Choose a longer period.");
+            return T.f("%d of %d tests came out below p = 0.05 on their own (about %.1f would by chance alone). After "
+                    + "correcting for running %d tests, the number still flagged is %d.", rawFlags, usable, usable * 0.05,
+                    usable, adjustedFlags);
         }
     }
 
@@ -52,6 +50,7 @@ final class Randomness {
             this.score = score;
             this.rarity = rarity;
         }
+        String label() { return drawLabel(score); }
     }
 
     static Report run(Sample s) {
@@ -60,9 +59,9 @@ final class Randomness {
         Game g = s.game;
         Analysis.Freq f = Analysis.frequency(s);
 
-        TestResult t = new TestResult("freq", "Number frequencies",
-                g.digits() ? "Does every digit come up equally often in each of the four positions?"
-                        : "Does every ball from 1 to " + g.max + " come up equally often?");
+        TestResult t = new TestResult("freq", T.t("Number frequencies"),
+                g.digits() ? T.t("Does every digit come up equally often in each of the four positions?")
+                        : T.f("Does every ball from 1 to %d come up equally often?", g.max));
         t.stat = f.chi;
         t.df = f.df;
         t.p = f.p;
@@ -70,7 +69,7 @@ final class Randomness {
         List<Analysis.Cell> hot = f.hot(1), cold = f.cold(1);
         if (!hot.isEmpty()) {
             Analysis.Cell h = hot.get(0), c = cold.get(0);
-            t.detail = String.format(Locale.US, "Most frequent %s: %s times (%s expected). Least frequent %s: %s times.",
+            t.detail = T.f("Most frequent %s: %s times (%s expected). Least frequent %s: %s times.",
                     h.label, Fmt.num(h.observed), Fmt.num(h.expected), c.label, Fmt.num(c.observed));
             t.direction = h.label + " high";
         }
@@ -78,68 +77,65 @@ final class Randomness {
 
         if (f.extraDraws > 0) {
             int M = f.extra.size();
-            t = new TestResult("extra", g.extraName + " frequencies", "Does every " + g.extraName.toLowerCase(Locale.US)
-                    + " number come up equally often?");
+            String ex = g.extraName.toLowerCase(T.L);
+            t = new TestResult("extra", T.f("%s frequencies", g.extraName), T.f("Does every %s number come up equally often?", ex));
             t.stat = f.extraChi;
             t.df = f.extraDf;
             t.p = f.extraP;
             t.enough = f.extraDraws >= 5 * M;
             Analysis.Cell top = Collections.min(f.extra);
-            t.detail = String.format(Locale.US, "%d draws with a %s. Most frequent: %s (%s times, %s expected).",
-                    f.extraDraws, g.extraName.toLowerCase(Locale.US), top.label, Fmt.num(top.observed), Fmt.num(top.expected));
+            t.detail = T.f("%d draws with a %s. Most frequent: %s (%s times, %s expected).",
+                    f.extraDraws, ex, top.label, Fmt.num(top.observed), Fmt.num(top.expected));
             t.direction = top.label + " high";
             r.tests.add(t);
         }
 
         Analysis.Dist eo = Analysis.evenOdd(s);
-        t = distTest("evenodd", "Even / odd split", "Is the number of even " + (g.digits() ? "digits" : "numbers")
-                + " per draw what a fair draw gives?", eo);
-        t.detail = String.format(Locale.US, "Average %.2f even per draw (fair: %.2f).", eo.obsMean, eo.expMean);
+        t = distTest("evenodd", T.t("Even / odd split"), g.digits()
+                ? T.t("Is the number of even digits per draw what a fair draw gives?")
+                : T.t("Is the number of even numbers per draw what a fair draw gives?"), eo);
+        t.detail = T.f("Average %.2f even per draw (fair: %.2f).", eo.obsMean, eo.expMean);
         t.direction = eo.obsMean > eo.expMean ? "more even" : "more odd";
         r.tests.add(t);
 
         Analysis.Dist sums = Analysis.sums(s);
-        t = distTest("sum", "Sum of the numbers", "Are the totals of each draw spread the way fair draws spread?", sums);
-        t.detail = String.format(Locale.US, "Average sum %.1f, spread %.1f (fair: %.1f and %.1f).", sums.obsMean, sums.obsSd,
-                sums.expMean, sums.expSd);
+        t = distTest("sum", T.t("Sum of the numbers"), T.t("Are the totals of each draw spread the way fair draws spread?"), sums);
+        t.detail = T.f("Average sum %.1f, spread %.1f (fair: %.1f and %.1f).", sums.obsMean, sums.obsSd, sums.expMean, sums.expSd);
         t.direction = sums.obsMean > sums.expMean ? "high sums" : "low sums";
         r.tests.add(t);
 
         if (g.digits()) {
             Analysis.Dist pat = Analysis.patterns(s);
-            t = distTest("poker", "Repeated digits (poker test)",
-                    "Do numbers like 1123 or 7777 (repeated digits) appear as often as they should?", pat);
-            t.detail = String.format(Locale.US, "All digits different: %s (%s expected); with a pair: %s (%s); three or four "
-                            + "alike: %s (%s).", Fmt.num(pat.observed[0]), Fmt.num(pat.expected[0]), Fmt.num(pat.observed[1]),
-                    Fmt.num(pat.expected[1]), Fmt.num(pat.observed[3] + pat.observed[4]),
-                    Fmt.num(pat.expected[3] + pat.expected[4]));
+            t = distTest("poker", T.t("Repeated digits (poker test)"),
+                    T.t("Do numbers like 1123 or 7777 (repeated digits) appear as often as they should?"), pat);
+            t.detail = T.f("All digits different: %s (%s expected); with a pair: %s (%s); three or four alike: %s (%s).",
+                    Fmt.num(pat.observed[0]), Fmt.num(pat.expected[0]), Fmt.num(pat.observed[1]), Fmt.num(pat.expected[1]),
+                    Fmt.num(pat.observed[3] + pat.observed[4]), Fmt.num(pat.expected[3] + pat.expected[4]));
             t.direction = pat.observed[0] > pat.expected[0] ? "fewer repeats" : "more repeats";
             r.tests.add(t);
         } else {
             Analysis.Combos c = Analysis.combos(s);
             Analysis.Combo cons = c.shapes.get(0);
-            t = new TestResult("consec", "Consecutive numbers", "Do draws with neighbouring numbers (like 17 and 18) "
-                    + "appear as often as they should?");
+            t = new TestResult("consec", T.t("Consecutive numbers"),
+                    T.t("Do draws with neighbouring numbers (like 17 and 18) appear as often as they should?"));
             t.stat = cons.count;
             t.p = c.shapeP.get(0);
             t.enough = D >= 30;
-            t.detail = String.format(Locale.US, "%d draws had two or more consecutive numbers (%s expected).", cons.count,
-                    Fmt.num(cons.expected));
+            t.detail = T.f("%d draws had two or more consecutive numbers (%s expected).", cons.count, Fmt.num(cons.expected));
             t.direction = cons.count > cons.expected ? "more consecutive" : "fewer consecutive";
             r.tests.add(t);
         }
 
         Analysis.Dist prev = Analysis.fromPrevious(s);
-        t = distTest("prev", "Repeats from the previous draw", g.digits()
-                ? "Do digits stay in the same place from one draw to the next more (or less) than chance?"
-                : "Do numbers carry over from one draw to the next more (or less) than chance?", prev);
+        t = distTest("prev", T.t("Repeats from the previous draw"), g.digits()
+                ? T.t("Do digits stay in the same place from one draw to the next more (or less) than chance?")
+                : T.t("Do numbers carry over from one draw to the next more (or less) than chance?"), prev);
         double repObs = 0, repExp = 0;
         for (int m = 1; m < prev.observed.length; m++) {
             repObs += m * prev.observed[m];
             repExp += m * prev.expected[m];
         }
-        t.detail = String.format(Locale.US, "%s repeats in %d draw-to-draw steps (%s expected).", Fmt.num(repObs),
-                Math.max(0, D - 1), Fmt.num(repExp));
+        t.detail = T.f("%s repeats in %d draw-to-draw steps (%s expected).", Fmt.num(repObs), Math.max(0, D - 1), Fmt.num(repExp));
         t.direction = repObs > repExp ? "more repeats" : "fewer repeats";
         r.tests.add(t);
 
@@ -151,13 +147,12 @@ final class Randomness {
         r.tests.add(drift(s));
 
         Analysis.Duplicates dup = Analysis.duplicates(s);
-        t = new TestResult("dupes", "Repeated results", "Does the exact same result come back more often than the "
-                + "\"birthday problem\" predicts?");
+        t = new TestResult("dupes", T.t("Repeated results"),
+                T.t("Does the exact same result come back more often than the \"birthday problem\" predicts?"));
         t.stat = dup.coincidingPairs;
         t.p = dup.p;
         t.enough = D >= 30;
-        t.detail = String.format(Locale.US, "%d pairs of identical results (%s expected by chance).", dup.coincidingPairs,
-                Fmt.num(dup.expectedPairs));
+        t.detail = T.f("%d pairs of identical results (%s expected by chance).", dup.coincidingPairs, Fmt.num(dup.expectedPairs));
         t.direction = "repeats";
         r.tests.add(t);
 
@@ -198,7 +193,7 @@ final class Randomness {
 
     /** Lag-1 correlation of the sums: does a high total tend to follow a high total? */
     static TestResult serial(Sample s) {
-        TestResult t = new TestResult("serial", "Serial correlation", "Does one draw's total say anything about the next one's?");
+        TestResult t = new TestResult("serial", T.t("Serial correlation"), T.t("Does one draw's total say anything about the next one's?"));
         int n = s.size();
         t.enough = n >= 30;
         if (n < 3) return t;
@@ -215,16 +210,15 @@ final class Randomness {
         double z = rho * Math.sqrt(n);
         t.stat = z;
         t.p = Combi.zTwoSided(z);
-        t.detail = String.format(Locale.US, "Correlation between consecutive totals: %+.3f (fair: about 0 ± %.3f).", rho,
-                1 / Math.sqrt(n));
+        t.detail = T.f("Correlation between consecutive totals: %+.3f (fair: about 0 ± %.3f).", rho, 1 / Math.sqrt(n));
         t.direction = rho > 0 ? "positive" : "negative";
         return t;
     }
 
     /** Wald-Wolfowitz runs test on the totals above / below the median. */
     static TestResult runs(Sample s) {
-        TestResult t = new TestResult("runs", "Runs above / below the middle",
-                "Do high and low totals alternate the way a fair draw makes them, without long streaks or zigzags?");
+        TestResult t = new TestResult("runs", T.t("Runs above / below the middle"),
+                T.t("Do high and low totals alternate the way a fair draw makes them, without long streaks or zigzags?"));
         int n = s.size();
         if (n < 3) return t;
         double[] v = new double[n];
@@ -249,15 +243,15 @@ final class Randomness {
         double z = var > 0 ? (runs - mu) / Math.sqrt(var) : 0;
         t.stat = z;
         t.p = Combi.zTwoSided(z);
-        t.detail = String.format(Locale.US, "%d runs (fair: %.1f ± %.1f).", runs, mu, Math.sqrt(var));
+        t.detail = T.f("%d runs (fair: %.1f ± %.1f).", runs, mu, Math.sqrt(var));
         t.direction = runs > mu ? "zigzag" : "streaky";
         return t;
     }
 
     /** Gap test: the waits between two appearances of the same value should follow a geometric distribution. */
     static TestResult gaps(Sample s, Analysis.Freq f) {
-        TestResult t = new TestResult("gaps", "Waiting times (gap test)",
-                "Do numbers come back after the waits a fair draw gives, not too regularly and not in clumps?");
+        TestResult t = new TestResult("gaps", T.t("Waiting times (gap test)"),
+                T.t("Do numbers come back after the waits a fair draw gives, not too regularly and not in clumps?"));
         Game g = s.game;
         int D = s.size();
         double p = g.digits() ? 0.1 : g.count / (double) g.max;
@@ -312,16 +306,15 @@ final class Randomness {
         t.df = (int) res[1];
         t.p = res[2];
         t.enough = total >= 200 && t.df > 0 && D >= 4 / p;
-        t.detail = String.format(Locale.US, "%d waits measured, average %.1f draws (fair: %.1f).", total,
-                total > 0 ? sumGap / total : 0, 1 / p);
+        t.detail = T.f("%d waits measured, average %.1f draws (fair: %.1f).", total, total > 0 ? sumGap / total : 0, 1 / p);
         t.direction = total > 0 && sumGap / total > 1 / p ? "long waits" : "short waits";
         return t;
     }
 
     /** Chance only: is each digit independent of the digit next to it? */
     static TestResult positions(Sample s) {
-        TestResult t = new TestResult("position", "Independent positions",
-                "Is each digit independent of the one next to it (no favourite digit pairs like 3 followed by 7)?");
+        TestResult t = new TestResult("position", T.t("Independent positions"),
+                T.t("Is each digit independent of the one next to it (no favourite digit pairs like 3 followed by 7)?"));
         double chi = 0;
         int df = 0;
         for (int pos = 0; pos + 1 < s.game.count; pos++) {
@@ -335,15 +328,15 @@ final class Randomness {
         t.df = df;
         t.p = Combi.chiSquareP(chi, df);
         t.enough = s.size() >= 300;
-        t.detail = String.format(Locale.US, "Checked %d neighbouring digit pairs in each of %d draws.", s.game.count - 1, s.size());
+        t.detail = T.f("Checked %d neighbouring digit pairs in each of %d draws.", s.game.count - 1, s.size());
         t.direction = "pairs";
         return t;
     }
 
     /** Do the numbers depend on the day of the week? */
     static TestResult weekday(Sample s) {
-        TestResult t = new TestResult("weekday", "Day of the week",
-                "Are the numbers drawn on one day of the week different from those on other days?");
+        TestResult t = new TestResult("weekday", T.t("Day of the week"),
+                T.t("Are the numbers drawn on one day of the week different from those on other days?"));
         Game g = s.game;
         int[] perDay = new int[7];
         for (Draw d : s.draws) perDay[d.date.getDayOfWeek().getValue() - 1]++;
@@ -355,7 +348,7 @@ final class Randomness {
             }
         }
         if (days < 2) {
-            t.detail = "All draws in this selection fall on the same day of the week.";
+            t.detail = T.t("All draws in this selection fall on the same day of the week.");
             return t;
         }
         double chi = 0;
@@ -382,21 +375,17 @@ final class Randomness {
         t.df = df;
         t.p = Combi.chiSquareP(chi, df);
         t.enough = minExpected >= 3 && df > 0;
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < 7; i++) {
-            if (perDay[i] == 0) continue;
-            if (sb.length() > 0) sb.append(", ");
-            sb.append(Game.DAY_SHORT[i]).append(' ').append(perDay[i]);
-        }
-        t.detail = "Draws per day: " + sb + ".";
+        List<String> parts = new ArrayList<>();
+        for (int i = 0; i < 7; i++) if (perDay[i] > 0) parts.add(Fmt.dayShort(i) + " " + perDay[i]);
+        t.detail = T.f("Draws per day: %s.", String.join(", ", parts));
         t.direction = "weekday";
         return t;
     }
 
     /** Did the numbers change between the first and second half of the period? */
     static TestResult drift(Sample s) {
-        TestResult t = new TestResult("drift", "Stable over time",
-                "Are the numbers in the first half of the period distributed like those in the second half?");
+        TestResult t = new TestResult("drift", T.t("Stable over time"),
+                T.t("Are the numbers in the first half of the period distributed like those in the second half?"));
         Game g = s.game;
         int D = s.size(), half = D / 2;
         double chi = 0;
@@ -422,8 +411,9 @@ final class Randomness {
         t.df = df;
         t.p = df > 0 ? Combi.chiSquareP(chi, df) : Double.NaN;
         if (D >= 2) {
-            t.detail = "First half: " + Fmt.shortDate(s.draws.get(0).date) + " – " + Fmt.shortDate(s.draws.get(Math.max(0, half - 1)).date)
-                    + ". Second half: " + Fmt.shortDate(s.draws.get(half).date) + " – " + Fmt.shortDate(s.draws.get(D - 1).date) + ".";
+            t.detail = T.f("First half: %s – %s. Second half: %s – %s.", Fmt.shortDate(s.draws.get(0).date),
+                    Fmt.shortDate(s.draws.get(Math.max(0, half - 1)).date), Fmt.shortDate(s.draws.get(half).date),
+                    Fmt.shortDate(s.draws.get(D - 1).date));
         }
         t.direction = "drift";
         return t;
@@ -516,28 +506,29 @@ final class Randomness {
             int sum = d.sum();
             double ps1 = twoSided(sumP, Math.min(sumP.length - 1, Math.max(0, sum)));
             ps.add(ps1);
-            if (ps1 < 0.05) why.add(String.format(Locale.US, "Sum %d is far from the middle (half of fair draws total %d–%d).",
-                    sum, mid[0], mid[1]));
+            if (ps1 < 0.05) why.add(T.f("Sum %d is far from the middle (half of fair draws total %d–%d).", sum, mid[0], mid[1]));
             int ev = d.evens();
             double ps2 = twoSided(evenP, ev);
             ps.add(ps2);
-            if (ps2 < 0.15) why.add(String.format(Locale.US, "%d of %d %s are even (happens in %s of fair draws).", ev, g.count,
-                    g.digits() ? "digits" : "numbers", Combi.percent(evenP[ev])));
+            if (ps2 < 0.15) {
+                why.add(g.digits() ? T.f("%d of %d digits are even (happens in %s of fair draws).", ev, g.count, Combi.percent(evenP[ev]))
+                        : T.f("%d of %d numbers are even (happens in %s of fair draws).", ev, g.count, Combi.percent(evenP[ev])));
+            }
             Draw prev = previous.get(d.game);
             if (g.digits()) {
                 int pat = Analysis.pattern(d);
                 ps.add(patTail[pat]);
-                if (pat >= 2) why.add(Analysis.PATTERNS[pat] + ": " + Combi.percent(Analysis.PATTERN_P[pat]) + " of fair draws.");
+                if (pat >= 2) why.add(T.f("%s: %s of fair draws.", Analysis.patternName(pat), Combi.percent(Analysis.PATTERN_P[pat])));
                 boolean up = true, down = true;
                 for (int i = 1; i < d.nums.length; i++) {
                     if (d.nums[i] != d.nums[i - 1] + 1) up = false;
                     if (d.nums[i] != d.nums[i - 1] - 1) down = false;
                 }
                 ps.add(up || down ? 14 / 10000.0 : 1.0);
-                if (up || down) why.add("A straight run of digits: 14 of the 10,000 numbers are like that.");
+                if (up || down) why.add(T.t("A straight run of digits: 14 of the 10,000 numbers are like that."));
                 if (prev != null && prev.lastTwo() == d.lastTwo()) {
                     ps.add(0.01);
-                    why.add("Same last two digits as the previous " + d.game.name + " draw (1 in 100).");
+                    why.add(T.f("Same last two digits as the previous %s draw (1 in 100).", d.game.name));
                 } else {
                     ps.add(1.0);
                 }
@@ -545,14 +536,13 @@ final class Randomness {
                 int run = longestRun(d);
                 double pr = runAtLeast(g.max, g.count, run);
                 ps.add(pr);
-                if (run >= 3) why.add(String.format(Locale.US, "%d consecutive numbers in a row (%s of fair draws).", run, Combi.percent(pr)));
+                if (run >= 3) why.add(T.f("%d consecutive numbers in a row (%s of fair draws).", run, Combi.percent(pr)));
                 if (prev != null) {
                     int sh = d.shared(prev);
                     double tail = 0;
                     for (int m = sh; m <= g.count; m++) tail += Combi.hypergeom(g.max, g.count, g.count, m);
                     ps.add(sh == 0 ? 1.0 : tail);
-                    if (sh >= 2) why.add(String.format(Locale.US, "%d numbers repeated from the previous draw (%s of fair draws).",
-                            sh, Combi.percent(tail)));
+                    if (sh >= 2) why.add(T.f("%d numbers repeated from the previous draw (%s of fair draws).", sh, Combi.percent(tail)));
                 } else {
                     ps.add(1.0);
                 }
@@ -562,7 +552,7 @@ final class Randomness {
             for (double p : ps) min = Math.min(min, p);
             double rarity = Math.min(1, ps.size() * min);
             DrawScore ds = new DrawScore(d, (int) Math.round(100 * rarity), rarity);
-            if (why.isEmpty()) why.add("Nothing out of the ordinary.");
+            if (why.isEmpty()) why.add(T.t("Nothing out of the ordinary."));
             ds.reasons.addAll(why);
             out.add(ds);
         }
@@ -570,9 +560,9 @@ final class Randomness {
     }
 
     static String drawLabel(int score) {
-        if (score >= 50) return "Ordinary";
-        if (score >= 10) return "A little unusual";
-        if (score >= 1) return "Unusual";
-        return "Very unusual";
+        if (score >= 50) return T.t("Ordinary");
+        if (score >= 10) return T.t("A little unusual");
+        if (score >= 1) return T.t("Unusual");
+        return T.t("Very unusual");
     }
 }

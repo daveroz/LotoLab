@@ -16,32 +16,35 @@ final class Game {
     enum Kind { DIGITS, LOTTO }
 
     enum Slot {
-        MORNING("Morning"), AFTERNOON("Afternoon"), NIGHT("Evening / Night");
-        final String label;
-        Slot(String label) { this.label = label; }
-    }
+        MORNING, AFTERNOON, NIGHT;
 
-    static final String[] DAY_NAMES = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
-    static final String[] DAY_SHORT = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+        String label() {
+            switch (this) {
+                case MORNING: return T.t("Morning");
+                case AFTERNOON: return T.t("Afternoon");
+                default: return T.t("Evening / Night");
+            }
+        }
+    }
 
     final String id;          // also the history file name
     final String lottery;     // Dorado, Paisita, Baloto, MiLoto
     final String name;        // Dorado Mañana
-    final String shortName;   // Mañana
+    private final String shortName;
     final Slot slot;
     final Kind kind;
     final int count;          // digits in the number, or balls drawn
     final int max;            // highest ball (LOTTO) or 9 (DIGITS)
     final int extraMax;       // superbalota 1..16, quinta 0..9, 0 = none
     final String extraName;
-    /** Draw time per weekday, Monday first; null where there's no draw. */
-    final String[] times;
-    /** Whether it also plays on Colombian public holidays (at the Sunday time). */
+    /** Draw time per weekday in minutes after midnight, Monday first; -1 where there's no draw. */
+    final int[] times;
+    /** Whether it also plays on Colombian public holidays (at the Sunday time when it has one). */
     final boolean playsHolidays;
     final String source;
 
     private Game(String id, String lottery, String name, String shortName, Slot slot, Kind kind, int count, int max,
-                 int extraMax, String extraName, String[] times, boolean playsHolidays, String source) {
+                 int extraMax, String extraName, int[] times, boolean playsHolidays, String source) {
         this.id = id;
         this.lottery = lottery;
         this.name = name;
@@ -57,40 +60,41 @@ final class Game {
         this.source = source;
     }
 
-    private static String[] week(String monSat, String sun) {
-        return new String[]{monSat, monSat, monSat, monSat, monSat, monSat, sun};
+    static int hm(int h, int m) { return h * 60 + m; }
+
+    private static int[] week(int monSat, int sun) {
+        return new int[]{monSat, monSat, monSat, monSat, monSat, monSat, sun};
     }
 
-    private static String[] days(String time, DayOfWeek... on) {
-        String[] t = new String[7];
+    private static int[] days(int time, DayOfWeek... on) {
+        int[] t = {-1, -1, -1, -1, -1, -1, -1};
         for (DayOfWeek d : on) t[d.getValue() - 1] = time;
         return t;
     }
 
     static final String ASTRO = "astroluna.co";
-    static final String OFFICIAL = "baloto.com (official)";
+    static final String OFFICIAL = "baloto.com";
 
     static final Game DORADO_MANANA = new Game("dorado-manana", "Dorado", "Dorado Mañana", "Mañana", Slot.MORNING,
-            Kind.DIGITS, 4, 9, 9, "Quinta", week("11:00 a.m.", null), false, ASTRO);
+            Kind.DIGITS, 4, 9, 9, "Quinta", week(hm(11, 0), -1), false, ASTRO);
     static final Game DORADO_TARDE = new Game("dorado-tarde", "Dorado", "Dorado Tarde", "Tarde", Slot.AFTERNOON,
-            Kind.DIGITS, 4, 9, 9, "Quinta", week("3:30 p.m.", null), false, ASTRO);
+            Kind.DIGITS, 4, 9, 9, "Quinta", week(hm(15, 30), -1), false, ASTRO);
     static final Game DORADO_NOCHE = new Game("dorado-noche", "Dorado", "Dorado Noche", "Noche", Slot.NIGHT,
             Kind.DIGITS, 4, 9, 9, "Quinta",
-            new String[]{"10:05 p.m.", "10:05 p.m.", "10:05 p.m.", "10:05 p.m.", "10:05 p.m.", "10:15 p.m.", "7:25 p.m."},
-            true, ASTRO);
+            new int[]{hm(22, 5), hm(22, 5), hm(22, 5), hm(22, 5), hm(22, 5), hm(22, 15), hm(19, 25)}, true, ASTRO);
     static final Game PAISITA_DIA = new Game("paisita-dia", "Paisita", "Paisita Día", "Día", Slot.AFTERNOON,
-            Kind.DIGITS, 4, 9, 9, "Quinta", week("1:00 p.m.", "2:00 p.m."), true, ASTRO);
+            Kind.DIGITS, 4, 9, 9, "Quinta", week(hm(13, 0), hm(14, 0)), true, ASTRO);
     static final Game PAISITA_NOCHE = new Game("paisita-noche", "Paisita", "Paisita Noche", "Noche", Slot.NIGHT,
-            Kind.DIGITS, 4, 9, 9, "Quinta", week("6:00 p.m.", "8:00 p.m."), true, ASTRO);
-    static final Game PAISITA_3 = new Game("paisita-3", "Paisita", "Paisita 3", "3 (Sat)", Slot.NIGHT,
-            Kind.DIGITS, 4, 9, 9, "Quinta", days("10:00 p.m.", DayOfWeek.SATURDAY), false, ASTRO);
+            Kind.DIGITS, 4, 9, 9, "Quinta", week(hm(18, 0), hm(20, 0)), true, ASTRO);
+    static final Game PAISITA_3 = new Game("paisita-3", "Paisita", "Paisita 3", "3", Slot.NIGHT,
+            Kind.DIGITS, 4, 9, 9, "Quinta", days(hm(22, 0), DayOfWeek.SATURDAY), false, ASTRO);
     static final Game BALOTO = new Game("baloto", "Baloto", "Baloto", "Baloto", Slot.NIGHT, Kind.LOTTO, 5, 43, 16,
-            "Superbalota", days("11:00 p.m.", DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.SATURDAY), true, OFFICIAL);
+            "Superbalota", days(hm(23, 0), DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.SATURDAY), true, OFFICIAL);
     static final Game REVANCHA = new Game("revancha", "Baloto", "Baloto Revancha", "Revancha", Slot.NIGHT, Kind.LOTTO, 5,
-            43, 16, "Superbalota", days("11:00 p.m.", DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.SATURDAY), true,
+            43, 16, "Superbalota", days(hm(23, 0), DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.SATURDAY), true,
             OFFICIAL);
     static final Game MILOTO = new Game("miloto", "MiLoto", "MiLoto", "MiLoto", Slot.NIGHT, Kind.LOTTO, 5, 39, 0, null,
-            days("10:00 p.m.", DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), true, OFFICIAL);
+            days(hm(22, 0), DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY), true, OFFICIAL);
 
     static final Game[] ALL = {DORADO_MANANA, DORADO_TARDE, DORADO_NOCHE, PAISITA_DIA, PAISITA_NOCHE, PAISITA_3,
             BALOTO, REVANCHA, MILOTO};
@@ -109,60 +113,72 @@ final class Game {
 
     boolean digits() { return kind == Kind.DIGITS; }
 
-    /** The draw time on that date, or null if there's no draw (holidays included). */
-    String timeOn(LocalDate date) {
+    /** "Mañana", "Noche", "Revancha"; Paisita 3 is "3 (Sat)" / "3 (sáb)". */
+    String shortName() {
+        return this == PAISITA_3 ? T.f("3 (%s)", Fmt.dayShort(5)) : shortName;
+    }
+
+    /** The draw time on that date in minutes after midnight, or -1 if there's no draw (holidays included). */
+    int timeOn(LocalDate date) {
         boolean holiday = Holidays.isHoliday(date);
-        if (holiday && !playsHolidays) return null;
+        if (holiday && !playsHolidays) return -1;
         int dow = date.getDayOfWeek().getValue() - 1;
-        if (holiday && dow < 6) return times[6] != null ? times[6] : times[dow];
+        if (holiday && dow < 6 && times[dow] >= 0) return times[6] >= 0 ? times[6] : times[dow];
         return times[dow];
     }
+
+    /** The usual time on that weekday (ignoring holidays), or -1. */
+    int usualTime(LocalDate date) { return times[date.getDayOfWeek().getValue() - 1]; }
 
     /** The longest regular wait between two draws in days (Saturday to Monday is 2). */
     int longestRegularGap() {
         int worst = 1;
         for (int d = 0; d < 7; d++) {
-            if (times[d] == null) continue;
+            if (times[d] < 0) continue;
             int gap = 1;
-            while (times[(d + gap) % 7] == null) gap++;
+            while (times[(d + gap) % 7] < 0) gap++;
             worst = Math.max(worst, gap);
         }
         return worst;
     }
 
-    /** "Mon–Sat 11:00 a.m." style summary of the schedule. */
+    int drawsPerWeek() {
+        int n = 0;
+        for (int t : times) if (t >= 0) n++;
+        return n;
+    }
+
+    /** "Mon–Sat 11:00 a.m." style summary of the schedule, in the app's language. */
     String scheduleText() {
-        StringBuilder sb = new StringBuilder();
+        List<String> parts = new ArrayList<>();
         int d = 0;
         while (d < 7) {
-            if (times[d] == null) { d++; continue; }
+            if (times[d] < 0) { d++; continue; }
             int e = d;
-            while (e + 1 < 7 && times[d].equals(times[e + 1])) e++;
-            if (sb.length() > 0) sb.append(" · ");
-            if (e == d) sb.append(DAY_SHORT[d]);
-            else if (e == d + 1) sb.append(DAY_SHORT[d]).append(", ").append(DAY_SHORT[e]);
-            else sb.append(DAY_SHORT[d]).append("–").append(DAY_SHORT[e]);
-            sb.append(' ').append(times[d]);
+            while (e + 1 < 7 && times[e + 1] == times[d]) e++;
+            String days;
+            if (e == d) days = Fmt.dayShort(d);
+            else if (e == d + 1) days = Fmt.dayShort(d) + ", " + Fmt.dayShort(e);
+            else days = Fmt.dayShort(d) + "–" + Fmt.dayShort(e);
+            parts.add(days + " " + Fmt.time(times[d]));
             d = e + 1;
         }
-        // non-contiguous single days with the same time read better grouped: "Mon, Wed, Sat 11:00 p.m."
-        String s = sb.toString();
-        String[] parts = s.split(" · ");
-        if (parts.length > 1) {
-            String time = null;
+        String s = String.join(" · ", parts);
+        if (parts.size() > 1) {
+            // non-contiguous days at one time read better grouped: "Mon, Wed, Sat 11:00 p.m."
+            int time = -2;
             boolean same = true;
-            StringBuilder ds = new StringBuilder();
+            List<String> ds = new ArrayList<>();
             for (int i = 0; i < 7; i++) {
-                if (times[i] == null) continue;
-                if (time == null) time = times[i];
-                else if (!time.equals(times[i])) same = false;
-                if (ds.length() > 0) ds.append(", ");
-                ds.append(DAY_SHORT[i]);
+                if (times[i] < 0) continue;
+                if (time == -2) time = times[i];
+                else if (time != times[i]) same = false;
+                ds.add(Fmt.dayShort(i));
             }
-            if (same && time != null) s = ds + " " + time;
+            if (same) s = String.join(", ", ds) + " " + Fmt.time(time);
         }
-        if (playsHolidays && times[6] != null) s += " (holidays: Sunday time)";
-        else if (!playsHolidays) s += " (no draw on public holidays)";
+        if (playsHolidays && times[6] >= 0 && times[6] != times[0]) s += " " + T.t("(holidays: Sunday time)");
+        else if (!playsHolidays) s += " " + T.t("(no draw on public holidays)");
         return s;
     }
 
@@ -175,6 +191,4 @@ final class Game {
 
     /** Number of possible values for each drawn number. */
     int values() { return digits() ? 10 : max; }
-
-    int firstValue() { return digits() ? 0 : 1; }
 }

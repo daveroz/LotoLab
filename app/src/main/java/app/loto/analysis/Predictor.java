@@ -3,7 +3,6 @@ package app.loto.analysis;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Random;
 
 /**
@@ -21,22 +20,34 @@ final class Predictor {
     private Predictor() {}
 
     enum Model {
-        FREQUENCY("Hot numbers", "Favours the numbers drawn most often in the period."),
-        RECENT("Recent form", "Like hot numbers, but recent draws count more (weights halve every few dozen draws)."),
-        OVERDUE("Overdue", "Favours the numbers that haven't come up for longest. In a fair draw a number is never "
-                + "\"due\": this is the gambler's fallacy, shown for comparison."),
-        BAYES("Bayesian (fair-adjusted)", "Starts from a fair draw and moves away from it only as far as the data's "
-                + "real variation supports. If frequencies vary no more than chance, every number stays equal."),
-        BALANCED("Typical shape", "A random combination with the shape most draws have: usual even/odd split, sum in "
-                + "the middle half, no long runs. Typical shapes are common only because there are more of them."),
-        UNPOPULAR("Least shared", "Avoids what most people play (birthdays 1–31, dates, patterns, sequences). Same odds, "
-                + "but if it wins, the prize is less likely to be split."),
-        RANDOM("Quick pick", "Uniformly random, like the terminal's quick pick. The benchmark the others are measured against.");
+        FREQUENCY, RECENT, OVERDUE, BAYES, BALANCED, UNPOPULAR, RANDOM;
 
-        final String title, description;
-        Model(String title, String description) {
-            this.title = title;
-            this.description = description;
+        String title() {
+            switch (this) {
+                case FREQUENCY: return T.t("Hot numbers");
+                case RECENT: return T.t("Recent form");
+                case OVERDUE: return T.t("Overdue");
+                case BAYES: return T.t("Bayesian (fair-adjusted)");
+                case BALANCED: return T.t("Typical shape");
+                case UNPOPULAR: return T.t("Least shared");
+                default: return T.t("Quick pick");
+            }
+        }
+
+        String description() {
+            switch (this) {
+                case FREQUENCY: return T.t("Favours the numbers drawn most often in the period.");
+                case RECENT: return T.t("Like hot numbers, but recent draws count more (weights halve every few dozen draws).");
+                case OVERDUE: return T.t("Favours the numbers that haven't come up for longest. In a fair draw a number is never "
+                        + "\"due\": this is the gambler's fallacy, shown for comparison.");
+                case BAYES: return T.t("Starts from a fair draw and moves away from it only as far as the data's real "
+                        + "variation supports. If frequencies vary no more than chance, every number stays equal.");
+                case BALANCED: return T.t("A random combination with the shape most draws have: usual even/odd split, sum in "
+                        + "the middle half, no long runs. Typical shapes are common only because there are more of them.");
+                case UNPOPULAR: return T.t("Avoids what most people play (birthdays 1–31, dates, patterns, sequences). Same "
+                        + "odds, but if it wins, the prize is less likely to be split.");
+                default: return T.t("Uniformly random, like the terminal's quick pick. The benchmark the others are measured against.");
+            }
         }
     }
 
@@ -53,7 +64,7 @@ final class Predictor {
             } else {
                 for (int v : nums) {
                     if (sb.length() > 0) sb.append(' ');
-                    sb.append(String.format(Locale.US, "%02d", v));
+                    sb.append(String.format(java.util.Locale.US, "%02d", v));
                 }
             }
             return sb.toString();
@@ -378,16 +389,16 @@ final class Predictor {
     }
 
     private static String verdict(Model m, Analysis.Freq f) {
-        if (m == Model.RANDOM) return "Every combination has exactly the same chance; this is what the other models are compared with.";
-        if (m == Model.BALANCED) return "Doesn't change your odds: each typical-looking combination is exactly as likely as any other single combination.";
-        if (m == Model.UNPOPULAR) return "Doesn't change your odds of winning. It only changes how many people you might share a jackpot with.";
-        if (m == Model.OVERDUE) return "Past draws don't make a number due. If the draw is fair, this model can't beat chance; see the backtest.";
-        if (Double.isNaN(f.p)) return "Not enough draws to judge.";
+        if (m == Model.RANDOM) return T.t("Every combination has exactly the same chance; this is what the other models are compared with.");
+        if (m == Model.BALANCED) return T.t("Doesn't change your odds: each typical-looking combination is exactly as likely as any other single combination.");
+        if (m == Model.UNPOPULAR) return T.t("Doesn't change your odds of winning. It only changes how many people you might share a jackpot with.");
+        if (m == Model.OVERDUE) return T.t("Past draws don't make a number due. If the draw is fair, this model can't beat chance; see the backtest.");
+        if (Double.isNaN(f.p)) return T.t("Not enough draws to judge.");
         if (f.p >= 0.05) {
-            return String.format(Locale.US, "The frequency differences this model uses are within what chance produces "
+            return T.f("The frequency differences this model uses are within what chance produces "
                     + "(chi-square p = %s). Expect its picks to do no better than random.", Combi.pText(f.p));
         }
-        return String.format(Locale.US, "Frequencies vary more than chance usually allows (p = %s). That could be a real bias "
+        return T.f("Frequencies vary more than chance usually allows (p = %s). That could be a real bias "
                 + "or a fluke; the backtest shows whether it actually helped predict.", Combi.pText(f.p));
     }
 
@@ -404,20 +415,20 @@ final class Predictor {
                     case RECENT: {
                         int n = 0;
                         for (int t = D - recent; t < D; t++) if (s.draws.get(t).nums[i] == v) n++;
-                        line = String.format(Locale.US, "%s digit %d: %d times in the last %d draws (%s expected).",
-                                Analysis.POS[i], v, n, recent, Fmt.num(recent / 10.0));
+                        line = T.f("%s digit %d: %d times in the last %d draws (%s expected).",
+                                Analysis.pos(i), v, n, recent, Fmt.num(recent / 10.0));
                         break;
                     }
                     case OVERDUE:
-                        line = String.format(Locale.US, "%s digit %d: not seen there for %d draws (typical wait 10).",
-                                Analysis.POS[i], v, c.gap);
+                        line = T.f("%s digit %d: not seen there for %d draws (typical wait 10).",
+                                Analysis.pos(i), v, c.gap);
                         break;
                     case BAYES:
-                        line = String.format(Locale.US, "%s digit %d: estimated %s chance (fair: 10%%).", Analysis.POS[i], v,
+                        line = T.f("%s digit %d: estimated %s chance (fair: 10%%).", Analysis.pos(i), v,
                                 Fmt.pct(wt.w[i][v] / sum(wt.w[i])));
                         break;
                     case FREQUENCY:
-                        line = String.format(Locale.US, "%s digit %d: %s of %d draws (%s; fair 10%%), z %s.", Analysis.POS[i], v,
+                        line = T.f("%s digit %d: %s of %d draws (%s; fair 10%%), z %s.", Analysis.pos(i), v,
                                 Fmt.num(c.observed), D, Fmt.pct(D > 0 ? c.observed / D : 0), Fmt.signed(c.z));
                         break;
                     default:
@@ -431,21 +442,21 @@ final class Predictor {
                 String line;
                 switch (m) {
                     case FREQUENCY:
-                        line = String.format(Locale.US, "%02d: drawn %s times (%s expected, z %s), last seen %d draws ago.", v,
+                        line = T.f("%02d: drawn %s times (%s expected, z %s), last seen %d draws ago.", v,
                                 Fmt.num(c.observed), Fmt.num(c.expected), Fmt.signed(c.z), c.gap);
                         break;
                     case RECENT: {
                         int n = 0;
                         for (int t = D - recent; t < D; t++) if (s.draws.get(t).contains(v)) n++;
-                        line = String.format(Locale.US, "%02d: %d times in the last %d draws (%s expected).", v, n, recent,
+                        line = T.f("%02d: %d times in the last %d draws (%s expected).", v, n, recent,
                                 Fmt.num(recent * g.count / (double) g.max));
                         break;
                     }
                     case OVERDUE:
-                        line = String.format(Locale.US, "%02d: not drawn for %d draws (typical wait %s).", v, c.gap, Fmt.num(f.meanGap));
+                        line = T.f("%02d: not drawn for %d draws (typical wait %s).", v, c.gap, Fmt.num(f.meanGap));
                         break;
                     case BAYES:
-                        line = String.format(Locale.US, "%02d: estimated %s chance per draw (fair: %s).", v,
+                        line = T.f("%02d: estimated %s chance per draw (fair: %s).", v,
                                 Fmt.pct(g.count * wt.w[0][v] / sum(wt.w[0])), Fmt.pct(g.count / (double) g.max));
                         break;
                     default:
@@ -455,20 +466,20 @@ final class Predictor {
             }
             if (sg.extra > 0 && !f.extra.isEmpty() && (m == Model.FREQUENCY || m == Model.RECENT || m == Model.OVERDUE)) {
                 Analysis.Cell c = f.extra.get(sg.extra - 1);
-                sg.reasons.add(String.format(Locale.US, "%s %02d: %s times (%s expected), last seen %d draws ago.", g.extraName,
+                sg.reasons.add(T.f("%s %02d: %s times (%s expected), last seen %d draws ago.", g.extraName,
                         sg.extra, Fmt.num(c.observed), Fmt.num(c.expected), c.gap));
             }
             if (m == Model.UNPOPULAR) {
                 int high = 0;
                 for (int v : sg.nums) if (v > 31) high++;
-                sg.reasons.add(high + " of the numbers are above 31, which birthday players can't choose.");
-                sg.reasons.add("No sequence, no arithmetic pattern, at most two month numbers (1–12).");
+                sg.reasons.add(T.f("%d of the numbers are above 31, which birthday players can't choose.", high));
+                sg.reasons.add(T.t("No sequence, no arithmetic pattern, at most two month numbers (1–12)."));
             }
         }
         if (g.digits() && m == Model.UNPOPULAR) {
-            sg.reasons.add("Not a date, no repeated digits, no sequence or mirror, doesn't start with 0–2 like most years and dates.");
+            sg.reasons.add(T.t("Not a date, no repeated digits, no sequence or mirror, doesn't start with 0–2 like most years and dates."));
         }
-        if (m == Model.RANDOM) sg.reasons.add("Drawn uniformly at random, like a quick pick.");
+        if (m == Model.RANDOM) sg.reasons.add(T.t("Drawn uniformly at random, like a quick pick."));
         sg.reasons.add(shape(g, sg.nums));
     }
 
@@ -481,12 +492,12 @@ final class Predictor {
         }
         double[] pe = Analysis.evenProbabilities(g);
         int[] mid = Analysis.middleHalf(g);
-        String s = String.format(Locale.US, "Shape: %d even / %d odd (%s of fair draws) · sum %d (half of fair draws: %d–%d)",
+        String s = T.f("Shape: %d even / %d odd (%s of fair draws) · sum %d (half of fair draws: %d–%d)",
                 ev, n.length - ev, Combi.percent(pe[ev]), sum, mid[0], mid[1]);
         if (!g.digits()) {
             int cons = 0;
             for (int i = 1; i < n.length; i++) if (n[i] == n[i - 1] + 1) cons++;
-            if (cons > 0) s += " · " + cons + " consecutive pair" + (cons > 1 ? "s" : "");
+            if (cons > 0) s += " · " + T.f("consecutive pairs: %d", cons);
         }
         return s + ".";
     }
@@ -499,7 +510,7 @@ final class Predictor {
         int D = s.size();
         int B = Math.min(100, D - 30);
         if (B < 10) {
-            b.summary = "Not enough draws to replay.";
+            b.summary = T.t("Not enough draws to replay.");
             return b;
         }
         Random rnd = new Random(seed);
@@ -538,18 +549,17 @@ final class Predictor {
         double z = b.sd > 0 ? (b.hits - b.expected) / b.sd : 0;
         b.p = 1 - Combi.normalCdf(z);
         b.endingExpected = B / 100.0;
-        String unit = g.digits() ? "digits in the right place" : "numbers";
-        b.summary = String.format(Locale.US, "Replaying the last %d draws, letting the model see only earlier results: its "
-                        + "pick matched %.2f %s per draw on average; pure chance gives %.2f. ", B, b.hits / B, unit, mu);
-        if (b.p < 0.05) {
-            b.summary += String.format(Locale.US, "That's better than chance (p = %s), though with several models tried one "
-                    + "doing well by luck is expected now and then.", Combi.pText(b.p));
-        } else {
-            b.summary += String.format(Locale.US, "No better than chance (p = %s).", Combi.pText(b.p));
-        }
+        b.summary = g.digits()
+                ? T.f("Replaying the last %d draws, letting the model see only earlier results: its pick matched %.2f "
+                + "digits in the right place per draw on average; pure chance gives %.2f.", B, b.hits / B, mu)
+                : T.f("Replaying the last %d draws, letting the model see only earlier results: its pick matched %.2f "
+                + "numbers per draw on average; pure chance gives %.2f.", B, b.hits / B, mu);
+        b.summary += " " + (b.p < 0.05
+                ? T.f("That's better than chance (p = %s), though with several models tried one doing well by luck is "
+                + "expected now and then.", Combi.pText(b.p))
+                : T.f("No better than chance (p = %s).", Combi.pText(b.p)));
         if (g.digits()) {
-            b.summary += String.format(Locale.US, " Last two digits right: %d times (%s expected).", b.endingHits,
-                    Fmt.num(b.endingExpected));
+            b.summary += " " + T.f("Last two digits right: %d times (%s expected).", b.endingHits, Fmt.num(b.endingExpected));
         }
         return b;
     }

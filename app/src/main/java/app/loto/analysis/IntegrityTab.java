@@ -5,8 +5,6 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.Locale;
-
 /** Possible irregularities, graded with care: an anomaly is not evidence of manipulation. */
 final class IntegrityTab {
     private IntegrityTab() {}
@@ -26,10 +24,10 @@ final class IntegrityTab {
 
     static String tagText(Integrity.Level l) {
         switch (l) {
-            case PERSISTENT: return "persistent deviation";
-            case ANOMALY: return "anomaly · likely chance";
-            case DATA: return "data";
-            default: return "clear";
+            case PERSISTENT: return T.t("persistent deviation");
+            case ANOMALY: return T.t("anomaly · likely chance");
+            case DATA: return T.t("data");
+            default: return T.t("clear");
         }
     }
 
@@ -37,9 +35,8 @@ final class IntegrityTab {
         Integrity.Report r = (Integrity.Report) data;
         Ui ui = a.ui;
 
-        LinearLayout v = ui.card(body, "INTEGRITY CHECK · " + s.lottery.toUpperCase(Locale.US));
-        v.addView(ui.note("Every draw of " + s.lottery + " (all its draw times) · " + s.periodLabel + " · "
-                + String.format(Locale.US, "%,d", r.draws) + " draws"));
+        LinearLayout v = ui.card(body, T.f("INTEGRITY CHECK · %s", s.lottery.toUpperCase(T.L)));
+        v.addView(ui.note(T.f("Every draw of %s (all its draw times) · %s · %s draws", s.lottery, s.periodLabel, Fmt.num(r.draws))));
         LinearLayout lamp = ui.hbox();
         lamp.setGravity(Gravity.CENTER_VERTICAL);
         lamp.setPadding(0, ui.dp(14), 0, ui.dp(6));
@@ -52,15 +49,15 @@ final class IntegrityTab {
         v.addView(lamp);
         v.addView(ui.body(r.explanation));
         if (r.usable > 0) {
-            v.addView(ui.kv("Tests run", String.valueOf(r.usable), Theme.TEXT, null), ui.matchWrap(10));
-            v.addView(ui.kv("Below p = 0.05 on their own", String.valueOf(r.rawFlags), Theme.TEXT,
-                    Fmt.num(r.expectedRawFlags) + " expected by chance alone · more than chance? p = " + Combi.pText(r.excessP)));
-            v.addView(ui.kv("Significant after correction", String.valueOf(r.adjustedFlags),
-                    r.adjustedFlags > 0 ? Theme.AMBER : Theme.GREEN, "Holm–Bonferroni over all " + r.usable + " tests"));
+            v.addView(ui.kv(T.t("Tests run"), String.valueOf(r.usable), Theme.TEXT, null), ui.matchWrap(10));
+            v.addView(ui.kv(T.t("Below p = 0.05 on their own"), String.valueOf(r.rawFlags), Theme.TEXT,
+                    T.f("%s expected by chance alone · more than chance? p = %s", Fmt.num(r.expectedRawFlags), Combi.pText(r.excessP))));
+            v.addView(ui.kv(T.t("Significant after correction"), String.valueOf(r.adjustedFlags),
+                    r.adjustedFlags > 0 ? Theme.AMBER : Theme.GREEN, T.f("Holm–Bonferroni over all %d tests", r.usable)));
         }
 
         if (!r.findings.isEmpty()) {
-            LinearLayout f = ui.card(body, "FINDINGS");
+            LinearLayout f = ui.card(body, T.t("FINDINGS"));
             boolean first = true;
             for (Integrity.Finding x : r.findings) {
                 if (!first) f.addView(ui.divider());
@@ -81,9 +78,9 @@ final class IntegrityTab {
             }
         }
 
-        LinearLayout all = ui.card(body, "EVERY CHECK");
-        all.addView(ui.note("Each draw series tested on its own, plus same-day comparisons between series and a test for "
-                + "results avoiding the numbers people bet most."));
+        LinearLayout all = ui.card(body, T.t("EVERY CHECK"));
+        all.addView(ui.note(T.t("Each draw series tested on its own, plus same-day comparisons between series and a test for "
+                + "results avoiding the numbers people bet most.")));
         String lastGame = null;
         for (TestResult t : r.tests) {
             if (!t.game.equals(lastGame)) {
@@ -97,34 +94,34 @@ final class IntegrityTab {
             row.setPadding(0, ui.dp(4), 0, ui.dp(4));
             row.addView(ui.text(t.name, 12, Theme.uiMedium(a), Theme.TEXT_SOFT), new LinearLayout.LayoutParams(0,
                     ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-            String p = t.enough ? Combi.pText(t.p) + " → " + Combi.pText(t.pAdj) : "n/a";
+            String p = t.enough ? Combi.pText(t.p) + " → " + Combi.pText(t.pAdj) : T.t("n/a");
             TextView pv = ui.text(p, 11, Theme.monoMedium(a), Ui.pColor(t));
             pv.setPadding(ui.dp(8), 0, 0, 0);
             row.addView(pv);
             all.addView(row);
         }
-        all.addView(ui.note("p-value on its own → after correction. Green: as expected · amber: below 0.05 only before "
-                + "correction · coral: significant after it · grey: not enough data."), ui.matchWrap(10));
+        all.addView(ui.note(T.t("p-value on its own → after correction. Green: as expected · amber: below 0.05 only before "
+                + "correction · coral: significant after it · grey: not enough data.")), ui.matchWrap(10));
 
-        LinearLayout ex = ui.card(body, "AN ANOMALY IS NOT EVIDENCE OF MANIPULATION");
-        ex.addView(ui.body("Statistics can show that results are unlikely under a fair draw. It can't show why. In every long "
+        LinearLayout ex = ui.card(body, T.t("AN ANOMALY IS NOT EVIDENCE OF MANIPULATION"));
+        ex.addView(ui.body(T.t("Statistics can show that results are unlikely under a fair draw. It can't show why. In every long "
                 + "series of fair draws some patterns look suspicious, and with enough tests something always comes out "
-                + "\"significant\"."));
-        ex.addView(ui.body("Even a persistent deviation has ordinary explanations: balls of slightly different weight or wear, "
+                + "\"significant\".")));
+        ex.addView(ui.body(T.t("Even a persistent deviation has ordinary explanations: balls of slightly different weight or wear, "
                 + "a drawing machine that changed, errors or gaps in the published results, or a change in how results are "
-                + "recorded. Deliberate interference is one possibility among these, not the default."), ui.matchWrap(8));
-        ex.addView(ui.body("Real evidence of manipulation comes from outside the numbers: independent audits, inspection of the "
+                + "recorded. Deliberate interference is one possibility among these, not the default.")), ui.matchWrap(8));
+        ex.addView(ui.body(T.t("Real evidence of manipulation comes from outside the numbers: independent audits, inspection of the "
                 + "balls and machines, the draw videos and records, witnesses. Concerns go to the game's operator and its "
-                + "regulator (Coljuegos for Baloto and MiLoto; the departmental authority that licenses each chance game)."),
+                + "regulator (Coljuegos for Baloto and MiLoto; the departmental authority that licenses each chance game).")),
                 ui.matchWrap(8));
 
-        LinearLayout how = ui.card(body, "HOW THE CHECK WORKS");
-        how.addView(ui.body("1. Every randomness test runs on every draw series separately.\n"
+        LinearLayout how = ui.card(body, T.t("HOW THE CHECK WORKS"));
+        how.addView(ui.body(T.t("1. Every randomness test runs on every draw series separately.\n"
                 + "2. Draws held on the same day are compared: do they share more numbers than chance?\n"
                 + "3. Popular-number test: rigged results might avoid what people bet most (birthdays, dates).\n"
                 + "4. All p-values are corrected together (Holm–Bonferroni), so running many tests doesn't manufacture findings.\n"
                 + "5. Anything that survives is re-tested on the first and second half of the period. A systematic effect "
                 + "shows in both; a coincidence rarely does.\n"
-                + "6. The data is checked for impossible values and unexplained breaks in the schedule."));
+                + "6. The data is checked for impossible values and unexplained breaks in the schedule.")));
     }
 }

@@ -1,7 +1,10 @@
 package app.loto.analysis;
 
+import android.Manifest;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -21,20 +24,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * The one screen: choose a lottery, a draw (or all of its draws) and a period, then a tab. Glass cards over the
- * Worldly stage. Each tab's numbers are worked out on a background thread and the cards built when they're ready.
+ * The one screen: swipe to a lottery, pick one of its draws (or all of them), then a tab. Summary brings what
+ * matters at a glance; the other tabs go deeper. Glass cards over the Worldly stage; each tab's numbers are
+ * worked out on a background thread and its cards built when they're ready. Text follows the device language.
  */
 public class MainActivity extends Activity {
-    static final String[] TABS = {"Results", "Stats", "Randomness", "Picks", "Integrity", "Odds"};
+    static final int SUMMARY = 0, HISTORY = 1, STATS = 2, RANDOM = 3, PICKS = 4, INTEGRITY = 5, ODDS = 6;
     static final int[] PERIODS = {30, 90, 365, 0};
-    static final String[] PERIOD_LABELS = {"30 days", "90 days", "1 year", "All"};
     static final ZoneId BOGOTA = ZoneId.of("America/Bogota");
+    private static final int REQ_NOTIFY = 3;
 
     Ui ui;
     History history;
     private StageView stage;
     private ScrollView scroll;
-    private LinearLayout selectors, body;
+    private LogoCarousel carousel;
+    private LinearLayout drawBox, tabBox, periodBox, body;
     private TextView statusLine;
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private int generation;
@@ -45,8 +50,8 @@ public class MainActivity extends Activity {
     int gameIdx;       // index into the lottery's draws; == size for "all"
     int periodIdx;
     int tab;
-    int weekday = -1;  // Results filter: -1 all, 0 Monday .. 6 Sunday
-    int limit = 40;    // Results: days shown
+    int weekday = -1;  // History filter: -1 all, 0 Monday .. 6 Sunday
+    int limit = 40;    // History: days shown
     Predictor.Model model = Predictor.Model.FREQUENCY;
     long seed = 1;
     String check = "";
@@ -65,19 +70,42 @@ public class MainActivity extends Activity {
         String periodLabel;
     }
 
+    static String tabName(int i) {
+        switch (i) {
+            case SUMMARY: return T.t("Summary");
+            case HISTORY: return T.t("History");
+            case STATS: return T.t("Stats");
+            case RANDOM: return T.t("Randomness");
+            case PICKS: return T.t("Picks");
+            case INTEGRITY: return T.t("Integrity");
+            default: return T.t("Odds");
+        }
+    }
+
+    static String periodName(int i) {
+        switch (i) {
+            case 0: return T.t("30 days");
+            case 1: return T.t("90 days");
+            case 2: return T.t("1 year");
+            default: return T.t("All");
+        }
+    }
+
     @Override
     protected void onCreate(Bundle b) {
         super.onCreate(b);
+        T.init(Locale.getDefault());
         ui = new Ui(this);
         SharedPreferences sp = Data.sp(this);
         lottery = sp.getString("lottery", "Dorado");
         if (Game.of(lottery).isEmpty()) lottery = "Dorado";
         gameIdx = sp.getInt("game", Game.of(lottery).size() > 1 ? Game.of(lottery).size() : 0);
         periodIdx = Math.max(0, Math.min(PERIODS.length - 1, sp.getInt("period", 3)));
-        tab = Math.max(0, Math.min(TABS.length - 1, sp.getInt("tab", 0)));
+        tab = SUMMARY; // Summary first, every time the app opens
         try {
             model = Predictor.Model.valueOf(sp.getString("model", "FREQUENCY"));
         } catch (IllegalArgumentException ignored) { }
+        fromIntent(getIntent());
 
         FrameLayout room = new FrameLayout(this);
         stage = new StageView(this);
@@ -88,41 +116,55 @@ public class MainActivity extends Activity {
         room.addView(scroll, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         room.addView(new StageView.Film(this, 0), new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         LinearLayout col = ui.vbox();
-        col.setPadding(ui.dp(16), ui.dp(30), ui.dp(16), ui.dp(28));
+        col.setPadding(ui.dp(16), ui.dp(26), ui.dp(16), ui.dp(28));
         scroll.addView(col, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        // ---- header: a lit badge, the title, and the data status with a refresh button ----
+        // ---- header: title and the data status, with a refresh button ----
         LinearLayout head = ui.hbox();
         head.setGravity(Gravity.CENTER_VERTICAL);
-        TextView badge = ui.text("LOTO", 11, Theme.monoBold(this), Theme.LED);
-        badge.setLetterSpacing(0.08f);
-        badge.setGravity(Gravity.CENTER);
-        badge.setBackground(Theme.lit(this, 12, false));
-        head.addView(badge, new LinearLayout.LayoutParams(ui.dp(48), ui.dp(48)));
         LinearLayout titles = ui.vbox();
-        titles.setPadding(ui.dp(12), 0, 0, 0);
         titles.addView(ui.text("LotoLab", 19, Theme.uiBold(this), Theme.TEXT));
-        TextView tagline = ui.label("Dorado · Paisita · Baloto · MiLoto", Theme.AMBER_LIGHT);
-        tagline.setLetterSpacing(0.14f);
-        titles.addView(tagline);
+        statusLine = ui.note("");
+        statusLine.setTextSize(11);
+        titles.addView(statusLine);
         head.addView(titles, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         TextView refresh = ui.secondaryButton("↻", v -> fetch(true));
         refresh.setTextSize(16);
         refresh.setPadding(ui.dp(14), ui.dp(8), ui.dp(14), ui.dp(8));
+        refresh.setContentDescription(T.t("Fetch the newest results"));
         head.addView(refresh);
         col.addView(head);
-        statusLine = ui.note("");
-        statusLine.setPadding(ui.dp(2), ui.dp(10), 0, 0);
-        col.addView(statusLine);
 
-        selectors = ui.vbox();
-        col.addView(selectors, ui.matchWrap(4));
+        // ---- the lotteries: swipe through their emblems ----
+        String[] subs = {T.t("Chance · 3 draws a day"), T.t("Chance · day, night and Saturday"),
+                T.t("5 of 43 + superbalota"), T.t("5 of 39 · 4 draws a week")};
+        int[] res = {R.drawable.logo_dorado, R.drawable.logo_paisita, R.drawable.logo_baloto, R.drawable.logo_miloto};
+        int[] colors = {0xFFF2B230, 0xFF3FAE6A, 0xFFF5A623, 0xFF8E7CF0};
+        carousel = new LogoCarousel(this, Game.LOTTERIES, Game.LOTTERIES, subs, res, colors,
+                java.util.Arrays.asList(Game.LOTTERIES).indexOf(lottery), i -> {
+                    lottery = Game.LOTTERIES[i];
+                    int n = Game.of(lottery).size();
+                    gameIdx = n > 1 ? n : 0;
+                    weekday = -1;
+                    limit = 40;
+                    check = "";
+                    buildSelectors();
+                    render();
+                });
+        col.addView(carousel, ui.matchWrap(10));
+
+        drawBox = ui.vbox();
+        col.addView(drawBox, ui.matchWrap(2));
+        tabBox = ui.vbox();
+        col.addView(tabBox, ui.matchWrap(6));
+        periodBox = ui.vbox();
+        col.addView(periodBox, ui.matchWrap(0));
         body = ui.vbox();
         col.addView(body, ui.matchWrap(0));
         setContentView(room);
 
         // Load the history off the main thread (the bundled files hold several thousand draws).
-        body.addView(loading("Loading the draw history…"));
+        body.addView(loading(T.t("Loading the draw history…")));
         worker.execute(() -> {
             History h = Data.history(this);
             runOnUiThread(() -> {
@@ -131,8 +173,47 @@ public class MainActivity extends Activity {
                 render();
                 updateStatus();
                 fetch(false);
+                Notifier.schedule(getApplicationContext());
             });
         });
+
+        // Ask once for permission to announce results (Android 13+).
+        if (Build.VERSION.SDK_INT >= 33 && !sp.getBoolean("notifyAsked", false)) {
+            sp.edit().putBoolean("notifyAsked", true).apply();
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIFY);
+            }
+        }
+    }
+
+    /** A notification was tapped: show that lottery and draw on the Summary. */
+    private boolean fromIntent(Intent i) {
+        if (i == null || i.getStringExtra("lottery") == null) return false;
+        String l = i.getStringExtra("lottery");
+        if (Game.of(l).isEmpty()) return false;
+        lottery = l;
+        List<Game> games = Game.of(l);
+        Game g = Game.byId(i.getStringExtra("game"));
+        int idx = g == null ? -1 : games.indexOf(g);
+        gameIdx = idx >= 0 ? idx : (games.size() > 1 ? games.size() : 0);
+        tab = SUMMARY;
+        check = "";
+        return true;
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (fromIntent(intent) && history != null) {
+            recreate(); // simplest way to move the carousel and every row to the new choice
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int code, String[] perms, int[] results) {
+        super.onRequestPermissionsResult(code, perms, results);
+        if (code == REQ_NOTIFY && tab == SUMMARY) render(true);
     }
 
     @Override
@@ -147,7 +228,7 @@ public class MainActivity extends Activity {
         super.onPause();
         stage.setRunning(false);
         Data.sp(this).edit().putString("lottery", lottery).putInt("game", gameIdx).putInt("period", periodIdx)
-                .putInt("tab", tab).putString("model", model.name()).apply();
+                .putString("model", model.name()).apply();
     }
 
     @Override
@@ -161,13 +242,15 @@ public class MainActivity extends Activity {
     private void fetch(boolean everything) {
         if (fetching || history == null) return;
         fetching = true;
-        statusLine.setText("Fetching the newest results…");
+        statusLine.setText(T.t("Fetching the newest results…"));
         new Thread(() -> {
             Fetcher.Status st = Fetcher.refresh(getApplicationContext(), history, everything);
+            Notifier.markSeen(getApplicationContext(), st.fresh); // shown here, no need to announce them later
+            Notifier.schedule(getApplicationContext());
             runOnUiThread(() -> {
                 fetching = false;
                 updateStatus();
-                if (st.added > 0 || tab == 0) render(true);
+                if (st.added > 0 || tab == HISTORY || tab == SUMMARY) render(true);
             });
         }).start();
     }
@@ -177,13 +260,19 @@ public class MainActivity extends Activity {
         int total = 0;
         for (Game g : Game.ALL) total += history.size(g);
         long at = Data.sp(this).getLong("fetchAt", 0);
-        String when = at == 0 ? "not fetched yet" : "updated " + ZonedDateTime.ofInstant(Instant.ofEpochMilli(at), ZoneId.systemDefault())
-                .format(java.time.format.DateTimeFormatter.ofPattern("d MMM, HH:mm", Locale.US));
+        String when;
+        if (at == 0) {
+            when = T.t("not fetched yet");
+        } else {
+            ZonedDateTime z = ZonedDateTime.ofInstant(Instant.ofEpochMilli(at), ZoneId.systemDefault());
+            when = T.f("updated %s, %s", Fmt.shortDate(z.toLocalDate()), String.format(Locale.US, "%02d:%02d", z.getHour(), z.getMinute()));
+        }
         String log = Data.sp(this).getString("fetchLog", "");
         int failed = 0;
         for (String line : log.split("\n")) if (line.contains("\tfail\t")) failed++;
-        statusLine.setText(String.format(Locale.US, "%,d draws stored · %s%s", total, when,
-                failed > 0 ? " · " + failed + " source" + (failed > 1 ? "s" : "") + " unreachable (see Results)" : ""));
+        String s = T.f("%s draws stored · %s", Fmt.num(total), when);
+        if (failed > 0) s += " · " + T.f("%d source(s) unreachable (see History)", failed);
+        statusLine.setText(s);
     }
 
     // ------------------------------------------------------------------ choices
@@ -196,29 +285,26 @@ public class MainActivity extends Activity {
         return one;
     }
 
-    void buildSelectors() {
-        selectors.removeAllViews();
-        LinearLayout row = ui.chipRow(selectors, 14);
-        for (String l : Game.LOTTERIES) {
-            row.addView(ui.chip(l, l.equals(lottery), v -> {
-                if (l.equals(lottery)) return;
-                lottery = l;
-                int n = Game.of(l).size();
-                gameIdx = n > 1 ? n : 0;
-                weekday = -1;
-                limit = 40;
-                check = "";
-                buildSelectors();
-                render();
-            }), ui.wrap(row.getChildCount() == 0 ? 0 : 8));
+    /** "Mañana · morning" in English; in Spanish the draw's own name says it already. */
+    static String drawLabel(Game g) {
+        if (T.es || !g.digits()) return g.shortName();
+        String w;
+        switch (g.slot) {
+            case MORNING: w = "morning"; break;
+            case AFTERNOON: w = "afternoon"; break;
+            default: w = "night";
         }
-        ui.reveal(row, java.util.Arrays.asList(Game.LOTTERIES).indexOf(lottery));
+        return g.shortName() + " · " + w;
+    }
+
+    void buildSelectors() {
+        drawBox.removeAllViews();
         List<Game> games = Game.of(lottery);
         if (games.size() > 1) {
-            LinearLayout gr = ui.chipRow(selectors, 8);
+            LinearLayout gr = ui.chipRow(drawBox, 4, true);
             for (int i = 0; i <= games.size(); i++) {
                 final int idx = i;
-                String label = i == games.size() ? "All draws" : games.get(i).shortName + " · " + slotWord(games.get(i));
+                String label = i == games.size() ? T.t("All draws") : drawLabel(games.get(i));
                 gr.addView(ui.chip(label, idx == gameIdx, v -> {
                     gameIdx = idx;
                     buildSelectors();
@@ -227,19 +313,11 @@ public class MainActivity extends Activity {
             }
             ui.reveal(gr, gameIdx);
         }
-        LinearLayout pr = ui.chipRow(selectors, 8);
-        for (int i = 0; i < PERIODS.length; i++) {
+        tabBox.removeAllViews();
+        LinearLayout tr = ui.chipRow(tabBox, 10, false);
+        for (int i = 0; i <= ODDS; i++) {
             final int idx = i;
-            pr.addView(ui.chip(PERIOD_LABELS[i], i == periodIdx, v -> {
-                periodIdx = idx;
-                buildSelectors();
-                render();
-            }), ui.wrap(i == 0 ? 0 : 8));
-        }
-        LinearLayout tr = ui.chipRow(selectors, 16);
-        for (int i = 0; i < TABS.length; i++) {
-            final int idx = i;
-            TextView t = ui.chip(TABS[i].toUpperCase(Locale.US), i == tab, v -> {
+            TextView t = ui.chip(tabName(i).toUpperCase(T.L), i == tab, v -> {
                 tab = idx;
                 buildSelectors();
                 render();
@@ -250,13 +328,17 @@ public class MainActivity extends Activity {
             tr.addView(t, ui.wrap(i == 0 ? 0 : 8));
         }
         ui.reveal(tr, tab);
-    }
-
-    static String slotWord(Game g) {
-        switch (g.slot) {
-            case MORNING: return "morning";
-            case AFTERNOON: return "afternoon";
-            default: return "night";
+        periodBox.removeAllViews();
+        if (tab != SUMMARY && tab != ODDS) {
+            LinearLayout pr = ui.chipRow(periodBox, 8, false);
+            for (int i = 0; i < PERIODS.length; i++) {
+                final int idx = i;
+                pr.addView(ui.chip(periodName(i), i == periodIdx, v -> {
+                    periodIdx = idx;
+                    buildSelectors();
+                    render();
+                }), ui.wrap(i == 0 ? 0 : 8));
+            }
         }
     }
 
@@ -265,8 +347,9 @@ public class MainActivity extends Activity {
         s.h = history;
         s.lottery = lottery;
         s.games = chosenGames();
-        s.days = PERIODS[periodIdx];
-        s.periodLabel = PERIOD_LABELS[periodIdx];
+        boolean periodApplies = tab != SUMMARY && tab != ODDS;
+        s.days = periodApplies ? PERIODS[periodIdx] : 0;
+        s.periodLabel = periodApplies ? periodName(periodIdx) : T.t("All");
         s.weekday = weekday;
         s.limit = limit;
         s.model = model;
@@ -277,7 +360,6 @@ public class MainActivity extends Activity {
 
     // ------------------------------------------------------------------ rendering
 
-    /** Rebuilds the body for the current choice, doing the arithmetic in the background. */
     void render() { render(false); }
 
     /**
@@ -291,18 +373,19 @@ public class MainActivity extends Activity {
         final int t = tab;
         if (!inPlace || body.getChildCount() == 0) {
             body.removeAllViews();
-            body.addView(loading(t == 4 ? "Running every test on every draw…" : "Working it out…"));
+            body.addView(loading(t == INTEGRITY ? T.t("Running every test on every draw…") : T.t("Working it out…")));
         }
         worker.execute(() -> {
             Object data;
             try {
                 sel.sample = sel.h.sample(sel.games, sel.days);
                 switch (t) {
-                    case 0: data = ResultsTab.compute(sel); break;
-                    case 1: data = StatsTab.compute(sel); break;
-                    case 2: data = RandomTab.compute(sel); break;
-                    case 3: data = PicksTab.compute(sel); break;
-                    case 4: data = IntegrityTab.compute(sel); break;
+                    case SUMMARY: data = SummaryTab.compute(sel); break;
+                    case HISTORY: data = HistoryTab.compute(sel); break;
+                    case STATS: data = StatsTab.compute(sel); break;
+                    case RANDOM: data = RandomTab.compute(sel); break;
+                    case PICKS: data = PicksTab.compute(sel); break;
+                    case INTEGRITY: data = IntegrityTab.compute(sel); break;
                     default: data = OddsTab.compute(sel);
                 }
             } catch (RuntimeException e) {
@@ -314,16 +397,17 @@ public class MainActivity extends Activity {
                 final int y = scroll.getScrollY();
                 body.removeAllViews();
                 if (result instanceof RuntimeException) {
-                    LinearLayout c = ui.card(body, "SOMETHING WENT WRONG");
-                    c.addView(ui.body("This view couldn't be worked out: " + ((RuntimeException) result).getMessage()));
+                    LinearLayout c = ui.card(body, T.t("SOMETHING WENT WRONG"));
+                    c.addView(ui.body(T.f("This view couldn't be worked out: %s", ((RuntimeException) result).getMessage())));
                     return;
                 }
                 switch (t) {
-                    case 0: ResultsTab.show(this, body, sel, result); break;
-                    case 1: StatsTab.show(this, body, sel, result); break;
-                    case 2: RandomTab.show(this, body, sel, result); break;
-                    case 3: PicksTab.show(this, body, sel, result); break;
-                    case 4: IntegrityTab.show(this, body, sel, result); break;
+                    case SUMMARY: SummaryTab.show(this, body, sel, result); break;
+                    case HISTORY: HistoryTab.show(this, body, sel, result); break;
+                    case STATS: StatsTab.show(this, body, sel, result); break;
+                    case RANDOM: RandomTab.show(this, body, sel, result); break;
+                    case PICKS: PicksTab.show(this, body, sel, result); break;
+                    case INTEGRITY: IntegrityTab.show(this, body, sel, result); break;
                     default: OddsTab.show(this, body, sel, result);
                 }
                 if (inPlace) scroll.post(() -> scroll.scrollTo(0, y));
@@ -347,21 +431,21 @@ public class MainActivity extends Activity {
 
     /** "Not enough draws" card. */
     static void empty(MainActivity a, LinearLayout body, Sel s) {
-        LinearLayout c = a.ui.card(body, "NO DRAWS");
-        c.addView(a.ui.body("There are no stored results for " + label(s) + " in this period yet. Tap ↻ to fetch the newest "
-                + "results, or choose a longer period."));
+        LinearLayout c = a.ui.card(body, T.t("NO DRAWS"));
+        c.addView(a.ui.body(T.f("There are no stored results for %s in this period yet. Tap ↻ to fetch the newest results, "
+                + "or choose a longer period.", label(s))));
     }
 
     static String label(Sel s) {
         List<Game> all = Game.of(s.lottery);
-        if (s.games.size() == all.size() && all.size() > 1) return s.lottery + " (all draws)";
+        if (s.games.size() == all.size() && all.size() > 1) return T.f("%s (all draws)", s.lottery);
         return s.games.get(0).name;
     }
 
     /** "Dorado Mañana · 1 year · 288 draws (19 Nov 2025 – 17 Nov 2026)". */
     static String scope(Sel s) {
         Sample sm = s.sample;
-        String range = sm.size() == 0 ? "" : " (" + Fmt.shortDate(sm.from()) + " – " + Fmt.shortDate(sm.to()) + ")";
-        return label(s) + " · " + s.periodLabel + " · " + String.format(Locale.US, "%,d", sm.size()) + " draws" + range;
+        String base = T.f("%s · %s · %s draws", label(s), s.periodLabel, Fmt.num(sm.size()));
+        return sm.size() == 0 ? base : base + " (" + Fmt.shortDate(sm.from()) + " – " + Fmt.shortDate(sm.to()) + ")";
     }
 }

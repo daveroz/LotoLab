@@ -176,7 +176,7 @@ final class Charts {
             Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
             for (int col = 0; col < cols; col++) {
                 txt.setColor(Theme.MUTED);
-                c.drawText(Analysis.POS[col], labelW + cw * col + cw / 2, 12 * d, txt);
+                c.drawText(Analysis.pos(col), labelW + cw * col + cw / 2, 12 * d, txt);
             }
             for (int v = 0; v < 10; v++) {
                 txt.setColor(Theme.DIM);
@@ -240,7 +240,7 @@ final class Charts {
             c.drawText(score >= 0 ? String.valueOf(score) : "–", cx, cy + 4 * d, big);
             txt.setTextSize(10 * d);
             txt.setColor(Theme.MUTED);
-            c.drawText("OF 100", cx, cy + 20 * d, txt);
+            c.drawText(T.t("OF 100"), cx, cy + 20 * d, txt);
         }
     }
 

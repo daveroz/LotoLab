@@ -163,30 +163,30 @@ final class Combi {
         return adj;
     }
 
-    /** "1 in 15,401,568" style odds. */
+    /** "1 in 15,401,568" / "1 entre 15.401.568". */
     static String oneIn(double p) {
-        if (p <= 0) return "never";
+        if (p <= 0) return T.t("never");
         double n = 1 / p;
-        if (n < 10) return String.format(java.util.Locale.US, "1 in %.1f", n);
-        return "1 in " + String.format(java.util.Locale.US, "%,d", Math.round(n));
+        if (n < 10) return T.f("1 in %s", String.format(T.L, "%.1f", n));
+        return T.f("1 in %s", String.format(T.L, "%,d", Math.round(n)));
     }
 
     /** Probability as a percentage with sensible precision. */
     static String percent(double p) {
         double v = p * 100;
         if (v == 0) return "0%";
-        if (v >= 10) return String.format(java.util.Locale.US, "%.1f%%", v);
-        if (v >= 1) return String.format(java.util.Locale.US, "%.2f%%", v);
-        if (v >= 0.01) return String.format(java.util.Locale.US, "%.3f%%", v);
-        return String.format(java.util.Locale.US, "%.2e%%", v);
+        if (v >= 10) return String.format(T.L, "%.1f%%", v);
+        if (v >= 1) return String.format(T.L, "%.2f%%", v);
+        if (v >= 0.01) return String.format(T.L, "%.3f%%", v);
+        return String.format(T.L, "%.2e%%", v);
     }
 
-    /** A p-value for people: "0.43", "0.004", "< 0.0001". */
+    /** A p-value for people: "0.43", "0.004", "< 0.0001" (with a decimal comma in Spanish). */
     static String pText(double p) {
         if (Double.isNaN(p)) return "–";
-        if (p < 0.0001) return "< 0.0001";
-        if (p < 0.001) return String.format(java.util.Locale.US, "%.4f", p);
-        if (p < 0.01) return String.format(java.util.Locale.US, "%.3f", p);
-        return String.format(java.util.Locale.US, "%.2f", p);
+        if (p < 0.0001) return "< " + String.format(T.L, "%.4f", 0.0001);
+        if (p < 0.001) return String.format(T.L, "%.4f", p);
+        if (p < 0.01) return String.format(T.L, "%.3f", p);
+        return String.format(T.L, "%.2f", p);
     }
 }

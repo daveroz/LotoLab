@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -14,11 +15,12 @@ import java.util.regex.Pattern;
 
 /**
  * Brings the history up to date. Three kinds of source, all free, no key, no account:
- * 1. This repository's own copy of the full history (refreshed twice a day by a GitHub Action), so a phone that
- *    was offline for weeks still gets every draw it missed.
+ * 1. This repository's own copy of the full history (refreshed twice a day by a GitHub Action; HEAD is the
+ *    default branch, whatever its name), so a phone that was offline for weeks still gets every draw it missed.
  * 2. The newest results straight from the sites: astroluna.co for the chance draws (last 100, with the quinta),
  *    loteriasdehoy.co if that fails, and baloto.com, the official site, for Baloto, Revancha and MiLoto.
  * 3. Whatever is already stored stays: results are only ever added or completed, never removed.
+ * Every fetch reports the draws that weren't stored before, so they can be announced.
  */
 final class Fetcher {
     private Fetcher() {}
@@ -57,25 +59,26 @@ final class Fetcher {
         throw new IllegalArgumentException(month);
     }
 
-    /** One line per source for the status card. */
+    /** What a fetch did: one line per source for the status card, and the draws that are new. */
     static final class Status {
         final List<String[]> lines = new ArrayList<>(); // {name, ok/fail, detail}
+        final List<Draw> fresh = new ArrayList<>();
         int added;
     }
 
-    /** Fetches everything; safe to call from a background thread. `everything` also re-reads the repository copy. */
+    /** Everything: the repository copy (at most every 3 hours unless `everything`) and every site. */
     static Status refresh(Context c, History h, boolean everything) {
         Status st = new Status();
         SharedPreferences sp = Data.sp(c);
         long now = System.currentTimeMillis();
-
-        // 1. the repository's full history, at most every 3 hours unless asked
         if (everything || now - sp.getLong("repoAt", 0) > 3 * 3600_000L) {
             int added = 0, ok = 0;
             String err = null;
             for (Game g : Game.ALL) {
                 try {
+                    List<Draw> before = h.all(g);
                     added += h.addCsv(g, Net.get(REPO + g.id + ".csv"));
+                    collectNew(h, g, before, st.fresh);
                     ok++;
                 } catch (Exception e) {
                     err = e.getMessage();
@@ -83,35 +86,72 @@ final class Fetcher {
             }
             if (ok > 0) sp.edit().putLong("repoAt", now).apply();
             st.added += added;
-            st.lines.add(new String[]{"Full history (GitHub)", ok > 0 ? "ok" : "fail",
-                    ok > 0 ? (added + " new or completed draws, " + ok + " of " + Game.ALL.length + " files") : String.valueOf(err)});
+            st.lines.add(new String[]{T.t("Full history (GitHub)"), ok > 0 ? "ok" : "fail",
+                    ok > 0 ? T.f("%d new or completed draws, %d of %d files", added, ok, Game.ALL.length) : String.valueOf(err)});
         }
+        sites(h, java.util.Arrays.asList(Game.ALL), st);
+        finish(c, h, st, true);
+        return st;
+    }
 
-        // 2. chance: astroluna, loteriasdehoy as a fallback
-        for (Game g : Game.ALL) {
-            if (!g.digits()) continue;
-            int added = 0;
-            String src = "astroluna.co", err = null;
+    /** Only the sites of the given draws (for the background check after a draw). */
+    static Status latest(Context c, History h, Collection<Game> games) {
+        Status st = new Status();
+        sites(h, games, st);
+        finish(c, h, st, false);
+        return st;
+    }
+
+    private static void finish(Context c, History h, Status st, boolean log) {
+        if (st.added > 0) Data.save(c, h);
+        SharedPreferences.Editor e = Data.sp(c).edit().putLong("fetchAt", System.currentTimeMillis());
+        if (log) {
+            StringBuilder sb = new StringBuilder();
+            for (String[] l : st.lines) sb.append(l[0]).append('\t').append(l[1]).append('\t').append(l[2]).append('\n');
+            e.putString("fetchLog", sb.toString());
+        }
+        e.apply();
+    }
+
+    private static void collectNew(History h, Game g, List<Draw> before, List<Draw> fresh) {
+        java.util.Set<LocalDate> had = new java.util.HashSet<>();
+        for (Draw d : before) had.add(d.date);
+        for (Draw d : h.all(g)) if (!had.contains(d.date)) fresh.add(d);
+    }
+
+    private static void sites(History h, Collection<Game> games, Status st) {
+        boolean baloto = false, miloto = false;
+        for (Game g : games) {
+            if (g == Game.BALOTO || g == Game.REVANCHA) baloto = true;
+            else if (g == Game.MILOTO) miloto = true;
+            else chance(h, g, st);
+        }
+        if (baloto) baloto(h, st);
+        if (miloto) miloto(h, st);
+    }
+
+    private static void chance(History h, Game g, Status st) {
+        int added = 0;
+        String src = "astroluna.co", err = null;
+        try {
+            added = parseChance(h, g, Net.get("https://www.astroluna.co/" + ASTRO.get(g.id)), ASTRO_ROW, st.fresh);
+            if (added < 0) throw new IllegalStateException(T.t("no results on the page"));
+        } catch (Exception e) {
+            err = e.getMessage();
             try {
-                added = parseChance(h, g, Net.get("https://www.astroluna.co/" + ASTRO.get(g.id)), ASTRO_ROW);
-                if (added < 0) throw new IllegalStateException("no results on the page");
-            } catch (Exception e) {
-                err = e.getMessage();
-                try {
-                    src = "loteriasdehoy.co";
-                    added = parseChance(h, g, Net.get("https://loteriasdehoy.co/" + g.id), LDH_ROW);
-                    if (added < 0) throw new IllegalStateException("no results on the page");
-                    err = null;
-                } catch (Exception e2) {
-                    err = err + "; " + e2.getMessage();
-                }
+                src = "loteriasdehoy.co";
+                added = parseChance(h, g, Net.get("https://loteriasdehoy.co/" + g.id), LDH_ROW, st.fresh);
+                if (added < 0) throw new IllegalStateException(T.t("no results on the page"));
+                err = null;
+            } catch (Exception e2) {
+                err = err + "; " + e2.getMessage();
             }
-            if (added > 0) st.added += added;
-            st.lines.add(new String[]{g.name, err == null ? "ok" : "fail",
-                    err == null ? (added + " new · " + src) : String.valueOf(err)});
         }
+        if (added > 0) st.added += added;
+        st.lines.add(new String[]{g.name, err == null ? "ok" : "fail", err == null ? T.f("%d new · %s", Math.max(0, added), src) : String.valueOf(err)});
+    }
 
-        // 3. Baloto + Revancha and MiLoto from the official site: newest page, more while pages bring new draws
+    private static void baloto(History h, Status st) {
         try {
             int added = 0;
             for (int page = 1; page <= 20; page++) {
@@ -122,17 +162,25 @@ final class Fetcher {
                     rows++;
                     Game g = m.group(6).equals("baloto") ? Game.BALOTO : Game.REVANCHA;
                     Draw d = Draw.parse(g, date(m.group(1), m.group(2), m.group(3)), m.group(7), balls(m.group(4)), m.group(5));
-                    if (d != null && h.put(d)) n++;
+                    if (d == null) continue;
+                    boolean isNew = h.on(g, d.date) == null;
+                    if (h.put(d)) {
+                        n++;
+                        if (isNew) st.fresh.add(d);
+                    }
                 }
-                if (rows == 0 && page == 1) throw new IllegalStateException("no results on the page");
+                if (rows == 0 && page == 1) throw new IllegalStateException(T.t("no results on the page"));
                 added += n;
                 if (n == 0) break;
             }
             st.added += added;
-            st.lines.add(new String[]{"Baloto + Revancha", "ok", added + " new · baloto.com"});
+            st.lines.add(new String[]{"Baloto + Revancha", "ok", T.f("%d new · %s", added, "baloto.com")});
         } catch (Exception e) {
             st.lines.add(new String[]{"Baloto + Revancha", "fail", String.valueOf(e.getMessage())});
         }
+    }
+
+    private static void miloto(History h, Status st) {
         try {
             int added = 0;
             for (int page = 1; page <= 20; page++) {
@@ -142,27 +190,26 @@ final class Fetcher {
                 while (m.find()) {
                     rows++;
                     Draw d = Draw.parse(Game.MILOTO, date(m.group(1), m.group(2), m.group(3)), m.group(5), balls(m.group(4)), "");
-                    if (d != null && h.put(d)) n++;
+                    if (d == null) continue;
+                    boolean isNew = h.on(Game.MILOTO, d.date) == null;
+                    if (h.put(d)) {
+                        n++;
+                        if (isNew) st.fresh.add(d);
+                    }
                 }
-                if (rows == 0 && page == 1) throw new IllegalStateException("no results on the page");
+                if (rows == 0 && page == 1) throw new IllegalStateException(T.t("no results on the page"));
                 added += n;
                 if (n == 0) break;
             }
             st.added += added;
-            st.lines.add(new String[]{"MiLoto", "ok", added + " new · baloto.com"});
+            st.lines.add(new String[]{"MiLoto", "ok", T.f("%d new · %s", added, "baloto.com")});
         } catch (Exception e) {
             st.lines.add(new String[]{"MiLoto", "fail", String.valueOf(e.getMessage())});
         }
-
-        if (st.added > 0) Data.save(c, h);
-        StringBuilder log = new StringBuilder();
-        for (String[] l : st.lines) log.append(l[0]).append('\t').append(l[1]).append('\t').append(l[2]).append('\n');
-        sp.edit().putLong("fetchAt", now).putString("fetchLog", log.toString()).apply();
-        return st;
     }
 
-    /** Returns the number of new draws, or -1 if the page had no result rows at all. */
-    private static int parseChance(History h, Game g, String html, Pattern row) {
+    /** Returns the number of new or completed draws, or -1 if the page had no result rows at all. */
+    private static int parseChance(History h, Game g, String html, Pattern row, List<Draw> fresh) {
         Matcher m = row.matcher(html);
         int rows = 0, added = 0;
         while (m.find()) {
@@ -170,7 +217,12 @@ final class Fetcher {
             try {
                 Draw d = Draw.parse(g, date(m.group(1), m.group(2), m.group(3)), "", m.group(4),
                         m.group(5) == null ? "" : m.group(5));
-                if (d != null && h.put(d)) added++;
+                if (d == null) continue;
+                boolean isNew = h.on(g, d.date) == null;
+                if (h.put(d)) {
+                    added++;
+                    if (isNew) fresh.add(d);
+                }
             } catch (IllegalArgumentException ignored) { }
         }
         return rows == 0 ? -1 : added;

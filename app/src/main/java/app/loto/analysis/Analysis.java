@@ -88,7 +88,15 @@ final class Analysis {
         return out;
     }
 
-    static final String[] POS = {"1st", "2nd", "3rd", "4th"};
+    /** "1st".."4th" / "1ª".."4ª" digit position. */
+    static String pos(int i) {
+        switch (i) {
+            case 0: return T.t("1st");
+            case 1: return T.t("2nd");
+            case 2: return T.t("3rd");
+            default: return T.t("4th");
+        }
+    }
 
     static Freq frequency(Sample s) {
         Freq f = new Freq();
@@ -118,7 +126,7 @@ final class Analysis {
             for (int i = 0; i < k; i++) {
                 for (int v = 0; v < 10; v++) {
                     int gap = last[i][v] < 0 ? D : D - 1 - last[i][v];
-                    f.positions[i][v] = new Cell(v + " (" + POS[i] + ")", v, i, cnt[i][v], e, sd, gap);
+                    f.positions[i][v] = new Cell(T.f("%d (%s)", v, pos(i)), v, i, cnt[i][v], e, sd, gap);
                     if (e > 0) chi += (cnt[i][v] - e) * (cnt[i][v] - e) / e;
                 }
             }
@@ -265,7 +273,7 @@ final class Analysis {
         d.observed = new double[g.count + 1];
         d.expected = new double[g.count + 1];
         for (int e = 0; e <= g.count; e++) {
-            d.labels[e] = e + " even / " + (g.count - e) + " odd";
+            d.labels[e] = T.f("%d even / %d odd", e, g.count - e);
             d.expected[e] = pr[e] * s.size();
         }
         double sum = 0, sq = 0;
@@ -361,8 +369,15 @@ final class Analysis {
     // ================================================================ repeats
 
     /** Chance only: the five shapes a 4-digit number can have, as in the poker test. */
-    static final String[] PATTERNS = {"All different (ABCD)", "One pair (AABC)", "Two pairs (AABB)",
-            "Three of a kind (AAAB)", "Four of a kind (AAAA)"};
+    static String patternName(int i) {
+        switch (i) {
+            case 0: return T.t("All different (ABCD)");
+            case 1: return T.t("One pair (AABC)");
+            case 2: return T.t("Two pairs (AABB)");
+            case 3: return T.t("Three of a kind (AAAB)");
+            default: return T.t("Four of a kind (AAAA)");
+        }
+    }
     static final double[] PATTERN_P = {0.504, 0.432, 0.027, 0.036, 0.001};
 
     static int pattern(Draw d) {
@@ -382,7 +397,8 @@ final class Analysis {
 
     static Dist patterns(Sample s) {
         Dist d = new Dist();
-        d.labels = PATTERNS.clone();
+        d.labels = new String[5];
+        for (int i = 0; i < 5; i++) d.labels[i] = patternName(i);
         d.observed = new double[5];
         d.expected = new double[5];
         for (Draw x : s.draws) d.observed[pattern(x)]++;
@@ -418,7 +434,7 @@ final class Analysis {
         d.expected = new double[k + 1];
         int pairs = Math.max(0, s.size() - 1);
         for (int m = 0; m <= k; m++) {
-            d.labels[m] = m + (g.digits() ? " in the same place" : " shared");
+            d.labels[m] = g.digits() ? T.f("%d in the same place", m) : T.f("%d shared", m);
             d.expected[m] = pr[m] * pairs;
         }
         for (int t = 1; t < s.size(); t++) d.observed[repeatsBetween(s.draws.get(t - 1), s.draws.get(t))]++;
@@ -470,7 +486,7 @@ final class Analysis {
                 if (j > 0) sb.append(", ");
                 Draw d = l.get(j);
                 sb.append(Fmt.date(d.date));
-                if (s.games.size() > 1) sb.append(" (").append(d.game.shortName).append(')');
+                if (s.games.size() > 1) sb.append(" (").append(d.game.shortName()).append(')');
             }
             r.lines.add(sb.toString());
         }
@@ -542,12 +558,12 @@ final class Analysis {
                     if (a.digits() && p[0].lastTwo() == p[1].lastTwo()) r.sameEnding++;
                     boolean notable = a.digits() ? (p[0].lastTwo() == p[1].lastTwo() || m >= 3) : m >= 3;
                     if (notable) {
-                        r.examples.add(Fmt.date(day) + ":  " + a.shortName + " " + p[0].numbersText() + "  ·  "
-                                + b.shortName + " " + p[1].numbersText());
+                        r.examples.add(Fmt.date(day) + ":  " + a.shortName() + " " + p[0].numbersText() + "  ·  "
+                                + b.shortName() + " " + p[1].numbersText());
                     }
                 }
                 for (int m = 0; m <= k; m++) {
-                    d.labels[m] = m + (a.digits() ? " in the same place" : " shared");
+                    d.labels[m] = a.digits() ? T.f("%d in the same place", m) : T.f("%d shared", m);
                     d.expected[m] = pr[m] * r.days;
                 }
                 r.shared = finish(d, r.days);
@@ -623,10 +639,10 @@ final class Analysis {
                 if (dateLike(d.value())) dates++;
                 if (pattern(d) == 4) aaaa++;
             }
-            addShape(c, "Mirror numbers (ABBA, e.g. 1221)", pal, D, 100 / 10000.0);
-            addShape(c, "Straight runs (1234, 8765)", run, D, 14 / 10000.0);
-            addShape(c, "Four of a kind (0000–9999)", aaaa, D, 10 / 10000.0);
-            addShape(c, "Look like a date (DDMM, e.g. 2512)", dates, D, DATE_LIKE / 10000.0);
+            addShape(c, T.t("Mirror numbers (ABBA, e.g. 1221)"), pal, D, 100 / 10000.0);
+            addShape(c, T.t("Straight runs (1234, 8765)"), run, D, 14 / 10000.0);
+            addShape(c, T.t("Four of a kind (0000–9999)"), aaaa, D, 10 / 10000.0);
+            addShape(c, T.t("Look like a date (DDMM, e.g. 2512)"), dates, D, DATE_LIKE / 10000.0);
             return c;
         }
         int N = g.max, k = g.count;
@@ -674,14 +690,14 @@ final class Analysis {
         c.tripleCount = (int) triples;
         if (!tl.isEmpty()) c.tripleMaxP = maxP(tl.get(0)[3], et, triples);
         double pCons = 1 - Combi.choose(N - k + 1, k) / Combi.choose(N, k);
-        addShape(c, "At least two consecutive numbers (e.g. 17·18)", consecutive, D, pCons);
+        addShape(c, T.t("At least two consecutive numbers (e.g. 17·18)"), consecutive, D, pCons);
         int low = 0;
         for (Draw d : s.draws) {
             boolean allLow = true;
             for (int v : d.nums) if (v > 31) allLow = false;
             if (allLow) low++;
         }
-        addShape(c, "All numbers 31 or lower (birthday picks)", low, D, Combi.choose(31, k) / Combi.choose(N, k));
+        addShape(c, T.t("All numbers 31 or lower (birthday picks)"), low, D, Combi.choose(31, k) / Combi.choose(N, k));
         return c;
     }
 

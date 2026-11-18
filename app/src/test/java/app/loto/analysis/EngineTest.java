@@ -138,9 +138,12 @@ public class EngineTest {
         assertTrue(Holidays.isHoliday(LocalDate.of(2026, 11, 2)));  // All Saints, moved to Monday
         assertTrue(Holidays.isHoliday(LocalDate.of(2026, 11, 16))); // Cartagena, moved to Monday
         assertFalse(Holidays.isHoliday(LocalDate.of(2026, 11, 17)));
-        assertNull(Game.DORADO_MANANA.timeOn(LocalDate.of(2026, 11, 16)));
-        assertEquals("11:00 a.m.", Game.DORADO_MANANA.timeOn(LocalDate.of(2026, 11, 17)));
-        assertEquals("2:00 p.m.", Game.PAISITA_DIA.timeOn(LocalDate.of(2026, 11, 16)));
+        assertEquals(-1, Game.DORADO_MANANA.timeOn(LocalDate.of(2026, 11, 16)));
+        assertEquals(Game.hm(11, 0), Game.DORADO_MANANA.timeOn(LocalDate.of(2026, 11, 17)));
+        assertEquals("11:00 a.m.", Fmt.time(Game.DORADO_MANANA.timeOn(LocalDate.of(2026, 11, 17))));
+        assertEquals(Game.hm(14, 0), Game.PAISITA_DIA.timeOn(LocalDate.of(2026, 11, 16)));
+        assertEquals("Mon–Sat 11:00 a.m. (no draw on public holidays)", Game.DORADO_MANANA.scheduleText());
+        assertEquals("Mon, Tue, Thu, Fri 10:00 p.m.", Game.MILOTO.scheduleText());
         assertEquals(2, Game.DORADO_MANANA.longestRegularGap());
         assertEquals(3, Game.BALOTO.longestRegularGap());
         assertEquals("Mon, Wed, Sat 11:00 p.m.", Game.BALOTO.scheduleText());

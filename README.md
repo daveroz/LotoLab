@@ -2,7 +2,8 @@
 
 Results, statistics and honest predictions for **Dorado, Paisita, Baloto and MiLoto**: every daily draw
 (morning, afternoon, night) with its day of the week, years of history, frequency analysis, randomness
-tests, suggested combinations with their reasoning, and a careful check for signs of manipulation. No
+tests, suggested combinations with their reasoning, a careful check for signs of manipulation, and a
+notification when a result is announced. In Spanish or English, following the phone's language. No
 accounts, no API keys, no ads. A native Android app in plain Java, like Worldly.
 
 ## Get the APK
@@ -26,7 +27,10 @@ and aren't published to the `latest` release. (The same keystore as Worldly's wo
 1. Install the APK (allow "install unknown apps").
 2. Open **LotoLab**. The bundled history loads at once; the newest results are fetched in the background
    (↻ fetches again).
-3. Choose a lottery, a draw (or all of its draws) and a period (30 days, 90 days, 1 year, all), then a tab.
+3. Swipe left or right through the lotteries' emblems (or tap the one at the side), choose one of its draws
+   (Mañana / Tarde / Noche, Día / Noche / 3, Baloto / Revancha) or all of them, then a tab. It always opens
+   on **Summary**; the other tabs, with their period (30 days, 90 days, 1 year, all), are for going deeper.
+4. Allow notifications when asked (Android 13+) to be told as soon as a result is out.
 
 ## Lotteries and draws
 
@@ -50,16 +54,39 @@ History bundled with the app (kept current twice a day, see below): Baloto and R
 (every draw in the official archive), MiLoto from October 2023 (practically every draw since it started),
 the chance draws from early 2023. Every result is stored by lottery, draw, date and weekday.
 
-## The six tabs
+## The seven tabs
 
 | Tab | What it shows |
 |---|---|
-| **Results** | Today's draws across all lotteries, grouped morning / afternoon / night, with their result or the time they play. The lottery's schedule. Every stored result grouped by date with the full weekday name, filterable by day of the week. How much history is stored, from when, and which sources answered on the last refresh |
+| **Summary** | What matters at a glance for the chosen lottery and draw: the latest result with its randomness audit (ordinary or unusual, and why), when it plays next and its schedule, the suggested pick of the chosen model (the most probable combination under it, its estimate next to the theoretical probability, the backtest), a checker that sets any number you type beside that pick (odds, model estimate, times drawn, endings or partial matches, how common its shape is), and the notification switch for that lottery |
+| **History** | Every stored result grouped by date with the full weekday name and time, filterable by day of the week, each with its randomness audit. How much history is stored, from when, and which sources answered on the last refresh |
 | **Stats** | Hot and cold numbers (bars against the fair-draw expectation; for chance a heat map of each digit in each position), longest-absent numbers, the two- and three-digit endings, superbalota / quinta. Repeats: inside one number (poker shapes like 1123 or 7777), from one draw to the next, between draws held the same day (e.g. Dorado Mañana vs Tarde, Baloto vs Revancha) and identical results (with the "birthday problem" expectation). Even/odd split per draw. Recurring pairs and triples, shapes (consecutive numbers, birthday-only picks, mirror numbers, dates). Sum of the numbers. Results by day of the week. Every figure comes with its expected value and a p-value saying whether the difference is beyond chance |
-| **Randomness** | A 0–100 randomness score for the selection and for each draw series of the lottery, the 11–13 tests behind it (with plain-language questions, observed vs expected, p-values before and after correction), a typicality score for every single draw, the most unusual draws of the period, and how many unusual draws chance alone predicts |
-| **Picks** | Suggested combinations from seven models: hot numbers, recent form, overdue, Bayesian (fair-adjusted), typical shape, least shared, quick pick. For each: the combination with the highest probability under that model, alternatives, the reasoning number by number, the model's estimate next to the theoretical probability, and a backtest replaying the last 100 draws to show whether the model would really have beaten chance |
+| **Randomness** | A 0–100 randomness score for the selection and for each draw series of the lottery, the 11–13 tests behind it (with plain-language questions, observed vs expected, p-values before and after correction), the most unusual draws of the period, and how many unusual draws chance alone predicts |
+| **Picks** | The seven models in depth: hot numbers, recent form, overdue, Bayesian (fair-adjusted), typical shape, least shared, quick pick. For each: the combination with the highest probability under that model, alternatives, the reasoning number by number, the model's estimate next to the theoretical probability, and a backtest replaying the last 100 draws to show whether the model would really have beaten chance. The model chosen here is the one Summary uses |
 | **Integrity** | Every test on every draw series of the lottery, same-day comparisons between series and a popular-number avoidance test, all corrected together; anything significant is re-tested on each half of the period. Graded as *no sign*, *anomaly (likely chance)*, *persistent deviation* or *data problem*, with what that does and doesn't mean |
-| **Odds** | The chance of the top prize ("1 in 15,401,568" for Baloto), every prize tier, the probability of any single combination, what playing every draw for a year adds up to, and a checker: type a combination to see its probability and how it has done historically |
+| **Odds** | The chance of the top prize ("1 in 15,401,568" for Baloto), every prize tier, the probability of any single combination, and what playing every draw for a year adds up to |
+
+## Notifications
+About ten minutes after each draw of a lottery you follow, the app checks that draw's source (only that
+one) and posts a notification with the numbers and the draw's audit: "Dorado Mañana · 2820 · quinta 2 —
+Tuesday 17 November · ordinary draw (63/100)". If the result isn't published yet it checks again every
+15 minutes for up to four hours. It uses an alarm Android lets fire in battery-saving mode (no exact-alarm
+permission) and a job that waits for a network; a job every three hours re-arms it, and it's re-armed after
+a restart or an update. Each lottery has its own on/off switch on Summary (all on by default). Tapping a
+notification opens that lottery and draw on Summary. Results the app already showed you aren't announced.
+
+## Language
+Spanish when the phone is set to Spanish, English otherwise: every text, the statistics' explanations, the
+notifications, and the formats (1 entre 15.401.568, martes 17 de noviembre, 3:30 p. m.). `T.java` routes
+each English text to its Spanish version in `Es.java`; a unit test fails if any text lacks one or a
+translation changes a placeholder.
+
+## Emblems
+Each lottery has an original emblem drawn for the app (a golden sun for Dorado, Antioquian mountains for
+Paisita, a ball with a red band for Baloto, three balls for MiLoto), not the official logos, which are the
+operators' trademarks. To use an official logo you have the right to, put it in the app as
+`app/src/main/assets/logos/<lottery>.png` (`dorado.png`, `paisita.png`, `baloto.png`, `miloto.png`,
+square, transparent background); the carousel uses it instead of the emblem.
 
 ## The mathematics
 
@@ -127,9 +154,12 @@ Engine (plain Java, no Android, tested on the JVM in `app/src/test`): `Game` (th
 schedules and formats), `Holidays` (Colombian holidays), `Draw`, `History` (CSV store), `Sample`,
 `Combi` (combinatorics, distributions, Holm), `Analysis` (frequencies, repeats, even/odd, combinations,
 sums), `Randomness` + `TestResult` (tests, score, single draws), `Integrity`, `Predictor`, `Odds`, `Fmt`.
-App: `MainActivity` (selectors, tabs, background work), `ResultsTab`, `StatsTab`, `RandomTab`, `PicksTab`,
-`IntegrityTab`, `OddsTab`, `Charts` (bars, distributions, heat map, gauge), `Ui` (cards, chips, balls),
-`Data` (bundled + stored history), `Fetcher` (sources), `Net`, and from Worldly `Theme` and `StageView`.
+Language: `T` (device language, number formats) and `Es` (the Spanish texts), plus `Fmt` for dates and times.
+App: `MainActivity` (carousel, selectors, tabs, background work), `LogoCarousel`, `SummaryTab`, `HistoryTab`,
+`StatsTab`, `RandomTab`, `PicksTab`, `IntegrityTab`, `OddsTab`, `Charts` (bars, distributions, heat map,
+gauge), `Ui` (cards, chips, balls), `Data` (bundled + stored history), `Fetcher` (sources), `Net`,
+`Notifier` + `DrawAlarmReceiver` + `ResultJobService` + `BootReceiver` (notifications), and from Worldly
+`Theme` and `StageView`.
 
 ## Visual language
 The same "light in fog" as Worldly and SAB Monitor: a dark stage in amber haze with a chase of lamps along

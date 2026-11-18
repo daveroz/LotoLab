@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification icon: a ball (ring) with a star inside (white; the system tints it) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+        android:pathData="M12,2.5a9.5,9.5 0,1 0,0.01 0z M12,4.6a7.4,7.4 0,1 1,-0.01 0z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M12.00,6.80 L13.35,10.54 L17.33,10.67 L14.19,13.11 L15.29,16.93 L12.00,14.70 L8.71,16.93 L9.81,13.11 L6.67,10.67 L10.65,10.54 z" />
+</vector>
