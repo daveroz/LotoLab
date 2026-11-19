@@ -269,24 +269,6 @@ final class Ui {
         }
     }
 
-    /** A small action: an icon in a bubble of glass (a rounded square), thumb-sized. */
-    View iconButton(Icon.Kind kind, String description, int sizeDp, View.OnClickListener l) {
-        Icon i = new Icon(a, kind, Theme.AMBER_LIGHT);
-        int pad = dp(sizeDp) * 3 / 10;
-        i.setPadding(pad, pad, pad, pad);
-        i.setBackground(Theme.glassPressable(a, 0, Glass.Tone.BUBBLE));
-        i.setClickable(true);
-        i.setFocusable(true);
-        i.setContentDescription(description);
-        i.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_YES);
-        i.setOnClickListener(v -> {
-            v.performHapticFeedback(android.view.HapticFeedbackConstants.VIRTUAL_KEY);
-            l.onClick(v);
-        });
-        i.setLayoutParams(new LinearLayout.LayoutParams(dp(sizeDp), dp(sizeDp)));
-        return i;
-    }
-
     /**
      * A setting that's just on or off: its name in spaced amber capitals, as a section title, and a switch beside it;
      * the whole row toggles it. {@code description} is what a screen reader says.

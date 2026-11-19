@@ -26,9 +26,9 @@ and aren't published to the `latest` release. (The same keystore as Worldly's wo
 
 ## Install & use
 1. Install the APK (allow "install unknown apps").
-2. Open **LotoLab**. The bundled history loads at once; the newest results are fetched in the background
-   (the ↻ button in the top corner fetches again, and turns while it does). The screen starts straight
-   with the lotteries' logos: there's no title bar.
+2. Open **LotoLab**. The bundled history loads at once; the newest results are fetched in the background,
+   by themselves: on opening, on coming back after a while, and every 15 minutes while the app is open.
+   There's no refresh button and no title bar: the screen starts straight with the lotteries' logos.
 3. Swipe left or right through the lotteries' logos (or tap the one at the side), choose one of its draws
    (Mañana / Tarde / Noche, Baloto / Revancha), then a tab. Switching lottery always starts on its first draw
    (Dorado Mañana, Baloto). It opens on **Summary**; the other tabs are for going deeper, always over the
@@ -158,7 +158,7 @@ MiLoto ($4.000) prizes come from each draw's pool and aren't fixed, so the app d
   waits between requests.
 - **The app** merges three layers: the history bundled in the APK, the repository's copy (fetched at most
   every 3 hours, so a phone that was offline for weeks catches up), and the newest results straight from
-  the sites. It refreshes on start and when reopened after 15 minutes. Results are only ever added or
+  the sites. It refreshes on start, when reopened after 15 minutes, and every 15 minutes while it's open. Results are only ever added or
   completed (a quinta or draw number filled in), never removed. Everything is stored on the phone, so it
   works offline with what it has.
 
@@ -193,8 +193,7 @@ Controls are Fuji-App's: the lottery's draws and the sections (Summary, History,
 controls of the same size, a recessed well with the chosen one a lighter lens of glass; a set of choices (the
 amount bet) is equal cells across the card, the chosen one lit (an amber wash with the light bleeding in from a
 glowing edge, inside its bounds, so it's never bigger than the others); notifications are a glass switch; the
-key action of a card is solid amber; small actions are icons in bubbles of glass (refresh sits alone in the top
-corner); status lights are lamps blooming in their colour. Icons are solid, drawn in code (`Icon`). Carbon+ type throughout. The analysis adds
+key action of a card is solid amber; status lights are lamps blooming in their colour. Icons are solid, drawn in code (`Icon`). Carbon+ type throughout. The analysis adds
 a cool blue for "cold" / below expectation and coral for strong deviations.
 
 ## Play responsibly
