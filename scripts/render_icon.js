@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /*
- * LotoLab's launcher icon, in the family style of Worldly and SAB Monitor (a graphite stage over a tilted street
- * grid, a vignette, a hairline edge, a dark disc ringed in amber with three coloured dots and an amber marker),
- * lit the way Worldly's widgets are since 1.55: light sources in a dark, hazy room. The histogram of draws is a
- * small wall of square lamps with warm, overexposed cores (white-hot only at the top), blooming into the gaps and
- * scattering in a haze above each lit column; the fair-draw curve is a thread of light with a tight glow and a wide
- * bloom; the drawn ball is lit like a lamp; two banks of fog drift over the stage, and film grain lies over it all.
+ * LotoLab's launcher icon: a lottery ball whose band is a ring chart of probabilities, around its number, on the
+ * family stage of Worldly's and SAB Monitor's icons (a graphite stage over a tilted street grid, a vignette, a
+ * hairline edge) with the family's three coloured dots as the other balls of the draw. Lit the way Worldly's widgets
+ * are since 1.55, as light sources in a dark, hazy room: the band's shares glow from a white-hot share down to a deep
+ * amber one, blooming into the haze; the ball is dark glass with a gloss; the light warms the stage's air, two banks
+ * of fog drift over it, and film grain lies over it all.
  *
- * Writes assets/icon.svg (the 512 × 512 master) and the adaptive icon's layers as PNGs in every density
+ * Writes assets/icon.svg (the 512 × 512 master) and the adaptive icon's layers as WebP in every density
  * (app/src/main/res/mipmap-*dpi/ic_launcher_{background,foreground}.webp), plus the themed-icon silhouette
  * (app/src/main/res/drawable/ic_launcher_monochrome.xml). Run from the repository root:
  *
@@ -22,7 +22,6 @@ const KEY = '#eb9438';  // the key light
 const HOT = '#ffb64e';  // the key overexposed: the warm core of a lit lamp
 const DEEP = '#d8750b'; // the key richer and deeper: light seen through haze (bloom, halo, fog)
 const LED = '#faf2e7';  // the near-white of an LED's core
-const RING = '#df8b35'; // the family's amber line work
 
 // ---------------------------------------------------------------- the family's stage
 // The street grid of Worldly's and SAB Monitor's icons (same lines, extended so the adaptive layer's margins are
@@ -43,38 +42,56 @@ function grid() {
     + `<g transform="rotate(-16 256 256)"><rect x="40" y="318" width="110" height="64" rx="6" fill="#18241f" opacity=".9"/></g>`; // the park
 }
 
-// ---------------------------------------------------------------- the lamps: a histogram of draws
-const LAMP = 26, PITCH = 34, ROWS = 5;
-const LIT = [2, 3, 5, 4, 3, 1];           // lit lamps per column: more draws in the middle, as a fair draw gives
-const WALL_X = 256 - (LIT.length * PITCH - (PITCH - LAMP)) / 2;
-const BASE = 334;                          // the bottom of the wall
-const lampX = i => WALL_X + i * PITCH;
-const lampY = k => BASE - LAMP - k * PITCH; // k = 0 is the bottom row
+// ---------------------------------------------------------------- the ball
+const BALL = { x: 256, y: 250, r: 150, band: 40 }; // r: the middle of the band
+const SHARES = [0.32, 0.22, 0.18, 0.15, 0.13];     // the ring chart, largest first, from the top clockwise
+const SHADES = [LED, HOT, KEY, '#c97624', '#8a4a12'];
+const LABEL = 86;                                   // the ball's light disc
+const DOTS = [[108, 112, 14, 'cyan'], [410, 120, 11, 'yellow'], [404, 404, 12, 'green']];
+const DOT_COLOURS = { cyan: ['#9af0ff', '#2a9db3', '#67e8f9'], yellow: ['#ffe066', '#c79a0c', '#facc15'], green: ['#6ee7a0', '#178a4a', '#22c55e'] };
+// Carbon+ Bold's "7" (font units, y up; bounds x 70–488, y 0–580), so the master needs no font
+const SEVEN = 'M488 580H70V487H379V477C379 407 170 320 170 169V0H274V174C274 288 488 359 488 494Z';
 
-const CURVE = 'M146,330 C192,328 204,150 256,148 C308,150 320,328 366,330';
-const BALL = { x: 256, y: 112, r: 21 };
-const DOTS = [[176, 136, 11, '#67e8f9'], [342, 120, 9, '#facc15'], [384, 252, 10, '#22c55e']];
+/** The "7" placed with its middle at (cx, cy), {@code h} tall, as absolute path data (x and y transformed alike). */
+function seven(cx, cy, h) {
+  const k = h / 580, tx = cx - 279 * k, ty = cy + 290 * k;
+  const X = v => +(tx + v * k).toFixed(2), Y = v => +(ty - v * k).toFixed(2);
+  return SEVEN.replace(/([MHVCZ])([^MHVCZ]*)/g, (m, cmd, args) => {
+    const n = args.trim() ? args.trim().split(/[\s,]+/).map(Number) : [];
+    if (cmd === 'H') return 'H' + X(n[0]);
+    if (cmd === 'V') return 'V' + Y(n[0]);
+    if (cmd === 'Z') return 'Z';
+    return cmd + n.map((v, i) => (i % 2 ? Y(v) : X(v))).join(' ');
+  });
+}
+
+/** The band's arcs: {d, i} for each share, a small gap between them. */
+function arcs(cx = BALL.x, cy = BALL.y, r = BALL.r) {
+  const out = [];
+  let a = -90;
+  SHARES.forEach((sh, i) => {
+    const sweep = sh * 360 - 6, a0 = (a + 3) * Math.PI / 180, a1 = (a + 3 + sweep) * Math.PI / 180;
+    const p = (t, v) => +(v === 'x' ? cx + r * Math.cos(t) : cy + r * Math.sin(t)).toFixed(2);
+    out.push({ i, d: `M${p(a0, 'x')} ${p(a0, 'y')}A${r} ${r} 0 ${sweep > 180 ? 1 : 0} 1 ${p(a1, 'x')} ${p(a1, 'y')}` });
+    a += sh * 360;
+  });
+  return out;
+}
 
 /** The shared definitions; the grain's specks are about {@code pxPerUnit}-scaled pixels, so they stay one or two pixels wide. */
 function defs(pxPerUnit = 1) {
   return `
   <linearGradient id="bg" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="512" y2="512"><stop offset="0" stop-color="#1c2230"/><stop offset="1" stop-color="#090b11"/></linearGradient>
   <radialGradient id="vig" gradientUnits="userSpaceOnUse" cx="256" cy="256" r="384"><stop offset=".35" stop-color="#0b0e15" stop-opacity="0"/><stop offset="1" stop-color="#0b0e15" stop-opacity=".85"/></radialGradient>
-  <radialGradient id="disc" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#101520" stop-opacity=".9"/><stop offset="1" stop-color="#0b0e15" stop-opacity=".94"/></radialGradient>
   <radialGradient id="washKey" gradientUnits="userSpaceOnUse" cx="430" cy="70" r="360"><stop offset="0" stop-color="${KEY}" stop-opacity=".2"/><stop offset="1" stop-color="${KEY}" stop-opacity="0"/></radialGradient>
   <radialGradient id="washLow" gradientUnits="userSpaceOnUse" cx="40" cy="470" r="300"><stop offset="0" stop-color="${KEY}" stop-opacity=".09"/><stop offset="1" stop-color="${KEY}" stop-opacity="0"/></radialGradient>
   <radialGradient id="fog" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${DEEP}" stop-opacity="1"/><stop offset="1" stop-color="${DEEP}" stop-opacity="0"/></radialGradient>
-  <radialGradient id="air" gradientUnits="userSpaceOnUse" cx="256" cy="230" r="190"><stop offset="0" stop-color="${DEEP}" stop-opacity=".16"/><stop offset="1" stop-color="${DEEP}" stop-opacity="0"/></radialGradient>
-  <linearGradient id="beam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${DEEP}" stop-opacity=".34"/><stop offset="1" stop-color="${DEEP}" stop-opacity="0"/></linearGradient>
-  <radialGradient id="core" cx=".5" cy=".45" r=".66"><stop offset="0" stop-color="${HOT}"/><stop offset=".5" stop-color="${KEY}"/><stop offset="1" stop-color="#b8600a"/></radialGradient>
-  <radialGradient id="whiteHot" cx=".5" cy=".45" r=".66"><stop offset="0" stop-color="#ffffff"/><stop offset=".3" stop-color="${LED}"/><stop offset=".7" stop-color="${HOT}"/><stop offset="1" stop-color="${KEY}"/></radialGradient>
-  <radialGradient id="ballFill" cx=".38" cy=".34" r=".7"><stop offset="0" stop-color="${LED}"/><stop offset=".35" stop-color="${HOT}"/><stop offset=".8" stop-color="${KEY}"/><stop offset="1" stop-color="${DEEP}"/></radialGradient>
-  <linearGradient id="rim" gradientUnits="userSpaceOnUse" x1="120" y1="420" x2="400" y2="90"><stop offset="0" stop-color="${RING}"/><stop offset=".6" stop-color="${KEY}"/><stop offset="1" stop-color="${HOT}"/></linearGradient>
-  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="0.7"/></filter>
+  <radialGradient id="darkBall" cx=".36" cy=".3" r=".75"><stop offset="0" stop-color="#3a3d45"/><stop offset=".5" stop-color="#16171b"/><stop offset="1" stop-color="#08090b"/></radialGradient>
+  <radialGradient id="label" cx=".42" cy=".36" r=".7"><stop offset="0" stop-color="#fffaf3"/><stop offset=".8" stop-color="#f6ead9"/><stop offset="1" stop-color="#e3cdb0"/></radialGradient>
+  ${Object.entries(DOT_COLOURS).map(([k, [c, d]]) => `<radialGradient id="${k}Ball" cx=".36" cy=".32" r=".72"><stop offset="0" stop-color="#fffaf2"/><stop offset=".22" stop-color="${c}"/><stop offset=".78" stop-color="${d}"/><stop offset="1" stop-color="#101418"/></radialGradient>`).join('')}
   <filter id="halo" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
   <filter id="bloom" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
   <filter id="wide" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="22"/></filter>
-  <filter id="haze" x="-30%" y="-10%" width="160%" height="120%"><feGaussianBlur stdDeviation="7"/></filter>
   <filter id="grain" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
     <feTurbulence type="fractalNoise" baseFrequency="${(0.62 * pxPerUnit).toFixed(4)}" numOctaves="2" seed="7" stitchTiles="stitch" result="n"/>
     <feColorMatrix in="n" type="matrix" result="light" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.55 0 0 0 -0.31"/>
@@ -95,46 +112,29 @@ function stage(x, y, w, h) {
     + `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#vig)"/>`;
 }
 
-/** The disc and everything lit on it. */
+/** The ball and the other balls of the draw. */
 function disc() {
-  const lit = [], dark = [];
-  LIT.forEach((n, i) => {
-    for (let k = 0; k < ROWS; k++) (k < n ? lit : dark).push([lampX(i), lampY(k), i, k, n]);
-  });
-  const rect = ([x, y], extra = '') => `<rect x="${x}" y="${y}" width="${LAMP}" height="${LAMP}" rx="4" ${extra}/>`;
-  const litRects = lit.map(l => rect(l)).join('');
-  // a dark lamp next to a lit one catches a little of its light
-  const near = ([, , i, k]) => (LIT[i] === k) || (i > 0 && LIT[i - 1] > k) || (i < LIT.length - 1 && LIT[i + 1] > k);
-  return `<circle cx="256" cy="256" r="184" fill="url(#disc)"/>`
-    + `<circle cx="256" cy="256" r="184" fill="url(#air)"/>`
-    // the family's inner ring and the baseline, faint, behind the light
-    + `<g fill="none" stroke="${RING}"><circle cx="256" cy="256" r="126" stroke-width="5" stroke-opacity=".28"/>`
-    + `<path d="M88 ${BASE + 12}H424" stroke-width="4" stroke-opacity=".42"/></g>`
-    // haze above each lit column: its light scattered in the air
-    + LIT.map((n, i) => `<rect x="${lampX(i) - 4}" y="${lampY(n - 1) - 120}" width="${LAMP + 8}" height="122" fill="url(#beam)" filter="url(#haze)"/>`).join('')
-    // the wall's wide glow and the tight bloom filling the gaps between lit lamps
-    + `<g fill="${DEEP}" filter="url(#wide)" opacity=".45">${litRects}</g>`
-    + `<g fill="${DEEP}" filter="url(#bloom)" opacity=".5">${litRects}</g>`
-    + `<g fill="${DEEP}" filter="url(#halo)" opacity=".55">${litRects}</g>`
-    // dark lamps: glass, catching their neighbours' light
-    + dark.map(d => rect(d, `fill="${near(d) ? '#3a2a1a' : '#1a2130'}" fill-opacity=".55" stroke="${near(d) ? '#6a4520' : '#2a3346'}" stroke-opacity=".8" stroke-width="1.5"`)).join('')
-    // lit lamps: warm cores with soft edges, white-hot at the top of the tallest columns
-    + `<g filter="url(#soft)">` + lit.map(l => rect(l, `fill="url(#${l[3] === l[4] - 1 && l[4] >= 4 ? 'whiteHot' : 'core'})"`)).join('') + `</g>`
-    // the fair-draw curve: a thread of light
-    + `<g fill="none" stroke-linecap="round"><path d="${CURVE}" stroke="${DEEP}" stroke-width="12" opacity=".6" filter="url(#bloom)"/>`
-    + `<path d="${CURVE}" stroke="${HOT}" stroke-width="6" opacity=".75" filter="url(#halo)"/>`
-    + `<path d="${CURVE}" stroke="${LED}" stroke-width="3.5"/></g>`
-    // the outer ring, lit: brightest towards the key light at the top right
-    + `<g fill="none"><circle cx="256" cy="256" r="184" stroke="${DEEP}" stroke-width="10" opacity=".5" filter="url(#bloom)"/>`
-    + `<circle cx="256" cy="256" r="184" stroke="${HOT}" stroke-width="8" opacity=".35" filter="url(#halo)"/>`
-    + `<circle cx="256" cy="256" r="184" stroke="url(#rim)" stroke-width="7"/></g>`
-    // the other balls in the drum: the family's three dots, each glowing softly
-    + DOTS.map(([x, y, r, c]) => `<circle cx="${x}" cy="${y}" r="${r * 2}" fill="${c}" opacity=".28" filter="url(#halo)"/>`
-      + `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" fill-opacity=".92"/>`).join('')
-    // the drawn ball: the family's marker, lit like a lamp
-    + `<circle cx="${BALL.x}" cy="${BALL.y}" r="${BALL.r + 6}" fill="${DEEP}" opacity=".85" filter="url(#wide)"/>`
-    + `<circle cx="${BALL.x}" cy="${BALL.y}" r="${BALL.r + 3}" fill="${HOT}" opacity=".6" filter="url(#halo)"/>`
-    + `<circle cx="${BALL.x}" cy="${BALL.y}" r="${BALL.r}" fill="url(#ballFill)" stroke="${LED}" stroke-width="5"/>`;
+  const { x, y, r, band } = BALL;
+  let out = `<circle cx="${x}" cy="${y}" r="${r + 30}" fill="${DEEP}" opacity=".35" filter="url(#wide)"/>`
+    // the ball: dark glossy glass
+    + `<circle cx="${x}" cy="${y}" r="${r + band / 2 + 6}" fill="url(#darkBall)"/>`;
+  // the band: a share of the ring for each, glowing from white-hot down to a deep amber
+  for (const { d, i } of arcs()) {
+    out += `<path d="${d}" fill="none" stroke="${DEEP}" stroke-width="${band + 10}" opacity="${i === 0 ? 0.7 : 0.35}" filter="url(#bloom)"/>`
+      + `<path d="${d}" fill="none" stroke="${SHADES[i]}" stroke-width="${band}"/>`;
+  }
+  // the ball's light disc and its number, and the gloss of a sphere
+  out += `<circle cx="${x}" cy="${y}" r="${LABEL}" fill="url(#label)"/>`
+    + `<path d="${seven(x, y + 2, 66)}" fill="#2a1606"/>`
+    + `<path d="M${x - 120} ${y - 70} A 140 140 0 0 1 ${x - 40} ${y - 132}" fill="none" stroke="#ffffff" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/>`;
+  // the other balls of the draw: the family's three dots, glossy and glowing softly
+  for (const [dx, dy, dr, k] of DOTS) {
+    const glow = DOT_COLOURS[k][2];
+    out += `<circle cx="${dx}" cy="${dy}" r="${dr * 1.5}" fill="${glow}" opacity=".3" filter="url(#wide)"/>`
+      + `<circle cx="${dx}" cy="${dy}" r="${dr + 3}" fill="${glow}" opacity=".35" filter="url(#halo)"/>`
+      + `<circle cx="${dx}" cy="${dy}" r="${dr}" fill="url(#${k}Ball)"/>`;
+  }
+  return out;
 }
 
 const grain = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" filter="url(#grain)"/>`;
@@ -155,27 +155,29 @@ const LAYER = 'viewBox="-128 -128 768 768"';
 // the files small.
 const background = px => `<svg xmlns="http://www.w3.org/2000/svg" ${LAYER}><defs>${defs(px / 768)}</defs>${stage(-128, -128, 768, 768)}`
   + `${grain(-128, -128, 768, 768)}</svg>`;
-const foreground = px => `<svg xmlns="http://www.w3.org/2000/svg" ${LAYER}><defs>${defs(px / 768)}<clipPath id="inDisc"><circle cx="256" cy="256" r="188"/></clipPath></defs>`
-  + `${disc()}<g clip-path="url(#inDisc)">${grain(-128, -128, 768, 768)}</g></svg>`;
+const foreground = px => `<svg xmlns="http://www.w3.org/2000/svg" ${LAYER}><defs>${defs(px / 768)}<clipPath id="inDisc"><circle cx="${BALL.x}" cy="${BALL.y}" r="${BALL.r + BALL.band / 2 + 6}"/></clipPath></defs>`
+  + `${disc()}<g clip-path="url(#inDisc)" opacity=".4">${grain(-128, -128, 768, 768)}</g></svg>`; // fainter on the ball's light parts
 
-/** The themed icon (Android 13+): the ring, the lit lamps, the curve and the ball, as one silhouette. */
+/** The themed icon (Android 13+): the band's shares, the light disc with its 7 cut out, and the three dots. */
 function monochrome() {
   const t = v => +((v + 128) * 108 / 768).toFixed(2);
-  const s = v => +(v * 108 / 768).toFixed(2);
-  const lamps = [];
-  LIT.forEach((n, i) => { for (let k = 0; k < n; k++) lamps.push(`M${t(lampX(i))},${t(lampY(k))}h${s(LAMP)}v${s(LAMP)}h${-s(LAMP)}z`); });
-  const curve = CURVE.replace(/-?\d+(\.\d+)?/g, m => String(t(+m))); // x and y scale alike
-  const circle = (cx, cy, r) => `M${t(cx - r)},${t(cy)}a${s(r)},${s(r)} 0,1 1,${s(2 * r)},0a${s(r)},${s(r)} 0,1 1,${-s(2 * r)},0z`;
+  const sc = v => +(v * 108 / 768).toFixed(2);
+  const inLayer = d => d.replace(/-?\d+(\.\d+)?/g, m => String(t(+m))); // absolute coordinates; x and y scale alike
+  const circle = (cx, cy, r) => `M${t(cx - r)},${t(cy)}a${sc(r)},${sc(r)} 0,1 1,${sc(2 * r)},0a${sc(r)},${sc(r)} 0,1 1,${-sc(2 * r)},0z`;
+  const band = arcs().map(({ d }) => {
+    // arcs carry radii and flags that mustn't move: rebuild each in layer units
+    const m = d.match(/M([\d.-]+) ([\d.-]+)A([\d.]+) [\d.]+ 0 (\d) 1 ([\d.-]+) ([\d.-]+)/);
+    return `M${t(+m[1])},${t(+m[2])}A${sc(+m[3])},${sc(+m[3])} 0 ${m[4]} 1 ${t(+m[5])},${t(+m[6])}`;
+  }).join('');
   return `<?xml version="1.0" encoding="utf-8"?>
-<!-- The themed-icon silhouette (generated by scripts/render_icon.js): ring, lamps, curve and ball -->
+<!-- The themed-icon silhouette (generated by scripts/render_icon.js): the ring chart, the 7 and the dots -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="${s(9)}"
-        android:pathData="${circle(256, 256, 184)}" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="${lamps.join('')}" />
-    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="${s(6)}" android:strokeLineCap="round"
-        android:pathData="${curve}" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="${circle(BALL.x, BALL.y, BALL.r + 3)}" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="${sc(BALL.band)}"
+        android:pathData="${band}" />
+    <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
+        android:pathData="${circle(BALL.x, BALL.y, LABEL)}${inLayer(seven(BALL.x, BALL.y + 2, 66))}" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="${DOTS.map(([x, y, r]) => circle(x, y, r)).join('')}" />
 </vector>
 `;
 }
@@ -199,7 +201,9 @@ async function render(page, svg, px, file) {
   fs.writeFileSync(file, Buffer.from(data.split(',')[1], 'base64'));
 }
 
-(async () => {
+module.exports = { defs, stage, grain, KEY, HOT, DEEP, LED, LAYER };
+
+if (require.main === module) (async () => {
   const root = path.resolve(__dirname, '..');
   const res = path.join(root, 'app/src/main/res');
   fs.writeFileSync(path.join(root, 'assets/icon.svg'), master());

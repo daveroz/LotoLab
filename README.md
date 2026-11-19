@@ -84,20 +84,19 @@ transforms, gradients, clip paths) so they stay sharp at any size and keep their
 logos take the theme's amber light as a gradient; multicolour ones are mapped tone by tone onto the theme.
 
 ## The app icon
-The launcher icon belongs to the same family as Worldly's and SAB Monitor's: a graphite stage over a tilted
-street grid with its avenue and park, a vignette and a hairline edge, and in the middle a dark disc ringed in
-amber with three coloured dots and an amber marker. LotoLab's disc holds a histogram of draws under the curve
-of a fair draw, and the drawn ball as the marker. It's lit the way Worldly's widgets are since 1.55, as light
-sources in a dark, hazy room: the histogram is a small wall of square lamps with warm, overexposed cores
-(white-hot only at the top of the tallest columns) blooming into the gaps and scattering in a haze above each
-lit column, while the dark lamps catch their neighbours' light; the curve is a thread of light with a tight
-glow and a wide bloom; the ring and the ball glow towards the key light at the top right; the light warms the
-air of the stage, two banks of fog drift over it, and a fine film grain, lighter and darker specks, lies over
-everything. `scripts/render_icon.js` draws it: it writes `assets/icon.svg` (the 512 × 512 master), renders
-the adaptive icon's two layers (`mipmap-*dpi/ic_launcher_background.webp` and `ic_launcher_foreground.webp`,
-WebP because grain makes PNGs several times larger) with Chromium, and writes the silhouette for themed icons
-(`drawable/ic_launcher_monochrome.xml`). Run `node scripts/render_icon.js` after changing it (it needs
-Playwright: `npm i playwright`).
+A lottery ball whose band is a ring chart of probabilities, around its number (a 7, in Carbon+): lottery
+analysis at a glance, readable down to the smallest launcher size. It belongs to the same family as Worldly's
+and SAB Monitor's icons: a graphite stage over a tilted street grid with its avenue and park, a vignette and a
+hairline edge, and the family's cyan, yellow and green dots, here the other balls of the draw. It's lit the way
+Worldly's widgets are since 1.55, as light sources in a dark, hazy room: the band's shares glow from a
+white-hot share (towards the key light at the top right) down to a deep amber one, blooming into the haze; the
+ball is dark glass with a gloss; the light warms the air of the stage, two banks of fog drift over it, and a
+fine film grain, lighter and darker specks, lies over everything (fainter on the ball's light parts).
+`scripts/render_icon.js` draws it: it writes `assets/icon.svg` (the 512 × 512 master), renders the adaptive
+icon's two layers (`mipmap-*dpi/ic_launcher_background.webp` and `ic_launcher_foreground.webp`, WebP because
+grain makes PNGs several times larger) with Chromium, and writes the silhouette for themed icons
+(`drawable/ic_launcher_monochrome.xml`: the ring chart, the light disc with its 7 cut out, and the dots). Run
+`node scripts/render_icon.js` after changing it (it needs Playwright: `npm i playwright`).
 
 ## The mathematics
 
