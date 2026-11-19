@@ -202,11 +202,11 @@ final class SummaryTab {
             nx.setTextColor(l.awaiting ? Theme.AMBER : Theme.TEXT_SOFT);
             nx.setPadding(0, ui.dp(8), 0, 0);
             lc.addView(nx);
-            if (l.missing != null) warn(a, lc, T.f("Result of %s missing. Tap ↻.", Fmt.dayMonthInline(l.missing)));
+            if (l.missing != null) warn(a, lc, T.f("Result of %s missing; checking again soon.", Fmt.dayMonthInline(l.missing)));
         }
         // only say something about the data when something is wrong with it
         if (o.fetchAt == 0) warn(a, lc, T.t("Not updated yet: showing the bundled history."));
-        else if (o.stale) warn(a, lc, T.f("Last updated %s. Tap ↻.", when(o.fetchAt)));
+        else if (o.stale) warn(a, lc, T.f("Last updated %s.", when(o.fetchAt)));
         if (o.failedSources > 0) warn(a, lc, T.f("%d source(s) didn't answer (see History).", o.failedSources));
 
         // ---- today's recommendation ----
@@ -238,11 +238,6 @@ final class SummaryTab {
                 r.advantage ? T.t("The model beats chance in the tests (see Stats).") : T.t("Same as any other number: no model beats chance.")),
                 ui.matchWrap(8));
         c.addView(ui.note(T.f("%s · %s", r.model.shortTitle(), when(l.generatedAt))), ui.matchWrap(2));
-        c.addView(ui.secondaryButton(T.t("Model ranking"), Icon.Kind.BARS, v -> {
-            a.tab = MainActivity.STATS;
-            a.buildSelectors();
-            a.render();
-        }), ui.matchWrap(10));
     }
 
     /** El Dorado: what each bet wins, net, for the amount chosen. */

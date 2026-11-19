@@ -26,9 +26,9 @@ and aren't published to the `latest` release. (The same keystore as Worldly's wo
 
 ## Install & use
 1. Install the APK (allow "install unknown apps").
-2. Open **LotoLab**. The bundled history loads at once; the newest results are fetched in the background
-   (the ↻ button in the top corner fetches again, and turns while it does). The screen starts straight
-   with the lotteries' logos: there's no title bar.
+2. Open **LotoLab**. The bundled history loads at once; the newest results are fetched in the background,
+   by themselves: on opening, on coming back after a while, and every 15 minutes while the app is open.
+   There's no refresh button and no title bar: the screen starts straight with the lotteries' logos.
 3. Swipe left or right through the lotteries' logos (or tap the one at the side), choose one of its draws
    (Mañana / Tarde / Noche, Baloto / Revancha), then a tab. Switching lottery always starts on its first draw
    (Dorado Mañana, Baloto). It opens on **Summary**; the other tabs are for going deeper, always over the
@@ -84,20 +84,19 @@ transforms, gradients, clip paths) so they stay sharp at any size and keep their
 logos take the theme's amber light as a gradient; multicolour ones are mapped tone by tone onto the theme.
 
 ## The app icon
-The launcher icon belongs to the same family as Worldly's and SAB Monitor's: a graphite stage over a tilted
-street grid with its avenue and park, a vignette and a hairline edge, and in the middle a dark disc ringed in
-amber with three coloured dots and an amber marker. LotoLab's disc holds a histogram of draws under the curve
-of a fair draw, and the drawn ball as the marker. It's lit the way Worldly's widgets are since 1.55, as light
-sources in a dark, hazy room: the histogram is a small wall of square lamps with warm, overexposed cores
-(white-hot only at the top of the tallest columns) blooming into the gaps and scattering in a haze above each
-lit column, while the dark lamps catch their neighbours' light; the curve is a thread of light with a tight
-glow and a wide bloom; the ring and the ball glow towards the key light at the top right; the light warms the
-air of the stage, two banks of fog drift over it, and a fine film grain, lighter and darker specks, lies over
-everything. `scripts/render_icon.js` draws it: it writes `assets/icon.svg` (the 512 × 512 master), renders
-the adaptive icon's two layers (`mipmap-*dpi/ic_launcher_background.webp` and `ic_launcher_foreground.webp`,
-WebP because grain makes PNGs several times larger) with Chromium, and writes the silhouette for themed icons
-(`drawable/ic_launcher_monochrome.xml`). Run `node scripts/render_icon.js` after changing it (it needs
-Playwright: `npm i playwright`).
+Kept minimal: a lottery ball whose band is a ring chart of three shares, around its number (a 7, in Carbon+):
+lottery analysis at a glance, readable down to the smallest launcher size. It sits on the family background of
+Worldly's and SAB Monitor's icons: a graphite stage over a tilted street grid with its avenue and park, a
+vignette and a hairline edge. It's lit the way Worldly's widgets are since 1.55, as light sources in a dark,
+hazy room: the shares glow from white-hot (towards the key light at the top right) down to a deep amber,
+blooming into the haze; the ball is dark glass; the light warms the air of the stage, two banks of fog drift
+over it, and a fine film grain, lighter and darker specks, lies over everything (fainter on the ball's light
+parts).
+`scripts/render_icon.js` draws it: it writes `assets/icon.svg` (the 512 × 512 master), renders the adaptive
+icon's two layers (`mipmap-*dpi/ic_launcher_background.webp` and `ic_launcher_foreground.webp`, WebP because
+grain makes PNGs several times larger) with Chromium, and writes the silhouette for themed icons
+(`drawable/ic_launcher_monochrome.xml`: the ring chart and the light disc with its 7 cut out). Run
+`node scripts/render_icon.js` after changing it (it needs Playwright: `npm i playwright`).
 
 ## The mathematics
 
@@ -159,7 +158,7 @@ MiLoto ($4.000) prizes come from each draw's pool and aren't fixed, so the app d
   waits between requests.
 - **The app** merges three layers: the history bundled in the APK, the repository's copy (fetched at most
   every 3 hours, so a phone that was offline for weeks catches up), and the newest results straight from
-  the sites. It refreshes on start and when reopened after 15 minutes. Results are only ever added or
+  the sites. It refreshes on start, when reopened after 15 minutes, and every 15 minutes while it's open. Results are only ever added or
   completed (a quinta or draw number filled in), never removed. Everything is stored on the phone, so it
   works offline with what it has.
 
@@ -194,8 +193,7 @@ Controls are Fuji-App's: the lottery's draws and the sections (Summary, History,
 controls of the same size, a recessed well with the chosen one a lighter lens of glass; a set of choices (the
 amount bet) is equal cells across the card, the chosen one lit (an amber wash with the light bleeding in from a
 glowing edge, inside its bounds, so it's never bigger than the others); notifications are a glass switch; the
-key action of a card is solid amber; small actions are icons in bubbles of glass (refresh sits alone in the top
-corner); status lights are lamps blooming in their colour. Icons are solid, drawn in code (`Icon`). Carbon+ type throughout. The analysis adds
+key action of a card is solid amber; status lights are lamps blooming in their colour. Icons are solid, drawn in code (`Icon`). Carbon+ type throughout. The analysis adds
 a cool blue for "cold" / below expectation and coral for strong deviations.
 
 ## Play responsibly

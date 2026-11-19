@@ -37,7 +37,16 @@ public class MainActivity extends Activity {
     private ScrollView scroll;
     private LogoCarousel carousel;
     private LinearLayout drawBox, tabBox, body;
-    private View refresh;
+    /** Fetches the newest results every 15 minutes while the app is in front. */
+    private final android.os.Handler ticker = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable tick = new Runnable() {
+        @Override
+        public void run() {
+            fetch();
+            ticker.postDelayed(this, REFRESH_MS);
+        }
+    };
+    private static final long REFRESH_MS = 15 * 60_000L;
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private int generation;
     private boolean fetching;
@@ -99,10 +108,10 @@ public class MainActivity extends Activity {
         room.addView(scroll, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         room.addView(new StageView.Film(this, 0), new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         LinearLayout col = ui.vbox();
-        col.setPadding(ui.dp(16), ui.dp(8), ui.dp(16), ui.dp(28));
+        col.setPadding(ui.dp(16), ui.dp(16), ui.dp(16), ui.dp(28));
         scroll.addView(col, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        // ---- the lotteries: swipe through their emblems, the refresh button in the top corner ----
+        // ---- the lotteries: swipe through their emblems (results refresh by themselves) ----
         String[] subs = {T.t("Chance · 3 draws a day"), T.t("5 of 43 + superbalota"), T.t("5 of 39 · 4 draws a week")};
         int[] colors = {0xFFF2B230, 0xFFEB9438, 0xFFE08A33};
         carousel = new LogoCarousel(this, Game.LOTTERIES, subs, colors,
@@ -113,14 +122,7 @@ public class MainActivity extends Activity {
                     buildSelectors();
                     render();
                 });
-        FrameLayout top = new FrameLayout(this);
-        FrameLayout.LayoutParams cp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        cp.topMargin = ui.dp(8);
-        top.addView(carousel, cp);
-        // small, in the corner above the next lottery's emblem peeking in at the side
-        refresh = ui.iconButton(Icon.Kind.REFRESH, T.t("Fetch the newest results"), 34, v -> fetch(true));
-        top.addView(refresh, new FrameLayout.LayoutParams(ui.dp(34), ui.dp(34), Gravity.TOP | Gravity.END));
-        col.addView(top, ui.matchWrap(0));
+        col.addView(carousel, ui.matchWrap(0));
 
         drawBox = ui.vbox();
         col.addView(drawBox, ui.matchWrap(2));
@@ -145,7 +147,7 @@ public class MainActivity extends Activity {
                 history = h;
                 buildSelectors();
                 render();
-                fetch(false);
+                fetch();
                 Notifier.schedule(getApplicationContext());
             });
         });
@@ -192,13 +194,17 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         stage.setRunning(true);
-        if (history != null && System.currentTimeMillis() - Data.sp(this).getLong("fetchAt", 0) > 15 * 60_000L) fetch(false);
+        // the newest results come by themselves: on opening, on coming back after a while, and every 15 minutes
+        if (history != null && System.currentTimeMillis() - Data.sp(this).getLong("fetchAt", 0) > REFRESH_MS) fetch();
+        ticker.removeCallbacks(tick);
+        ticker.postDelayed(tick, REFRESH_MS);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         stage.setRunning(false);
+        ticker.removeCallbacks(tick);
         Data.sp(this).edit().putString("lottery", lottery).putInt("game", gameIdx).apply();
     }
 
@@ -210,14 +216,13 @@ public class MainActivity extends Activity {
 
     // ------------------------------------------------------------------ data
 
-    private void fetch(boolean everything) {
+    private void fetch() {
         if (fetching || history == null) return;
         fetching = true;
-        spin();
         new Thread(() -> {
             Fetcher.Status got = null;
             try {
-                got = Fetcher.refresh(getApplicationContext(), history, everything);
+                got = Fetcher.refresh(getApplicationContext(), history, false);
                 Notifier.markSeen(getApplicationContext(), got.fresh); // shown here, no need to announce them later
                 Notifier.schedule(getApplicationContext());
             } catch (Throwable e) {
@@ -229,16 +234,6 @@ public class MainActivity extends Activity {
                 if (st == null || st.added > 0 || tab == HISTORY || tab == SUMMARY) render(true);
             });
         }).start();
-    }
-
-    /** The refresh button turns while the newest results are being fetched. */
-    private void spin() {
-        if (refresh == null) return;
-        refresh.animate().rotationBy(360).setDuration(900).setInterpolator(new android.view.animation.LinearInterpolator())
-                .withEndAction(() -> {
-                    if (fetching) spin();
-                    else refresh.setRotation(0);
-                }).start();
     }
 
     // ------------------------------------------------------------------ choices
@@ -361,7 +356,7 @@ public class MainActivity extends Activity {
     /** "Not enough draws" card. */
     static void empty(MainActivity a, LinearLayout body, Sel s) {
         LinearLayout c = a.ui.card(body, T.t("NO DRAWS"));
-        c.addView(a.ui.body(T.f("There are no stored results for %s yet. Tap ↻ to fetch the newest results.", label(s))));
+        c.addView(a.ui.body(T.f("There are no stored results for %s yet; they'll appear as soon as they're fetched.", label(s))));
     }
 
     static String label(Sel s) {

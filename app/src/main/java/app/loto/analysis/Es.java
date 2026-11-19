@@ -113,8 +113,6 @@ final class Es {
                 "Historial");
         p("Stats",
                 "Estadísticas");
-        p("Fetch the newest results",
-                "Traer los resultados más recientes");
         p("Chance · 3 draws a day",
                 "Chance · 3 sorteos al día");
         p("5 of 43 + superbalota",
@@ -131,8 +129,8 @@ final class Es {
                 "No se pudo calcular esta vista: %s");
         p("NO DRAWS",
                 "SIN SORTEOS");
-        p("There are no stored results for %s yet. Tap ↻ to fetch the newest results.",
-                "Aún no hay resultados guardados de %s. Toca ↻ para traer los más recientes.");
+        p("There are no stored results for %s yet; they'll appear as soon as they're fetched.",
+                "Aún no hay resultados guardados de %s; aparecerán en cuanto se descarguen.");
         p("%s · %s draws",
                 "%s · %s sorteos");
         p("Results",
@@ -439,12 +437,12 @@ final class Es {
                 "Próximo sorteo: %s · %s (%s)");
         p("No draw scheduled in the next week.",
                 "No hay sorteos programados en la próxima semana.");
-        p("Result of %s missing. Tap ↻.",
-                "Falta el resultado del %s. Toca ↻.");
+        p("Result of %s missing; checking again soon.",
+                "Falta el resultado del %s; se volverá a buscar pronto.");
         p("Not updated yet: showing the bundled history.",
                 "Aún sin actualizar: se muestra el historial incluido.");
-        p("Last updated %s. Tap ↻.",
-                "Última actualización %s. Toca ↻.");
+        p("Last updated %s.",
+                "Última actualización %s.");
         p("%d source(s) didn't answer (see History).",
                 "%d fuente(s) no respondieron (ver Historial).");
         p("TODAY'S RECOMMENDATION",
@@ -461,8 +459,6 @@ final class Es {
                 "La misma de cualquier otro número: ningún modelo supera al azar.");
         p("%s · %s",
                 "%s · %s");
-        p("Model ranking",
-                "Ranking de modelos");
         p("WHAT YOU WIN",
                 "LO QUE GANAS");
         p("Net prize, after withholding where it applies.",
