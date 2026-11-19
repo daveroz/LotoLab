@@ -16,7 +16,7 @@ import android.view.View;
  * units of the icon's size from its centre.
  */
 final class Icon extends View {
-    enum Kind { REFRESH, CHEVRON_RIGHT, PLUS, BARS }
+    enum Kind { REFRESH, CHEVRON_RIGHT, PLUS }
 
     private final Glyph glyph;
 
@@ -130,13 +130,6 @@ final class Icon extends View {
                     bold.setStrokeWidth(Math.max(2.2f, s * 0.13f));
                     line(-0.3f, 0, 0.3f, 0);
                     line(0, -0.3f, 0, 0.3f);
-                    break;
-                case BARS:
-                    // three bars, the middle one lit by a notch: a ranking
-                    add(rr(-0.42f, 0.02f, -0.18f, 0.42f, 0.06f));
-                    add(rr(-0.12f, -0.42f, 0.12f, 0.42f, 0.06f));
-                    add(rr(0.18f, -0.18f, 0.42f, 0.42f, 0.06f));
-                    cut(rr(-0.05f, -0.34f, 0.05f, -0.2f, 0.04f));
                     break;
             }
         }

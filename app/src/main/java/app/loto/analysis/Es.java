@@ -461,8 +461,6 @@ final class Es {
                 "La misma de cualquier otro número: ningún modelo supera al azar.");
         p("%s · %s",
                 "%s · %s");
-        p("Model ranking",
-                "Ranking de modelos");
         p("WHAT YOU WIN",
                 "LO QUE GANAS");
         p("Net prize, after withholding where it applies.",

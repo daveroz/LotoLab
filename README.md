@@ -84,18 +84,18 @@ transforms, gradients, clip paths) so they stay sharp at any size and keep their
 logos take the theme's amber light as a gradient; multicolour ones are mapped tone by tone onto the theme.
 
 ## The app icon
-A lottery ball whose band is a ring chart of probabilities, around its number (a 7, in Carbon+): lottery
-analysis at a glance, readable down to the smallest launcher size. It belongs to the same family as Worldly's
-and SAB Monitor's icons: a graphite stage over a tilted street grid with its avenue and park, a vignette and a
-hairline edge, and the family's cyan, yellow and green dots, here the other balls of the draw. It's lit the way
-Worldly's widgets are since 1.55, as light sources in a dark, hazy room: the band's shares glow from a
-white-hot share (towards the key light at the top right) down to a deep amber one, blooming into the haze; the
-ball is dark glass with a gloss; the light warms the air of the stage, two banks of fog drift over it, and a
-fine film grain, lighter and darker specks, lies over everything (fainter on the ball's light parts).
+Kept minimal: a lottery ball whose band is a ring chart of three shares, around its number (a 7, in Carbon+):
+lottery analysis at a glance, readable down to the smallest launcher size. It sits on the family background of
+Worldly's and SAB Monitor's icons: a graphite stage over a tilted street grid with its avenue and park, a
+vignette and a hairline edge. It's lit the way Worldly's widgets are since 1.55, as light sources in a dark,
+hazy room: the shares glow from white-hot (towards the key light at the top right) down to a deep amber,
+blooming into the haze; the ball is dark glass; the light warms the air of the stage, two banks of fog drift
+over it, and a fine film grain, lighter and darker specks, lies over everything (fainter on the ball's light
+parts).
 `scripts/render_icon.js` draws it: it writes `assets/icon.svg` (the 512 × 512 master), renders the adaptive
 icon's two layers (`mipmap-*dpi/ic_launcher_background.webp` and `ic_launcher_foreground.webp`, WebP because
 grain makes PNGs several times larger) with Chromium, and writes the silhouette for themed icons
-(`drawable/ic_launcher_monochrome.xml`: the ring chart, the light disc with its 7 cut out, and the dots). Run
+(`drawable/ic_launcher_monochrome.xml`: the ring chart and the light disc with its 7 cut out). Run
 `node scripts/render_icon.js` after changing it (it needs Playwright: `npm i playwright`).
 
 ## The mathematics

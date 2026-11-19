@@ -238,11 +238,6 @@ final class SummaryTab {
                 r.advantage ? T.t("The model beats chance in the tests (see Stats).") : T.t("Same as any other number: no model beats chance.")),
                 ui.matchWrap(8));
         c.addView(ui.note(T.f("%s · %s", r.model.shortTitle(), when(l.generatedAt))), ui.matchWrap(2));
-        c.addView(ui.secondaryButton(T.t("Model ranking"), Icon.Kind.BARS, v -> {
-            a.tab = MainActivity.STATS;
-            a.buildSelectors();
-            a.render();
-        }), ui.matchWrap(10));
     }
 
     /** El Dorado: what each bet wins, net, for the amount chosen. */

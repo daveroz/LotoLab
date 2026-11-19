@@ -1,11 +1,10 @@
 #!/usr/bin/env node
 /*
- * LotoLab's launcher icon: a lottery ball whose band is a ring chart of probabilities, around its number, on the
- * family stage of Worldly's and SAB Monitor's icons (a graphite stage over a tilted street grid, a vignette, a
- * hairline edge) with the family's three coloured dots as the other balls of the draw. Lit the way Worldly's widgets
- * are since 1.55, as light sources in a dark, hazy room: the band's shares glow from a white-hot share down to a deep
- * amber one, blooming into the haze; the ball is dark glass with a gloss; the light warms the stage's air, two banks
- * of fog drift over it, and film grain lies over it all.
+ * LotoLab's launcher icon, kept minimal: a lottery ball whose band is a ring chart of three shares, around its number,
+ * on the family stage of Worldly's and SAB Monitor's icons (a graphite stage over a tilted street grid, a vignette, a
+ * hairline edge). Lit the way Worldly's widgets are since 1.55, as light sources in a dark, hazy room: the shares glow
+ * from white-hot (towards the key light) down to a deep amber, blooming into the haze; the ball is dark glass; the
+ * light warms the stage's air, two banks of fog drift over it, and film grain lies over it all.
  *
  * Writes assets/icon.svg (the 512 × 512 master) and the adaptive icon's layers as WebP in every density
  * (app/src/main/res/mipmap-*dpi/ic_launcher_{background,foreground}.webp), plus the themed-icon silhouette
@@ -43,12 +42,11 @@ function grid() {
 }
 
 // ---------------------------------------------------------------- the ball
-const BALL = { x: 256, y: 250, r: 150, band: 40 }; // r: the middle of the band
-const SHARES = [0.32, 0.22, 0.18, 0.15, 0.13];     // the ring chart, largest first, from the top clockwise
-const SHADES = [LED, HOT, KEY, '#c97624', '#8a4a12'];
-const LABEL = 86;                                   // the ball's light disc
-const DOTS = [[108, 112, 14, 'cyan'], [410, 120, 11, 'yellow'], [404, 404, 12, 'green']];
-const DOT_COLOURS = { cyan: ['#9af0ff', '#2a9db3', '#67e8f9'], yellow: ['#ffe066', '#c79a0c', '#facc15'], green: ['#6ee7a0', '#178a4a', '#22c55e'] };
+const BALL = { x: 256, y: 256, r: 148, band: 36 }; // r: the middle of the band
+const SHARES = [0.5, 0.3, 0.2];                    // the ring chart, largest first, from the top clockwise
+const SHADES = [LED, KEY, '#9a5214'];
+const GAP = 10;                                     // degrees between shares
+const LABEL = 84;                                   // the ball's light disc
 // Carbon+ Bold's "7" (font units, y up; bounds x 70–488, y 0–580), so the master needs no font
 const SEVEN = 'M488 580H70V487H379V477C379 407 170 320 170 169V0H274V174C274 288 488 359 488 494Z';
 
@@ -70,7 +68,7 @@ function arcs(cx = BALL.x, cy = BALL.y, r = BALL.r) {
   const out = [];
   let a = -90;
   SHARES.forEach((sh, i) => {
-    const sweep = sh * 360 - 6, a0 = (a + 3) * Math.PI / 180, a1 = (a + 3 + sweep) * Math.PI / 180;
+    const sweep = sh * 360 - GAP, a0 = (a + GAP / 2) * Math.PI / 180, a1 = (a + GAP / 2 + sweep) * Math.PI / 180;
     const p = (t, v) => +(v === 'x' ? cx + r * Math.cos(t) : cy + r * Math.sin(t)).toFixed(2);
     out.push({ i, d: `M${p(a0, 'x')} ${p(a0, 'y')}A${r} ${r} 0 ${sweep > 180 ? 1 : 0} 1 ${p(a1, 'x')} ${p(a1, 'y')}` });
     a += sh * 360;
@@ -88,7 +86,6 @@ function defs(pxPerUnit = 1) {
   <radialGradient id="fog" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="${DEEP}" stop-opacity="1"/><stop offset="1" stop-color="${DEEP}" stop-opacity="0"/></radialGradient>
   <radialGradient id="darkBall" cx=".36" cy=".3" r=".75"><stop offset="0" stop-color="#3a3d45"/><stop offset=".5" stop-color="#16171b"/><stop offset="1" stop-color="#08090b"/></radialGradient>
   <radialGradient id="label" cx=".42" cy=".36" r=".7"><stop offset="0" stop-color="#fffaf3"/><stop offset=".8" stop-color="#f6ead9"/><stop offset="1" stop-color="#e3cdb0"/></radialGradient>
-  ${Object.entries(DOT_COLOURS).map(([k, [c, d]]) => `<radialGradient id="${k}Ball" cx=".36" cy=".32" r=".72"><stop offset="0" stop-color="#fffaf2"/><stop offset=".22" stop-color="${c}"/><stop offset=".78" stop-color="${d}"/><stop offset="1" stop-color="#101418"/></radialGradient>`).join('')}
   <filter id="halo" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
   <filter id="bloom" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
   <filter id="wide" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="22"/></filter>
@@ -112,29 +109,18 @@ function stage(x, y, w, h) {
     + `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="url(#vig)"/>`;
 }
 
-/** The ball and the other balls of the draw. */
+/** The ball: dark glass, its band a ring chart of three shares, its number on a light disc. */
 function disc() {
   const { x, y, r, band } = BALL;
-  let out = `<circle cx="${x}" cy="${y}" r="${r + 30}" fill="${DEEP}" opacity=".35" filter="url(#wide)"/>`
-    // the ball: dark glossy glass
-    + `<circle cx="${x}" cy="${y}" r="${r + band / 2 + 6}" fill="url(#darkBall)"/>`;
-  // the band: a share of the ring for each, glowing from white-hot down to a deep amber
+  let out = `<circle cx="${x}" cy="${y}" r="${r + 26}" fill="${DEEP}" opacity=".3" filter="url(#wide)"/>`
+    + `<circle cx="${x}" cy="${y}" r="${r + band / 2 + 8}" fill="url(#darkBall)"/>`;
+  // the shares glow from white-hot (towards the key light) down to a deep amber
   for (const { d, i } of arcs()) {
-    out += `<path d="${d}" fill="none" stroke="${DEEP}" stroke-width="${band + 10}" opacity="${i === 0 ? 0.7 : 0.35}" filter="url(#bloom)"/>`
+    out += `<path d="${d}" fill="none" stroke="${DEEP}" stroke-width="${band + 8}" opacity="${i === 0 ? 0.6 : 0.3}" filter="url(#bloom)"/>`
       + `<path d="${d}" fill="none" stroke="${SHADES[i]}" stroke-width="${band}"/>`;
   }
-  // the ball's light disc and its number, and the gloss of a sphere
-  out += `<circle cx="${x}" cy="${y}" r="${LABEL}" fill="url(#label)"/>`
-    + `<path d="${seven(x, y + 2, 66)}" fill="#2a1606"/>`
-    + `<path d="M${x - 120} ${y - 70} A 140 140 0 0 1 ${x - 40} ${y - 132}" fill="none" stroke="#ffffff" stroke-opacity=".3" stroke-width="10" stroke-linecap="round"/>`;
-  // the other balls of the draw: the family's three dots, glossy and glowing softly
-  for (const [dx, dy, dr, k] of DOTS) {
-    const glow = DOT_COLOURS[k][2];
-    out += `<circle cx="${dx}" cy="${dy}" r="${dr * 1.5}" fill="${glow}" opacity=".3" filter="url(#wide)"/>`
-      + `<circle cx="${dx}" cy="${dy}" r="${dr + 3}" fill="${glow}" opacity=".35" filter="url(#halo)"/>`
-      + `<circle cx="${dx}" cy="${dy}" r="${dr}" fill="url(#${k}Ball)"/>`;
-  }
-  return out;
+  return out + `<circle cx="${x}" cy="${y}" r="${LABEL}" fill="url(#label)"/>`
+    + `<path d="${seven(x, y + 2, 66)}" fill="#2a1606"/>`;
 }
 
 const grain = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" filter="url(#grain)"/>`;
@@ -155,10 +141,10 @@ const LAYER = 'viewBox="-128 -128 768 768"';
 // the files small.
 const background = px => `<svg xmlns="http://www.w3.org/2000/svg" ${LAYER}><defs>${defs(px / 768)}</defs>${stage(-128, -128, 768, 768)}`
   + `${grain(-128, -128, 768, 768)}</svg>`;
-const foreground = px => `<svg xmlns="http://www.w3.org/2000/svg" ${LAYER}><defs>${defs(px / 768)}<clipPath id="inDisc"><circle cx="${BALL.x}" cy="${BALL.y}" r="${BALL.r + BALL.band / 2 + 6}"/></clipPath></defs>`
+const foreground = px => `<svg xmlns="http://www.w3.org/2000/svg" ${LAYER}><defs>${defs(px / 768)}<clipPath id="inDisc"><circle cx="${BALL.x}" cy="${BALL.y}" r="${BALL.r + BALL.band / 2 + 8}"/></clipPath></defs>`
   + `${disc()}<g clip-path="url(#inDisc)" opacity=".4">${grain(-128, -128, 768, 768)}</g></svg>`; // fainter on the ball's light parts
 
-/** The themed icon (Android 13+): the band's shares, the light disc with its 7 cut out, and the three dots. */
+/** The themed icon (Android 13+): the band's shares and the light disc with its 7 cut out. */
 function monochrome() {
   const t = v => +((v + 128) * 108 / 768).toFixed(2);
   const sc = v => +(v * 108 / 768).toFixed(2);
@@ -170,14 +156,13 @@ function monochrome() {
     return `M${t(+m[1])},${t(+m[2])}A${sc(+m[3])},${sc(+m[3])} 0 ${m[4]} 1 ${t(+m[5])},${t(+m[6])}`;
   }).join('');
   return `<?xml version="1.0" encoding="utf-8"?>
-<!-- The themed-icon silhouette (generated by scripts/render_icon.js): the ring chart, the 7 and the dots -->
+<!-- The themed-icon silhouette (generated by scripts/render_icon.js): the ring chart and the 7 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
     <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="${sc(BALL.band)}"
         android:pathData="${band}" />
     <path android:fillColor="#FFFFFFFF" android:fillType="evenOdd"
         android:pathData="${circle(BALL.x, BALL.y, LABEL)}${inLayer(seven(BALL.x, BALL.y + 2, 66))}" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="${DOTS.map(([x, y, r]) => circle(x, y, r)).join('')}" />
 </vector>
 `;
 }
@@ -201,7 +186,7 @@ async function render(page, svg, px, file) {
   fs.writeFileSync(file, Buffer.from(data.split(',')[1], 'base64'));
 }
 
-module.exports = { defs, stage, grain, KEY, HOT, DEEP, LED, LAYER };
+module.exports = { defs, stage, grid, disc, grain, KEY, HOT, DEEP, LED, LAYER };
 
 if (require.main === module) (async () => {
   const root = path.resolve(__dirname, '..');
